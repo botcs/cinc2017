@@ -17,18 +17,38 @@ label = []
 lens = []
 
 annotations = open('./training2017/REFERENCE.csv', 'r').read().splitlines()
-for line in annotations:
+for i, line in enumerate(annotations):
     fname, label_str = line.split(',')
     
-    x = io.loadmat('./training2017/'+fname+'.mat')['val'].squeeze()
+    x = io.loadmat('./training2017/'+fname+'.mat')['val'].astype(np.float32).squeeze()
+    
+    # [0, 1]
+    # x -= x.min()
+    # x /= x.max()
+    
+    # [-1, 1]
+    # x -= x.min()
+    # x /= x.max()
+    # x *= 2
+    # x -= 1
+    
+    # Normal
+    x -= x.mean()
+    x /= x.std()
+    
     data.append(x)
     
     y = label_dict[label_str]
     label.append(y)
     
     lens.append(len(x))
+    if i%50==0: 
+        print('\rReading files: %05d   ' % i, end='', flush=True)
+
+print('\rReading files: %05d   ' % i, end='', flush=True)
     
 assert(len(label) == len(data) == len(lens))
+print('\nReading successful!')
 data_size = len(data)
 
 # No problem with different lengths
@@ -56,7 +76,7 @@ def batch_pool(batch_size=64, num_epochs=10, random=True):
         shuffle()
     for _ in range(num_epochs):    
         for i in range(0, data_size, batch_size):
-	    yield data[i:i+n], label[i:i+n], lens[i:i+n]
+            yield data[i:i+n], label[i:i+n], lens[i:i+n]
 
 
 
