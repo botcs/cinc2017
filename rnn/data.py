@@ -69,6 +69,11 @@ def shuffle():
     label = label[p]
     lens = lens[p]
     
+def join_samples(sample_list, sample_lens):
+    res = np.zeros((len(sample_list), sample_lens.max(), output_dims))
+    for idx, (sample, l) in enumerate(zip(sample_list, sample_lens)):
+        res[idx, :l] = sample[None, :, None]
+    return res 
 
 def batch_pool(batch_size=64, num_epochs=10, random=True):
     n = batch_size
@@ -76,7 +81,8 @@ def batch_pool(batch_size=64, num_epochs=10, random=True):
         shuffle()
     for _ in range(num_epochs):    
         for i in range(0, data_size, batch_size):
-            yield data[i:i+n], label[i:i+n], lens[i:i+n]
+            data_window = join_samples(data[i:i+n], lens[i:i+n])
+            yield data_window, label[i:i+n], lens[i:i+n]
 
 
 
