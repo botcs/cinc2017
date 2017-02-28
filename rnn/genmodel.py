@@ -7,7 +7,6 @@ import numpy as np
 batch_size = 4
 time_steps = 250
 input_dims = 1 # Scalar
-
 output_dims = 1 # Scalar
 
 # Model Hyperparameters
