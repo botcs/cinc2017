@@ -70,12 +70,12 @@ def shuffle():
     lens = lens[p]
     
 def join_samples(sample_list, sample_lens):
-    res = np.zeros((len(sample_list), sample_lens.max(), output_dims))
+    res = np.zeros((len(sample_list), sample_lens.max(), 1))
     for idx, (sample, l) in enumerate(zip(sample_list, sample_lens)):
         res[idx, :l] = sample[None, :, None]
     return res 
 
-def batch_pool(batch_size=64, num_epochs=10, random=True):
+def batch_pool(batch_size=4, num_epochs=10, random=True):
     n = batch_size
     if random:
         shuffle()
