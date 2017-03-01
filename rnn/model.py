@@ -81,7 +81,9 @@ class stackedLSTM(object):
     def get_name(self):
         rnn_sizes = [str(s) for s in self.rnn_sizes]
         fc_sizes = [str(s) for s in self.fc_sizes]
-        name = 'rnn' + '-'.join(rnn_sizes) + '--fc' + '-'.join(fc_sizes)
+        name = str(self.time_steps) 
+        name += 'rnn' + '-'.join(rnn_sizes) 
+        name += '--fc' + '-'.join(fc_sizes)
         name += '---' + time.strftime("%Y-%m-%d--%H-%M-%S")
         return name
     
@@ -90,10 +92,6 @@ class stackedLSTM(object):
     
     def get_checkpoint_path(self):
         return os.path.join(self.model_path, self.name)
-        
-    def save_graph(self, sess):
-        save_path = self.saver.save(sess, self.get_checkpoint_path())
-        print("Model saved in file: %s" % save_path)
         
     def __init__(self,
             batch_size=FLAGS.batch_size,
