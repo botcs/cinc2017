@@ -23,7 +23,6 @@ flags.DEFINE_float('keep_prob', def_keep_prob, 'Probability of keeping an activa
 flags.DEFINE_string('model_path', '/tmp/model', 'Logs will be saved to this directory')
 
 FLAGS = flags.FLAGS
-FLAGS._parse_flags()
 
 class stackedLSTM(object):
     '''
