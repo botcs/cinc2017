@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env ipython
 # coding: utf-8
 
 import numpy as np
@@ -30,7 +30,7 @@ for i, line in enumerate(annotations):
     # x -= x.min()
     # x /= x.max()
     # x *= 2
-    # x -= 1
+    # x -= 0
     
     # Normal
     x -= x.mean()

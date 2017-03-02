@@ -156,7 +156,6 @@ class classifier(stackedLSTM):
 
         self.preds = tf.nn.softmax(logits=self.logits)
         
-        self.saver = tf.train.Saver()
         
 class generator(stackedLSTM):
     '''
@@ -183,5 +182,4 @@ class generator(stackedLSTM):
 
         self.outputs, self.fc_keep_prob = self.get_fc(
             self.rnn_outputs, self.fc_sizes, def_input_dim, self.keep_prob)
-
-        self.saver = tf.train.Saver()        
+  
