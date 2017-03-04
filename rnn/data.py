@@ -15,7 +15,7 @@ all_label_dict = {
 all_data = []
 all_label = []
 all_lens = []
-
+label_count = [0, 0, 0, 0]
 annotations = open('./training2017/REFERENCE.csv', 'r').read().splitlines()
 for i, line in enumerate(annotations):
     fname, all_label_str = line.split(',')
@@ -75,14 +75,16 @@ def join_samples(sample_list, sample_all_lens):
         res[idx, :l] = sample[None, :, None]
     return res 
 
-def batch_pool(batch_size=4, num_epochs=10, random=True):
+def random_batch(batch_size=4, num_epochs=10):
     n = batch_size
-    if random:
-        shuffle()
+    shuffle()
     for _ in range(num_epochs):    
         for i in range(0, all_data_size, batch_size):
             all_data_window = join_samples(all_data[i:i+n], all_lens[i:i+n])
             yield all_data_window, all_label[i:i+n], all_lens[i:i+n]
 
-
+def equal_batch(batch_size=4):
+    n = batch_size
+    
+        
 
