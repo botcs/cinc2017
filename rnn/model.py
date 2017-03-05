@@ -83,7 +83,7 @@ class stackedLSTM(object):
         name = str(self.time_steps) 
         name += 'rnn' + '-'.join(rnn_sizes) 
         name += '--fc' + '-'.join(fc_sizes)
-        name += '---' + time.strftime("%Y-%m-%d--%H-%M-%S")
+        name += '---' + time.strftime("%Y-%m-%d")
         return name
     
     def build_graph(self, model_name=None):
