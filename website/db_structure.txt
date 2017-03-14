@@ -1,0 +1,9 @@
+rec_ID (INTEGER): azonosító
+data (TEXT): adatsor, adatok vesszővel elválasztva, 300 Hz-es mintavételezéssel
+source (TEXT): 'official', ha a nyilvános adatbázisból, 'augmented', ha a nyilvános adatbázisból vett adatot időben nyújtunk, összenyomunk, 'generated', ha a mintákból egy neurhálóval újakat generálunk.
+class (TEXT): következő értékeket veheti fel: N, A, O, ~
+name (TEXT): fájlnév, vagy annak a fájlnak a neve, amiből augmentációval gyártottuk + valami jelölés, hogy milyen transzformációval kaptuk
+machine_guess (TEXT): klasszifikáló hálónk tippje
+human_guess (TEXT): a weboldalon emberi klasszifikálás eredménye
+comment_before (TEXT): megjegyzés azelőtt, hogy tudná az illető, hogy mi melyik osztályba tartozik az adat
+comment_after (TEXT): megjegyzés azután, hogy az illető megtudta, hogy mi melyik osztályba tartozik az adat
