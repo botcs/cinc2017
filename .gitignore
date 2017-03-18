@@ -1,0 +1,8 @@
+*.ipynb_checkpoints
+*.TFRecord
+*.zip
+*.mat
+*.hea
+*.csv
+RECORDS
+*.pyc
