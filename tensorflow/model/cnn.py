@@ -45,11 +45,6 @@ class model(object):
             same length as out_dims
         '''
         
-        if type(kernel_sizes) is int:
-            kernel_sizes = [kernel_sizes] * len(out_dims)
-        if type(pool_sizes) is int:
-            pool_sizes = [pool_sizes] * len(out_dims)
-        assert len(out_dims) == len(kernel_sizes) == len(pool_sizes)
         
         with tf.variable_scope('conv_module'):
             # Converting to NHWC where N is batch and H will be seq_len
@@ -112,12 +107,18 @@ class model(object):
         
         self.seq_len = seq_len
         self.input = input_op
+        
+        if type(kernel_sizes) is int:
+            kernel_sizes = [kernel_sizes] * len(out_dims)
+        if type(pool_sizes) is int:
+            pool_sizes = [pool_sizes] * len(out_dims)
+        assert len(out_dims) == len(kernel_sizes) == len(pool_sizes)
+        
         self.out_dims = out_dims
         self.kernel_sizes = kernel_sizes
         self.pool_sizes = pool_sizes
         
-        if len(kernel_sizes) == 1:
-            kernel_sizes = [kernel_sizes] * len(out_dims)
+        
         self.def_keep_prob = keep_prob
         self.name = self.get_name()
         with tf.variable_scope('CNN'):
