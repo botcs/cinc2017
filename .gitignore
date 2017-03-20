@@ -7,3 +7,4 @@
 RECORDS
 *.pyc
 *.TFRecord
+*.npy

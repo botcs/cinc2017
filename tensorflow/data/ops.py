@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import tensorflow as tf
+import numpy as np
 
 class foo(object):
     pass
@@ -19,8 +20,7 @@ def parse_example(filename_queue):
     
     context_features = {
         'length': tf.FixedLenFeature([], dtype=tf.int64),
-        'label': tf.FixedLenFeature([], dtype=tf.int64),
-        'weight': tf.FixedLenFeature([], dtype=tf.float32),
+        'label': tf.FixedLenFeature([], dtype=tf.int64)
     }
     sequence_features = {
         'data': tf.FixedLenSequenceFeature([], dtype=tf.float32)
@@ -32,24 +32,25 @@ def parse_example(filename_queue):
     )
     res = (seq_parsed['data'], 
         con_parsed['length'], 
-        con_parsed['label'], 
-        con_parsed['weight'])
+        con_parsed['label'])
     return res
 
-def get_batch_ops(
+def get_batch_producer(
     path=FLAGS.path, 
     batch_size=FLAGS.batch_size, 
     prefetch_size=FLAGS.capacity,
     num_of_threads=FLAGS.threads):
     
     filename_queue = tf.train.string_input_producer([path])
-    data, seq_len, label, weight = parse_example(filename_queue)
+    data, seq_len, label = parse_example(filename_queue)
+    seq_len = tf.cast(seq_len, tf.int32)
+    label = tf.cast(label, tf.int32)
     q = tf.PaddingFIFOQueue(
         capacity=prefetch_size,
-        dtypes=[tf.float32, tf.int64, tf.int64, tf.float32],
-        shapes=[[None], [], [], []])
+        dtypes=[tf.float32, tf.int32, tf.int32],
+        shapes=[[None], [], []])
     
-    enqueue_op = q.enqueue([data, seq_len, label, weight])
+    enqueue_op = q.enqueue([data, seq_len, label])
     qr = tf.train.QueueRunner(q, [enqueue_op]*num_of_threads)
     tf.train.add_queue_runner(qr)
     batch_op = q.dequeue_many(n=batch_size)
