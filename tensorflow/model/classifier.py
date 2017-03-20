@@ -24,10 +24,6 @@ class model(object):
     classifier will return an object, whose main fields are tensorflow graph nodes.
     
     '''
-    def get_input(self):
-        with tf.variable_scope('input'):
-            x = tf.placeholder(tf.float32, [None, FLAGS.input_dim], name='input')
-        return x
 
     def get_layers(self, in_node, fc_sizes, out_dim, keep_prob):
         with tf.variable_scope('fully_connected'):
@@ -54,9 +50,6 @@ class model(object):
         
         self.keep_prob = tf.placeholder_with_default(self.def_keep_prob, [], 'keep_prob')
         
-        if self.input is None:
-            self.input = self.get_input()
-        
         self.logits, self.fc_keep_prob = self.get_layers(
             self.input, self.fc_sizes, FLAGS.label_dim, self.keep_prob)
 
@@ -64,7 +57,7 @@ class model(object):
         print(self.pred)
         
     def __init__(self,
-            input=None,
+            input_op,
             fc_sizes=[int(s) for s in FLAGS.fc_sizes.split(',')],
             keep_prob=FLAGS.keep_prob,
             model_name=None):
@@ -75,7 +68,7 @@ class model(object):
         fc_sizes: [int, [int...]] Size of fc layers connected to the last LSTM cell's output
         keep_prob: float, Probability of keeping a value in DROPOUT layers
         '''
-        self.input = input
+        self.input = input_op
         self.fc_sizes = fc_sizes
         self.def_keep_prob = keep_prob
         self.name = self.get_name()
@@ -83,9 +76,9 @@ class model(object):
             print('\nFC' + self.name)
             self.build_graph()
 
-def get_logits_and_pred(input, **kwargs):
+def get_logits_and_pred(input_op, **kwargs):
     '''Convenience function for retrieveng 
     calssifier model graph definition's output'''
-    c = model(input, **kwargs)
+    c = model(input_op, **kwargs)
     return c.logits, c.pred
     

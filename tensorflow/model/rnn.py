@@ -31,14 +31,6 @@ class stackedLSTM(object):
     Use this class for describing specific usage by implementing `build_graph`
     '''
     
-    def get_input(self, def_input_dim=FLAGS.input_dim):
-        with tf.variable_scope('input'):
-            batch_size = tf.placeholder(tf.int16, [], name='batch_size')
-            seq_len = tf.placeholder(tf.int16, [None], name='sequence_length')
-            # [batch_size, seq_len, input_dim]
-            x = tf.placeholder(tf.float32, [None, None, def_input_dim], name='input')
-        return batch_size, seq_len, x
-    
     def get_layers(self, batch_size, seq_len, x, rnn_sizes, keep_prob):
         with tf.variable_scope('LSTM'):
             rnn_tuple_state = []
@@ -82,27 +74,19 @@ class stackedLSTM(object):
         
         self.keep_prob = tf.placeholder_with_default(self.def_keep_prob, [], 'keep_prob')
         
-        if self.input is None or self.seq_len is None or self.batch_size is None:
-            assert (self.input is None) and (self.seq_len is None) and\
-                (self.batch_size is None),\
-                'input or seq_len or batch_size tensor was provided, but not all'
-                
-            self.batch_size, self.seq_len, self.input = self.get_input()
-        
         rnn = self.get_layers(
             self.batch_size, self.seq_len, self.input, self.rnn_sizes, self.keep_prob)
         self.output, self.last_state, self.keep_prob = rnn[:3]
         self.init_state, self.zero_state = rnn[3:]
-        
         
         # Last layer's tuple, second element: (c=, h=)
         self.last_output = self.last_state[-1][1]
         
     
     def __init__(self,
-            input=None,
-            seq_len=None,
             batch_size=None,
+            seq_len=None,
+            input_op=None,
             time_steps=FLAGS.time_steps,
             rnn_sizes=[int(s) for s in FLAGS.rnn_sizes.split(',')],
             keep_prob=FLAGS.keep_prob,
@@ -116,7 +100,7 @@ class stackedLSTM(object):
         keep_prob: float, Probability of keeping a value in DROPOUT layers
         '''
         self.batch_size = batch_size
-        self.input = input
+        self.input = input_op
         self.seq_len = seq_len
         
         self.time_steps = time_steps
@@ -128,6 +112,6 @@ class stackedLSTM(object):
             print('\nRNN' + self.name)
             self.build_graph()
 
-def get_model(input, seq_len, **kwargs):
-    r = stackedLSTM(input, seq_len, **kwargs)
+def get_model(batch_size, seq_len, input_op, **kwargs):
+    r = stackedLSTM(batch_size, seq_len, input_op, **kwargs)
     return r
