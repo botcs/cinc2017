@@ -19,9 +19,9 @@ X = np.array([[1,2],
 
 Z =np.load('feature_vector.npy')
 X=[]
-#X.append(Z[:,0])
+X.append(Z[:,0])
 X.append(Z[:,2])
-X.append(Z[:,3])
+#X.append(Z[:,3])
 X=np.transpose(X)
 #labels
 y = [0,1,0,1,0,1]
