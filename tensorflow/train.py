@@ -98,6 +98,8 @@ tf.summary.scalar('accuracy', acc_op)
 tf.summary.image('confusion_matrix', conf_op[None, ..., None])
 summaries = tf.summary.merge_all()
 
+# Running the model
+
 with tf.Session() as sess:
     print('Sess started')
     coord = tf.train.Coordinator()
