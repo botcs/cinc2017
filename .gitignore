@@ -8,3 +8,5 @@ RECORDS
 *.pyc
 *.TFRecord
 *.npy
+entry/validation/
+website/AFchallenge
