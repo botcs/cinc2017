@@ -46,24 +46,26 @@ class model(object):
         '''
         
         
-        with tf.variable_scope('conv_module'):
-            # Converting to NHWC where N is batch and H will be seq_len
-            h = in_node[..., None, None]
-            if use_bnorm:
-                biases_initializer = None
-                normalizer_fn = tf.contrib.layers.batch_norm
-            else:
-                biases_initializer = tf.zeros_initializer
-                normalizer_fn = None
+        # Converting to NHWC where N is batch and H will be seq_len
+        h = in_node[..., None, None]
+        if use_bnorm:
+            biases_initializer = None
+            normalizer_fn = tf.contrib.layers.batch_norm
+        else:
+            biases_initializer = tf.zeros_initializer
+            normalizer_fn = None
             
             
-            keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
+        keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
             
-            for dim, ker, pool in zip(out_dims, kernel_sizes, pool_sizes):
+        for i, (dim, ker, pool) in enumerate(zip(out_dims, kernel_sizes, pool_sizes)):
+            with tf.variable_scope('Conv%d' % (i+1)):
+                scope = 'Conv_dim%d_ker%d_pool%d' % (dim, ker, pool)
                 # does the same as 1d, but with convenience function
                 h = tf.contrib.layers.conv2d(h, dim, [ker, 1], 
                                              normalizer_fn=normalizer_fn,
-                                             biases_initializer=biases_initializer)
+                                             biases_initializer=biases_initializer,
+                                             scope=scope)
                 
                 h = tf.contrib.layers.max_pool2d(
                     h, kernel_size=[pool, 1], stride=[pool, 1])

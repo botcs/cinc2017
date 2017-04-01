@@ -8,7 +8,7 @@ class foo(object):
     pass
 FLAGS = foo()
 FLAGS.path = 'train.TFRecord'
-FLAGS.batch_size = tf.constant(16)
+FLAGS.batch_size = tf.constant(16, name='batch_size')
 FLAGS.capacity = 512
 FLAGS.threads = 8
 
@@ -39,19 +39,23 @@ def get_batch_producer(
     path=FLAGS.path, 
     batch_size=FLAGS.batch_size, 
     prefetch_size=FLAGS.capacity,
-    num_of_threads=FLAGS.threads):
-    
-    filename_queue = tf.train.string_input_producer([path])
-    data, seq_len, label = parse_example(filename_queue)
-    seq_len = tf.cast(seq_len, tf.int32)
-    label = tf.cast(label, tf.int32)
-    q = tf.PaddingFIFOQueue(
-        capacity=prefetch_size,
-        dtypes=[tf.float32, tf.int32, tf.int32],
-        shapes=[[None], [], []])
-    
-    enqueue_op = q.enqueue([data, seq_len, label])
-    qr = tf.train.QueueRunner(q, [enqueue_op]*num_of_threads)
-    tf.train.add_queue_runner(qr)
-    batch_op = q.dequeue_many(n=batch_size)
+    num_of_threads=FLAGS.threads,
+    scope='batch_producer'):
+    with tf.name_scope(scope):
+        filename_queue = tf.train.string_input_producer([path], name='filename_producer')
+        with tf.name_scope('example_producer'):
+            data, seq_len, label = parse_example(filename_queue)
+            data = tf.placeholder_with_default(data, [None], name='data')
+            label = tf.cast(label, tf.int32, name='label')
+            seq_len = tf.cast(seq_len, tf.int32, name='seq_length')
+        with tf.name_scope('padded_batch_producer'):
+            q = tf.PaddingFIFOQueue(
+                capacity=prefetch_size,
+                dtypes=[tf.float32, tf.int32, tf.int32],
+                shapes=[[None], [], []], name='padding_queue')
+
+            enqueue_op = q.enqueue([data, seq_len, label], name='push_single_example')
+            qr = tf.train.QueueRunner(q, [enqueue_op]*num_of_threads)
+            tf.train.add_queue_runner(qr)
+            batch_op = q.dequeue_many(n=batch_size, name='pop_batch')
     return batch_op

@@ -26,16 +26,17 @@ class model(object):
     '''
 
     def get_layers(self, in_node, fc_sizes, out_dim, keep_prob):
-        with tf.variable_scope('fully_connected'):
-            act_fn = tf.nn.relu
-            h = in_node
-            keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
-            for size in fc_sizes:
+
+        act_fn = tf.nn.relu
+        h = in_node
+        keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
+        for i, size in enumerate(fc_sizes):
+            with tf.variable_scope('hidden_layer%d' % i):
                 h = tf.contrib.layers.fully_connected(h, size, act_fn)
                 print(h)
                 h = tf.nn.dropout(h, keep_prob)
-            logits = tf.contrib.layers.fully_connected(h, out_dim, None, scope='logits')
-            print(logits)
+        logits = tf.contrib.layers.fully_connected(h, out_dim, None, scope='logits')
+        print(logits)
         return logits, keep_prob
     
     def get_name(self):
@@ -53,7 +54,7 @@ class model(object):
         self.logits, self.fc_keep_prob = self.get_layers(
             self.input, self.fc_sizes, FLAGS.label_dim, self.keep_prob)
 
-        self.pred = tf.nn.softmax(logits=self.logits, name='pred')
+        self.pred = tf.nn.softmax(logits=self.logits, name='predictions')
         print(self.pred)
         
     def __init__(self,
