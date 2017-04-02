@@ -33,17 +33,7 @@ class stackedLSTM(object):
     
     def get_layers(self, batch_size, seq_len, x, rnn_sizes, keep_prob):
         with tf.variable_scope('LSTM'):
-            rnn_tuple_state = []
-
-            for size in rnn_sizes:
-                shape = [2, None, size]
-                ph = tf.placeholder(tf.float32, shape, name='RNN_init_state_placeholder')
-                rnn_tuple_state.append(
-                    tf.contrib.rnn.LSTMStateTuple(ph[0], ph[1]))
-                
-            rnn_tuple_state = tuple(rnn_tuple_state)
-
-            cells = [tf.contrib.rnn.BasicLSTMCell(size) for size in rnn_sizes]
+            cells = [tf.contrib.rnn.LSTMCell(size) for size in rnn_sizes]
             keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
             cells = [tf.contrib.rnn.DropoutWrapper(cell, output_keep_prob=keep_prob) 
                      for cell in cells]
@@ -52,13 +42,13 @@ class stackedLSTM(object):
             
             with tf.variable_scope('dynamic_wrapper'):
                 output, last_state = tf.nn.dynamic_rnn(
-                    initial_state=rnn_tuple_state,
+                    dtype=tf.float32,
                     inputs=x, cell=multi_cell, 
                     sequence_length=seq_len)
                 zero_state = multi_cell.zero_state(batch_size, tf.float32)
             print(*last_state, sep='\n')
             
-        return output, last_state, keep_prob, rnn_tuple_state, zero_state
+        return output, last_state, keep_prob
 
     def get_name(self):
         rnn_sizes = [str(s) for s in self.rnn_sizes]
@@ -77,7 +67,8 @@ class stackedLSTM(object):
         rnn = self.get_layers(
             self.batch_size, self.seq_len, self.input, self.rnn_sizes, self.keep_prob)
         self.output, self.last_state, self.keep_prob = rnn[:3]
-        self.init_state, self.zero_state = rnn[3:]
+        # Deprecated since 17.04.01
+        # self.init_state, self.zero_state = rnn[3:]
         
         # Last layer's tuple, second element: (c=, h=)
         self.last_output = self.last_state[-1][1]
