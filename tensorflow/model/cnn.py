@@ -127,6 +127,8 @@ class model(object):
             print('\nCNN' + self.name)
             self.build_graph()
 
-def get_output(seq_len, input_op, **kwargs):
+def get_output(seq_len, input_op, return_name=True, **kwargs):
     cnn = model(seq_len, input_op, **kwargs)
+    if return_name:
+        return cnn.output, cnn.name
     return cnn.output

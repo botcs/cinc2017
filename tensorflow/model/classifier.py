@@ -77,9 +77,11 @@ class model(object):
             print('\nFC' + self.name)
             self.build_graph()
 
-def get_logits_and_pred(input_op, **kwargs):
+def get_logits_and_pred(input_op, return_name=True, **kwargs):
     '''Convenience function for retrieveng 
     calssifier model graph definition's output'''
     c = model(input_op, **kwargs)
+    if return_name:
+        return c.logits, c.pred, c.name
     return c.logits, c.pred
     
