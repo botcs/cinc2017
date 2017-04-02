@@ -1,3 +1,4 @@
+#!/usr/bin/env python3.5
 
 # coding: utf-8
 
@@ -21,9 +22,11 @@ import json
 
 flags = tf.app.flags
 flags.DEFINE_integer('gpu', 0, 'device to train on [0]')
-flags.DEFINE_string('model_def', 'test_model.json', 'load hyperparameters from ["model.json"]')
+flags.DEFINE_string('model_def', './hyperparams/test_model.json', 'load hyperparameters from ["model.json"]')
 FLAGS = flags.FLAGS
 FLAGS._parse_flags()
+
+os.environ['CUDA_VISIBLE_DEVICES'] = str(FLAGS.gpu)
 
 
 # # Model definition
@@ -58,7 +61,7 @@ FLAGS._parse_flags()
 '''
 
 
-# In[5]:
+# In[4]:
 
 with open(FLAGS.model_def) as f:
     hyper_param = json.load(f)
@@ -71,7 +74,7 @@ with open(FLAGS.model_def) as f:
     model_name = model_name[:model_name.find('.json')]
 
 
-# In[6]:
+# In[5]:
 
 tf.reset_default_graph()
 batch_size = tf.placeholder_with_default(64, [], name='batch_size')
@@ -85,7 +88,7 @@ fc = classifier.model(input_op=r.last_output, **fc_params)
 logits = fc.logits
 pred = fc.pred
 
-MODEL_PATH = '/tmp/model/' + model_name # + c.name + r.name + classifier.name
+MODEL_PATH = '/tmp/model/' + model_name + c.name + r.name + fc.name
 MODEL_EXISTS = os.path.exists(MODEL_PATH)
 if MODEL_EXISTS:
     print('Model directory is not empty, removing old files')
@@ -191,18 +194,7 @@ sum_ops.append(tf.summary.scalar('accuracy', acc))
 sum_ops.append(tf.summary.image('confusion_matrix', conf_op[None, ..., None], max_outputs=10))
 summaries = tf.summary.merge(sum_ops)
 
-
-
-# In[ ]:
-
 saver = tf.train.Saver(keep_checkpoint_every_n_hours=1)
-#with open('test.txt', 'w') as f:
-    #metagraph = saver.export_meta_graph(as_text=True)
-    #f.write(str(metagraph.ListFields()))
-
-
-# In[ ]:
-
 TRAIN_STEPS = 5000
 with tf.Session() as sess:
     print('Sess started')
@@ -233,19 +225,3 @@ with tf.Session() as sess:
     print('Ending, closing producer threads')
     coord.request_stop()
     coord.join(threads)
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
