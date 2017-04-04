@@ -10,6 +10,8 @@ import numpy as np
 import data.ops
 import model.cnn as cnn
 import model.rnn as rnn
+import model.fourier as fourier
+import model.time_domain as time_domain
 import model.classifier as classifier
 
 import time
@@ -68,6 +70,8 @@ with open(FLAGS.model_def) as f:
     cnn_params = hyper_param['cnn_params']
     rnn_params = hyper_param['rnn_params']
     fc_params = hyper_param['fc_params']
+    fourier_params = hyper_param['fourier_params']
+    time_domain_params = hyper_param['time_domain_params']
     batch_size = hyper_param['batch_size']
     model_name = os.path.split(FLAGS.model_def)[1]
     # remove file ending
@@ -83,7 +87,10 @@ input_op, seq_len, label = data.ops.get_batch_producer(
 
 c = cnn.model(seq_len=seq_len, input_op=input_op, **cnn_params)
 r = rnn.get_model(batch_size=batch_size, seq_len=seq_len, input_op=c.output, **rnn_params)
-fc = classifier.model(input_op=r.last_output, **fc_params)
+f = fourier.get_output(seq_len=seq_len, input_op=input_op,**fourier_params)
+td = time_domain.get_output(seq_len=seq_len, input_op=input_op,**time_domain_params)
+concatenated_features=tf.concat([r.last_output,f,td], 1)
+fc = classifier.model(input_op=concatenated_features, **fc_params)
 
 logits = fc.logits
 pred = fc.pred

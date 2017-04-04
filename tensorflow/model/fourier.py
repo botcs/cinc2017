@@ -13,7 +13,10 @@ FLAGS.featureindices = '33,  27, 17,  38, 134' #selected frequencies
 
 
 def cpu_fft(input_array):
-        return np.fft.fft(input_array)
+	out=np.zeros(input_array.shape)
+	for ind,a in enumerate(input_array):
+            out[ind]=np.absolute(np.fft.fft(a))
+	return out
 
 class model(object):
     '''
@@ -32,24 +35,29 @@ class model(object):
             
             local_device_protos = device_lib.list_local_devices()
             GpuAvailable=False
-            
+            h=tf.squeeze(h,[2,3])
             for x in local_device_protos:
                 if x.device_type == 'GPU':
                     GpuAvailable=True
             if GpuAvailable:
                 #if gpu is available use tf.fft- executes on gpu
                 comp=tf.cast(h,dtype=tf.complex64)
+                
                 f = tf.fft(comp)
             else:
-                f=tf.py_func(cpu_fft, [h], tf.complex128)
+                f=tf.py_func(cpu_fft, [h], tf.float64)
             if use_magnitude:
                 f=tf.abs(f)
             f=tf.cast(f, tf.float32)
-            out=f[...,featureindices[0],:,:]
+            
+            #out=tf.slice(f, [0, featureindices[0]], [int(f_shape[0]), 1])      
+            out=f[...,featureindices[0]]
+            out=tf.reshape(out,[-1,1])
             for ind in range(1,len(featureindices)):
-                out=tf.concat( [out,f[...,featureindices[ind],:,:]],1)
-            out=tf.reshape(out,[-1,len(featureindices)])
-            print(out.get_shape())
+                out2=f[...,featureindices[1]]
+                out2=tf.reshape(out2,[-1,1])
+                out=tf.concat( [out, out2 ],1)
+            #out=tf.reshape(out,[-1,len(featureindices)])
 
         return out, seq_len
 
