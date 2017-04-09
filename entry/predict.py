@@ -69,11 +69,11 @@ print('Building model... done!')
 
 # Load recording
 print('Loading record...', end=' ')
-dir = "./validation/"
+# dir = "./validation/"
 assert len(sys.argv) == 2, "Wrong parameter list in the call of that script."
 fname = sys.argv[1]
-assert os.path.isfile(dir + fname + ".mat"), "Not existing file: " + fname + ".mat"
-data = io.loadmat(dir + fname + '.mat')['val'].astype(np.float32).squeeze()
+assert os.path.isfile(fname + ".mat"), "Not existing file: " + fname + ".mat"
+data = io.loadmat(fname + '.mat')['val'].astype(np.float32).squeeze()
 data -= data.mean()
 data /= data.std()
 print('done!')
@@ -83,7 +83,7 @@ print('done!')
 # Run predictor
 saver = tf.train.Saver()
 label_dict = {0: 'N', 1: 'A', 2: 'O', 3: '~'}
-print('Initializin session...', end=' ')
+print('Initializing session...', end=' ')
 with tf.Session() as sess:
 	saver.restore(sess, './ckpt/test_model--cnn64x1024-64x512-32x512-16x256--rnn--steps64--sizes128-64-32-32-16--fc32-16-8-16550')
 	print('done!')

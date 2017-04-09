@@ -9,4 +9,5 @@ RECORDS
 *.TFRecord
 *.npy
 entry/validation/
+entry/ckpt
 website/AFchallenge
