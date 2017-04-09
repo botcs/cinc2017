@@ -72,7 +72,7 @@ print('Loading record...', end=' ')
 dir = "./validation/"
 assert len(sys.argv) == 2, "Wrong parameter list in the call of that script."
 fname = sys.argv[1]
-assert os.path.isfile(dir + fname + ".mat"), "Not existing file: " + dir + fname + ".mat"
+assert os.path.isfile(dir + fname + ".mat"), "Not existing file: " + fname + ".mat"
 data = io.loadmat(dir + fname + '.mat')['val'].astype(np.float32).squeeze()
 data -= data.mean()
 data /= data.std()
