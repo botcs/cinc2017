@@ -21,4 +21,4 @@
 set -e
 set -o pipefail
 
-python3 predict.py $1 # That script reads data, performs classification and saves result to answeres.txt
+ipython3 predict.py $1 # That script reads data, performs classification and saves result to answeres.txt
