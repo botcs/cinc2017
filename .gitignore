@@ -8,3 +8,4 @@ RECORDS
 *.pyc
 *.TFRecord
 *.npy
+**/ckpt/**

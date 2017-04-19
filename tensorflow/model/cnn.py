@@ -67,9 +67,10 @@ class model(object):
                                              biases_initializer=biases_initializer,
                                              scope=scope)
                 
-                h = tf.contrib.layers.max_pool2d(
-                    h, kernel_size=[pool, 1], stride=[pool, 1])
-                seq_len /= 2
+                if pool > 1:
+                    h = tf.contrib.layers.max_pool2d(
+                        h, kernel_size=[pool, 1], stride=[pool, 1])
+                    seq_len /= 2
                 print(h)
                 h = tf.nn.dropout(h, keep_prob)
         return tf.squeeze(h, axis=2), seq_len
