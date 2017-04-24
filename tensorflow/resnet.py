@@ -60,10 +60,14 @@ cnn_params = {
 c = cnn.model(seq_len=seq_len, input_op=input_op, **cnn_params)
 residual_input = c.output
 for i in range(4):
-    c = cnn.model(seq_len=seq_len, input_op=residual_input, **cnn_params)
+    c = cnn.model(
+        seq_len=seq_len, 
+        input_op=residual_input, 
+        residual=True, 
+        **cnn_params)
     residual_input += c.output
-   
 
+ 
 a = tf.reduce_mean(c.output, axis=1)
 fc = classifier.model(input_op=a, fc_sizes=[32, 16])
 

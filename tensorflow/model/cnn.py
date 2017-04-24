@@ -34,7 +34,8 @@ class model(object):
     def get_layers(self, 
         seq_len, in_node, 
         out_dims, kernel_sizes,
-        pool_sizes, keep_prob, use_bnorm=True):
+        pool_sizes, residual, keep_prob, 
+        use_bnorm=True):
         '''
         `out_dims`: a list of integers for the featuremap [out_dims1, out_dims2, ...]
         `kernels_sizes`: a single integer or 
@@ -47,7 +48,12 @@ class model(object):
         
         
         # Converting to NHWC where N is batch and H will be seq_len
-        h = in_node[..., None, None]
+        
+        if not residual:
+            h = in_node[..., None, None]
+        else:
+            h = in_node
+        
         if use_bnorm:
             biases_initializer = None
             normalizer_fn = tf.contrib.layers.batch_norm
@@ -71,8 +77,11 @@ class model(object):
                     h = tf.contrib.layers.max_pool2d(
                         h, kernel_size=[pool, 1], stride=[pool, 1])
                     seq_len /= 2
-                print(h)
+                
                 h = tf.nn.dropout(h, keep_prob)
+                print(h)
+        if residual:
+            return h, seq_len
         return tf.squeeze(h, axis=2), seq_len
     
     def get_name(self):
@@ -90,9 +99,13 @@ class model(object):
         self.keep_prob = tf.placeholder_with_default(self.def_keep_prob, [], 'keep_prob')
         
         self.output, self.seq_len = self.get_layers(
-            self.seq_len, self.input, 
-            self.out_dims, self.kernel_sizes, 
-            self.pool_sizes, self.keep_prob)
+            seq_len=self.seq_len, 
+            in_node=self.input, 
+            out_dims=self.out_dims, 
+            kernel_sizes=self.kernel_sizes, 
+            pool_sizes=self.pool_sizes, 
+            residual=self.residual, 
+            keep_prob=self.keep_prob)
     
         
     def __init__(self,
@@ -102,6 +115,7 @@ class model(object):
             kernel_sizes=[int(s) for s in FLAGS.kernel_sizes.split(',')],
             pool_sizes=[int(s) for s in FLAGS.pool_sizes.split(',')],
             keep_prob=FLAGS.keep_prob,
+            residual=False,
             model_name=None):
         '''
         Initializer default vales use tf.app.flags
@@ -123,9 +137,10 @@ class model(object):
         
         
         self.def_keep_prob = keep_prob
+        self.residual = residual
         self.name = self.get_name()
-        with tf.variable_scope('CNN'):
-            print('\nCNN' + self.name)
+        with tf.variable_scope(model_name):
+            print(model_name + self.name)
             self.build_graph()
 
 def get_output(seq_len, input_op, return_name=True, **kwargs):

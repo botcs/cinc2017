@@ -151,11 +151,11 @@ with tf.name_scope('loss'):
 # In[10]:
 
 with tf.name_scope('train'):
+    TS = tf.constant(7000, name='TRAIN_STEPS')
     global_step = tf.Variable(initial_value=0, trainable=False, name='global_step')
-    boundaries = [8000, 40000, 72000, 12000]
+    boundaries = [TS//5, 2*TS//5, 3*TS//5, 4*TS//5]
     values = [0.05, 0.01, 0.005, 0.001, 0.0001]
-    learning_rate = tf.train.piecewise_constant(global_step, boundaries, values)
-
+    
     grad_clip = tf.Variable(initial_value=5., trainable=False, name='grad_clip')
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     gvs = optimizer.compute_gradients(loss)
@@ -191,7 +191,7 @@ saver = tf.train.Saver(keep_checkpoint_every_n_hours=1)
     #metagraph = saver.export_meta_graph(as_text=True)
     #f.write(str(metagraph.ListFields()))
     
-TRAIN_STEPS = 200000
+
 with tf.Session() as sess:
     print('Sess started')
     
