@@ -9,3 +9,5 @@ RECORDS
 *.TFRecord
 *.npy
 **/ckpt/**
+**/logs/**
+*.out
