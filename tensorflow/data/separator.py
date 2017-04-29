@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.5
 # coding: utf-8
 
 import os
@@ -11,8 +11,8 @@ def main(args):
   # class foo(object):
   #   pass
   # args = foo()
-  args.refname='raw/training2017/REFERENCE.csv'
-  annot_lines = open(args.refname, 'r').read().splitlines()
+  #args.ref='raw/training2017/REFERENCE.csv'
+  annot_lines = open(args.ref, 'r').read().splitlines()
   np.random.shuffle(annot_lines)
   annot_dict = {s:s.split(',')[1] for s in annot_lines}
   index_dict = {'N':[],'A':[],'O':[],'~':[]}
@@ -28,7 +28,7 @@ def main(args):
     hist = (x[0], l, floor(l*TRAIN), floor(l*VAL), l-floor((TRAIN+VAL)*l))
     print('%s,\t%d,\t%d,\t%d\t%d'%hist)
 
-  fp = lambda x: os.path.normpath(os.path.dirname(args.refname)+'/'+x)
+  fp = lambda x: os.path.normpath(os.path.dirname(args.ref)+'/'+x)
   train_reference = open(fp('TRAIN.csv'), 'w')
   validation_reference = open(fp('VALIDATION.csv'), 'w')
   test_reference = open(fp('TEST.csv'), 'w')
