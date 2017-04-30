@@ -9,47 +9,49 @@ import argparse
 
 def read_mat(refname, dir):
 
-    data = []
-    label = []
-    lens = []
-    annotations = open(refname, 'r').read().splitlines()
-    for i, line in enumerate(annotations, 1):
-        fname, label_str = line.split(',')
-        location = os.path.normpath(dir + '/' + fname + '.mat')
-        x = io.loadmat(location)['val']\
-            .astype(np.float32).squeeze()
-        data.append(x)
-        label.append(label_str)
-        lens.append(len(x))
-        if i % 50 == 0:
-            print('\rReading files: %05d' % i, end='', flush=True)
+  data = []
+  label = []
+  lens = []
+  annotations = open(refname, 'r').read().splitlines()
+  for i, line in enumerate(annotations, 1):
+    fname, label_str = line.split(',')
+    location = os.path.normpath(dir + '/' + fname + '.mat')
+    x = io.loadmat(location)['val']\
+      .astype(np.float32).squeeze()
+    data.append(x)
+    label.append(label_str)
+    lens.append(len(x))
+    if i % 50 == 0:
+      print('\rReading files: %05d' % i, end='', flush=True)
 
-    print('\rReading files: %05d\t' % i, end='', flush=True)
-    assert(len(label) == len(data) == len(lens))
-    print('Reading successful!')
+  print('\rReading files: %05d\t' % i, end='', flush=True)
+  assert(len(label) == len(data) == len(lens))
+  print('Reading successful!')
 
-    # for fancy indexing
-    data = np.array(data)
-    label = np.array(label)
-    lens = np.array(lens)
-    return data, label, lens, refname
+  # for fancy indexing
+  data = np.array(data)
+  label = np.array(label)
+  lens = np.array(lens)
+  return data, label, lens, refname
 
 
 def write_mat(data, label, refname, dir):
 
-    refname = os.path.normpath(dir + '/' + os.path.basename(refname))
-    annotations = open(refname, 'w')
-    for i, (d, l) in enumerate(zip(data, label), 1):
-        record_name = 'AUG%05d' % i
-        fname = os.path.normpath(dir + '/' + record_name + '.mat')
-        annotations.write('%s,%s\n' % (record_name, l))
-        io.savemat(fname, {'val': d})
-        if i % 50 == 0:
-            print('\rWriting files: %05d' % i, end='', flush=True)
+  refname = os.path.normpath(dir + '/' + os.path.basename(refname))
+  annotations = open(refname, 'w')
+  for i, (d, l) in enumerate(zip(data, label), 1):
+    record_name = 'AUG%05d' % i
+    fname = os.path.normpath(dir + '/' + record_name + '.mat')
+    annotations.write('%s,%s\n' % (record_name, l))
+    io.savemat(fname, {'val': d})
+    if i % 50 == 0:
+      print('\rWriting files: %05d' % i, end='', flush=True)
 
     print('\rWriting files: %05d\t' % i, end='', flush=True)
     print('Writing successful!')
 
+
+def augment(data, num_samples, labels=None, alfa=.01, beta=.01):
 
 def augment(data, num_samples, labels=None, alfa=.01, beta=.01):
 
@@ -69,28 +71,27 @@ def augment(data, num_samples, labels=None, alfa=.01, beta=.01):
 
     return res, res_labels
 
-
 def main(args):
 
-    orig = read_mat(refname=args.ref, dir=args.from_dir)
-    data, label = orig[:2]
-    classes = 'NAO~'
+  orig = read_mat(refname=args.ref, dir=args.from_dir)
+  data, label = orig[:2]
+  classes = 'NAO~'
 
-    if not os.path.exists(args.to_dir):
-        print('make directory:', args.to_dir)
-        os.mkdir(args.to_dir)
+  if not os.path.exists(args.to_dir):
+    print('make directory:', args.to_dir)
+    os.mkdir(args.to_dir)
 
-    data_sets = [data[label == c] for c in classes]
-    aug_data = []
-    aug_label = []
-    print('Augmenting...\t', end='', flush=True)
-    for data_set, label in zip(data_sets, classes):
-        res = augment(data_set, args.N, [label])
-        aug_data.extend(res[0])
-        aug_label.extend(res[1])
-        print('%s\t' % label, end='', flush=True)
-    print('Done!')
-    write_mat(aug_data, aug_label, args.ref, dir=args.to_dir)
+  data_sets = [data[label == c] for c in classes]
+  aug_data = []
+  aug_label = []
+  print('Augmenting...\t', end='', flush=True)
+  for data_set, label in zip(data_sets, classes):
+    res = augment(data_set, args.N, [label])
+    aug_data.extend(res[0])
+    aug_label.extend(res[1])
+    print('%s\t' % label, end='', flush=True)
+  print('Done!')
+  write_mat(aug_data, aug_label, args.ref, dir=args.to_dir)
 
 
 if __name__ == '__main__':

@@ -13,10 +13,10 @@ NumData = len(OnlyFiles)
 Data = np.zeros((NumData, DataLength))
 for DataInd, FileName in enumerate(OnlyFiles):
   with open(Dir + '/' + FileName) as f:
-    Lines = f.readlines()
-    Parts = Lines[0].split(",")
-      for Ind in range(DataLength):
-        Data[DataInd][Ind] = float(Parts[Ind])
+  Lines = f.readlines()
+  Parts = Lines[0].split(",")
+  for Ind in range(DataLength):
+  Data[DataInd][Ind] = float(Parts[Ind])
 
 np.save('Data2700', Data)
 # Data=np.load('Data2700')

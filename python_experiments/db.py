@@ -9,14 +9,14 @@ import requests
 
 def sqlQuery(sql):
   r = requests.post("https://users.itk.ppke.hu/~hakta/challenge/query.php",
-            data={'password': "qVK0fFt6zKLH{6T", 'sql': sql})
+    data={'password': "qVK0fFt6zKLH{6T", 'sql': sql})
   if r.status_code != requests.codes.ok:
-    raise Exception("ERROR " + str(r.status_code) + ": " + r.reason)
+  raise Exception("ERROR " + str(r.status_code) + ": " + r.reason)
   else:
-    try:
-      resp = r.json()
-      if resp["error"] != "OK":
-        raise Exception(resp["error"][2])
-      return resp["data"]
-    except ValueError:
-      print(r.text)
+  try:
+  resp = r.json()
+  if resp["error"] != "OK":
+  raise Exception(resp["error"][2])
+  return resp["data"]
+  except ValueError:
+  print(r.text)

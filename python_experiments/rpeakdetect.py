@@ -78,10 +78,10 @@ def detect_beats(
   thresholds = []
   max_powers = []
   for i in range(len(decg_power) / ransac_window_size):
-    sample = slice(i * ransac_window_size, (i + 1) * ransac_window_size)
-    d = decg_power[sample]
-    thresholds.append(0.5 * np.std(d))
-    max_powers.append(np.max(d))
+  sample = slice(i * ransac_window_size, (i + 1) * ransac_window_size)
+  d = decg_power[sample]
+  thresholds.append(0.5 * np.std(d))
+  max_powers.append(np.max(d))
 
   threshold = 0.5 * np.std(decg_power)
   threshold = np.median(thresholds)
@@ -97,8 +97,8 @@ def detect_beats(
 
   mean_window_len = int(rate * 0.125 + 1)
   lp_energy = np.convolve(
-    shannon_energy, [
-      1.0 / mean_window_len] * mean_window_len, mode='same')
+  shannon_energy, [
+  1.0 / mean_window_len] * mean_window_len, mode='same')
   #lp_energy = scipy.signal.filtfilt(*lowpass2, x=shannon_energy)
 
   lp_energy = scipy.ndimage.gaussian_filter1d(lp_energy, rate / 8.0)
@@ -126,8 +126,8 @@ if __name__ == '__main__':
 
   ecg = np.loadtxt(sys.stdin)
   if len(sys.argv) > 2 and sys.argv[2] == 'plot':
-    plot_peak_detection(ecg, rate)
+  plot_peak_detection(ecg, rate)
   else:
-    peaks = detect_beats(ecg, rate)
-    sys.stdout.write("\n".join(map(str, peaks)))
+  peaks = detect_beats(ecg, rate)
+  sys.stdout.write("\n".join(map(str, peaks)))
   sys.stdout.write("\n")

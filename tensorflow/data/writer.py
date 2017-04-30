@@ -104,6 +104,7 @@ def read_raw(refname, dir):
 =======
   return data, label, class_hist, refname
 
+
 def make_example(sequence, label):
   # The object we return
   ex = tf.train.SequenceExample()
@@ -124,12 +125,12 @@ def write_TFRecord(data, label, fname='train', threads=8):
   with open(fname + '.TFRecord', 'w') as fp:
     writer = tf.python_io.TFRecordWriter(fp.name)
 
-    print('Sampling %s...'%fname)
+    print('Sampling %s...' % fname)
 
     for i, (x, y) in enumerate(zip(data, label), 1):
       ex = make_example(x, y)
       writer.write(ex.SerializeToString())
-      print('\r%5d'%i, end=' ', flush=True)
+      print('\r%5d' % i, end=' ', flush=True)
     writer.close()
     print("\nWrote to {}".format(fp.name))
 
@@ -141,6 +142,7 @@ def main(args):
     os.mkdir(os.path.dirname(args.to))
   to_path = os.path.normpath(args.to)
   write_TFRecord(data, label, to_path)
+
 
 if __name__ == '__main__':
 <<<<<<< HEAD

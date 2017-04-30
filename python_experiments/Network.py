@@ -18,7 +18,7 @@ def conv2d(x, W, b, strides=1):
 def maxpool2d(x, k=3):
   # MaxPool2D
   return tf.nn.max_pool(x, ksize=[1, k, k, 1], strides=[1, k, k, 1],
-              padding='SAME')
+    padding='SAME')
 
 
 # Create model
@@ -81,26 +81,26 @@ def GetRandomWeightsAndBiases(n_classes):
   # Define random parameters for training in the network
   # Store layers weight & bias
   weights = {
-    # 5x5 conv, 3 input, 64 outputs
-    'wc1': tf.Variable(tf.random_normal([5, 1, 1, 512])),
-    # 5x5 conv, 64 inputs, 32 outputs
-    'wc2': tf.Variable(tf.random_normal([5, 1, 512, 512])),
-    'wc3': tf.Variable(tf.random_normal([3, 1, 512, 512])),
-    'wc4': tf.Variable(tf.random_normal([3, 1, 512, 256])),
-    'wc5': tf.Variable(tf.random_normal([3, 1, 256, 256])),
-    # fully connected, 6*6*16 inputs, 1024 outputs
-    'wd1': tf.Variable(tf.random_normal([9 * 1 * 256, 20])),
-    # 1024 inputs, 10 outputs (class prediction)
-    'out': tf.Variable(tf.random_normal([20, n_classes]))
+  # 5x5 conv, 3 input, 64 outputs
+  'wc1': tf.Variable(tf.random_normal([5, 1, 1, 512])),
+  # 5x5 conv, 64 inputs, 32 outputs
+  'wc2': tf.Variable(tf.random_normal([5, 1, 512, 512])),
+  'wc3': tf.Variable(tf.random_normal([3, 1, 512, 512])),
+  'wc4': tf.Variable(tf.random_normal([3, 1, 512, 256])),
+  'wc5': tf.Variable(tf.random_normal([3, 1, 256, 256])),
+  # fully connected, 6*6*16 inputs, 1024 outputs
+  'wd1': tf.Variable(tf.random_normal([9 * 1 * 256, 20])),
+  # 1024 inputs, 10 outputs (class prediction)
+  'out': tf.Variable(tf.random_normal([20, n_classes]))
   }
 
   biases = {
-    'bc1': tf.Variable(tf.random_normal([512])),
-    'bc2': tf.Variable(tf.random_normal([512])),
-    'bc3': tf.Variable(tf.random_normal([512])),
-    'bc4': tf.Variable(tf.random_normal([256])),
-    'bc5': tf.Variable(tf.random_normal([256])),
-    'bd1': tf.Variable(tf.random_normal([20])),
-    'out': tf.Variable(tf.random_normal([n_classes]))
+  'bc1': tf.Variable(tf.random_normal([512])),
+  'bc2': tf.Variable(tf.random_normal([512])),
+  'bc3': tf.Variable(tf.random_normal([512])),
+  'bc4': tf.Variable(tf.random_normal([256])),
+  'bc5': tf.Variable(tf.random_normal([256])),
+  'bd1': tf.Variable(tf.random_normal([20])),
+  'out': tf.Variable(tf.random_normal([n_classes]))
   }
   return weights, biases
