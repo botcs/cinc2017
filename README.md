@@ -1,16 +1,9 @@
-# README #
+# Test branch #
+branch for hyper-parameter tuning.
+Only scripts, and `.json` files.
 
-This repo would store our exepriments for the af challenge
-
-##TODO:
-
-**Marci**| **Tomi** | **Andris** | **Csabi**
----------- | --------- |---------- | --------- |
-AFChallenge kontakt | TensorFlow implement | Noise/Valid filter | Augment
-Entry | Entry | | Validation Set
-Time Domain filter *(300 Hz - Beat Per Minute)*| | | Hierarchic model test env
-
-
-## Workflow
-![Screenshot from 2017-04-27 19-05-13.png](https://bitbucket.org/repo/8pKrpa/images/1305719799-Screenshot%20from%202017-04-27%2019-05-13.png)
-Drawn with [draw.io](https://www.draw.io/?lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1#R7Vxbc9o4FP41vO74jnkMaWh3pkkzzWz3cUfYArSVLSqbhOyv3yNbvkkimMRQQptOE3wsydanc%2FnOkZKRe51sP3K0Xt2yGNORY8Xbkfth5Dj22LLgh5A8l5KJPy4FS05i2agRPJD%2FsBTKfssNiXHWaZgzRnOy7gojlqY4yjsyxDl76jZbMNp96hot5ROtRvAQIYq1Zn%2BTOF%2BV0tBvtf6EyXJVPdmuJjxH0fclZ5tUPm%2FkuIviq7ydoGos2T5boZg9tUTuzci95ozl5adke42pwLaCrew323G3fm%2BO07xPB7fs8IjoRk79jpEMg4hx%2BPYNUWjpBBQGm85BEizFpxnZws3p%2Fa2cRP5cAQfzWYuPm4ReRTmM4U4fMc8JQPsZzTG9ZxnJCUuhyZzlOUugARU3pjVw14yKfh8a6JoxrihZir45W4N0lScULmz4mOWcfa%2FXCmCc6khIcMRYeNsSSWQ%2BYpbgnD9DE3nXC%2Fyyi9Rix5PXT41OBHIhV211qFYXSTVc1kM3SwEf5GqYV0Y0VZZGQ1sAtu4%2F0dpe0JxiVedMAMCMuwD4OgC2MzkSAna4H4FK36LNHH5Mn1Ykxw9rFAnZE%2FimrpboUNUo71eK1pzHhkUPhpjx5KxmXGmB1VUCS9OBY%2BFRPeq88HAnHTy8E%2BJhnyMefheP4IR46OHr5D7S7lqHHerTN7vIyQAAnMJDujuQOthD2u4QLrJHWDzhlM0uctzPBMIh8OhhAqfHQ3GRtn06n2CfwkceDIjiIyf98KjTijc5SX8%2FIDiNr0TaJDChKMtI9BK9dkFSUHUsHmGJ%2BxLQBcVbOdA0YokYprxf9G8xe6v4gjs4hsRLvgjgS%2FLnr5gikSLcNHd2k3nRva9P8g0IVzJePPSxm%2F6ZUJdPuGcE3qQJAn7XAbi2snAZ2%2FAIy17tfEwZSPUk2kA54kucawMVSlBPu59eBJpe3HO85izCWaZpCOh5ri1kylKxOgtCqSJq6c6CpbnM8CGdkNdyYNuQ2yUkjotFR1IQwaJjXmuBIWRrirE7WisZjYGs1EbX1hPvcEP8K8P8y%2FxfUZ5wrCLHrYyvTKdj8igGlJME6Y%2BNyPqnFC%2Fy5qpKuatejKoSSloSlAjnlc4z8eNqs0wAl8Kaqtbwkp0Oe4a4YzyBV%2FzvwDGaCZqHvXnEqdAvEFKSLvUKQ%2BtR3WF2vwAIdXDU%2FoW2UPD0K0ZjzLtlohQlUtu%2FIU4KAljIa4sZt3RLWpNuIprb3G8tmqbvtAlTqGLQekEL572CdoDsIKYSdi2lNou2qfiBbirjw00FLlvWssNd9eC67yOMKTGr15qcJoy544HCmOedLozpNZMZoWBGhV%2B5zCjmuV14310U27wQxT6hNI44WuRglo61wCjfcFGQhqXjKDogDpVqAD1jnInX69frQcQk8bwFxz82OI0E7qkpDBqjlTEu6dMdNC657QrFxcclV6nKmwKT4xq0%2F0iBydUTzlsUrUgqlOgzRjw1eSJpSvtyz70rUO%2BiZDAGPOizsDsZrUrJVLb4INwWSdASX6mDFtJvxj2W4hZckQTmMIsogYUCw559hIn9YzvhFv7%2FsYYJFtGz3Msyb8ggHkkHatvDaEIQdt2gEwT9%2FOAQpTe3RyHq5HwkdOYugNCXj7RNHnrHPg5j7x3wFH%2FcdQGv5imBt2eg4XiKq5dh7stc%2B4KJytjq4hsY9g8rYN4dUbndiAMJBVcAv5eqyewennF9dwctvuLsDgt%2F%2BlVc9qQ1YvOd4nQJEIr1KfbZhU2tOc7UfP98SErwK5GUwFVJiq75xrMDxyIp4zOMVvPQ93xLj0OLMMJR1GYUotGSo5gA%2FMryn3us8iZdTfDUXbDeObUykK9uDgwYq%2FRaizwWpDqVa6EouiZR4IkZbulERNkmNtLCVryyx68gxB0dURXJF%2F9MqhcUXwNl4wqJ8A0nJIw0dJDtHU%2FnocWikAX4wDISXCa3mEyUIoiBW5g87LvgFpVEIDwSZxIqzW0Gc2ezovi4c%2Fx5XdIgsqQh5udYnwjmkIytxEqJ116vOYOEtRX15wYmUL5JDypxrEmsQDPiehJ%2FpgA6iTfFFEBpgH3kgpIcPomzYUie%2BysxpIlSw%2FzZDMnz9jMkEomTq%2B0leE15pOFC%2BnnVt21uWq5aEHH7RaKKWrwpEPU4vPibYh7l9IG67m617odyTDWmeo4y0HAcs5p7h2OKKvvZk8wBLDVUKpd1UnASyuj3OCL1eyv1bTYZTgYqUU6Ck5Uo%2FR5b7K3jtL3Pzh5UMVQ8kGOFmmWEJsMYIoT5ei6lAdCoub3fkbwQ83vvgZSr8qIeG38JZTwEID1Ol54NIDsOZOue9Xhw9eCQ5wbX%2Ft%2FuOB5cfU6m1lH%2B50OlsiwdKs8A1SvqDTpS%2BlnN94RUqKd2R0OqT6H7fJGyq5Pz%2B6ByBoDqHBO2egd71960gYqfLwu0LYXou2r1oi8N1EbyVGsZjgdWDv%2BSSiGer3vro5VCgnNMsH7NUojvv9LgtO2F4%2BVdQY%2B047cjfqNejCeKXgSvdcTKSIETHE0x9PTrS74SZ1ovv0Q2UfK44KS7qoEpk1N2pK5mL%2B02XfLaaF42MPwS%2FGCLA5fNH0Qpraj5qzPuzf8%3D)
+## Usage
+ - To prepare files run `./data/prepare_data.sh`
+ - (soon to be expanded)
+ 
+Structure motivated by [Morgan's proposal](https://blog.metaflow.fr/tensorflow-a-proposal-of-good-practices-for-files-folders-and-models-architecture-f23171501ae3)
