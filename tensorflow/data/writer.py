@@ -8,12 +8,13 @@ import sys
 import os
 import argparse
 
+
 def read_raw(refname, dir):
   label_dict = {
-    'N':0,
-    'A':1,
-    'O':2,
-    '~':3
+    'N': 0,
+    'A': 1,
+    'O': 2,
+    '~': 3
   }
 
   data = []
@@ -22,13 +23,13 @@ def read_raw(refname, dir):
   annotations = open(refname, 'r').read().splitlines()
   for i, line in enumerate(annotations, 1):
     fname, label_str = line.split(',')
-    location = os.path.normpath(dir+'/'+fname+'.mat')
+    location = os.path.normpath(dir + '/' + fname + '.mat')
     x = io.loadmat(location)['val'].astype(np.float32).squeeze()
     data.append(x)
     y = label_dict[label_str]
     label.append(y)
     lens.append(len(x))
-    if i%50==0:
+    if i % 50 == 0:
       print('\rReading files: %5d   ' % i, end='', flush=True)
 
   print('\rReading files: %5d   ' % i, end='', flush=True)
@@ -41,6 +42,7 @@ def read_raw(refname, dir):
   class_hist = np.histogram(label, bins=len(label_dict))[0]
 
   return data, label, class_hist, refname
+
 
 def make_example(sequence, label):
   # The object we return
@@ -61,12 +63,12 @@ def write_TFRecord(data, label, fname='train', threads=8):
   with open(fname + '.TFRecord', 'w') as fp:
     writer = tf.python_io.TFRecordWriter(fp.name)
 
-    print('Sampling %s...'%fname)
+    print('Sampling %s...' % fname)
 
     for i, (x, y) in enumerate(zip(data, label), 1):
       ex = make_example(x, y)
       writer.write(ex.SerializeToString())
-      print('\r%5d'%i, end=' ', flush=True)
+      print('\r%5d' % i, end=' ', flush=True)
     writer.close()
     print("\nWrote to {}".format(fp.name))
 
@@ -78,6 +80,7 @@ def main(args):
     os.mkdir(os.path.dirname(args.to))
   to_path = os.path.normpath(args.to)
   write_TFRecord(data, label, to_path)
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
