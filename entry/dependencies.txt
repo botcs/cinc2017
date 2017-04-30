@@ -4,7 +4,7 @@
 # prior to running your entry's 'setup.sh' and 'next.sh' scripts.
 # Each package must be on a separate line.
 
-python3
+ipython3
 
 # Installing tensorflow according to the following thread in physionet-challenges forum: https://groups.google.com/forum/#!topic/physionet-challenges/H9wR3it7T5k
 python3-tensorflow = 1.0.0-0~pn1 

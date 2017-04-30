@@ -12,7 +12,8 @@ import csv
 
 feature_vector=[]
 annotation=[]
-folder='Folder_name'
+"folder='A:/Uni/Subjects/ITK_PhD/PhD_2016_2017_2/Challenge_2017\Programok\entry\validation' "
+folder='A:/Uni/Subjects/ITK_PhD/PhD_2016_2017_2/Challenge_2017/Programok/entry/validation/';
 Reference_file='REFERENCE.csv'
 
 with open(folder+Reference_file) as csvfile:
