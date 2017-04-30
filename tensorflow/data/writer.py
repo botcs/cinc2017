@@ -4,16 +4,17 @@
 import numpy as np
 import tensorflow as tf
 import scipy.io as io
-<<<<<<< HEAD
+<< << << < HEAD
 import random
 
-def read_raw(UsedForTraining,dir='../../training2017/'):
-    UsedForTesting=1.0-UsedForTraining
+
+def read_raw(UsedForTraining, dir='../../training2017/'):
+    UsedForTesting = 1.0 - UsedForTraining
     label_dict = {
-        'N':0,
-        'A':1,
-        'O':2,
-        '~':3
+        'N': 0,
+        'A': 1,
+        'O': 2,
+        '~': 3
     }
 
     train_data = []
@@ -21,22 +22,28 @@ def read_raw(UsedForTraining,dir='../../training2017/'):
     test_data = []
     test_label = []
     lens = []
-    annotations = open(dir+'REFERENCE.csv', 'r').read().splitlines()
-    NumRecords=len(annotations)
-    Trainindices=set(random.sample(range(NumRecords),int(NumRecords*UsedForTraining)))
+    annotations = open(dir + 'REFERENCE.csv', 'r').read().splitlines()
+    NumRecords = len(annotations)
+    Trainindices = set(
+    random.sample(
+        range(NumRecords), int(
+            NumRecords * UsedForTraining)))
     for i, line in enumerate(annotations):
         fname, label_str = line.split(',')
-=======
+
+
+== == == =
 import sys
 import os
 import argparse
 
+
 def read_raw(refname, dir):
   label_dict = {
-    'N':0,
-    'A':1,
-    'O':2,
-    '~':3
+    'N': 0,
+    'A': 1,
+    'O': 2,
+    '~': 3
   }
 
   data = []
@@ -45,15 +52,17 @@ def read_raw(refname, dir):
   annotations = open(refname, 'r').read().splitlines()
   for i, line in enumerate(annotations, 1):
     fname, label_str = line.split(',')
-    location = os.path.normpath(dir+'/'+fname+'.mat')
+    location = os.path.normpath(dir + '/' + fname + '.mat')
     x = io.loadmat(location)['val'].astype(np.float32).squeeze()
     data.append(x)
     y = label_dict[label_str]
     label.append(y)
     lens.append(len(x))
-    if i%50==0:
+    if i % 50 == 0:
       print('\rReading files: %5d   ' % i, end='', flush=True)
->>>>>>> origin/deep_learn_develop
+
+
+>>>>>> > origin / deep_learn_develop
 
   print('\rReading files: %5d   ' % i, end='', flush=True)
   assert(len(label) == len(data) == len(lens))
@@ -64,8 +73,7 @@ def read_raw(refname, dir):
   lens = np.array(lens)
   class_hist = np.histogram(label, bins=len(label_dict))[0]
 
-<<<<<<< HEAD
-        
+<< << << < HEAD
 
         y = label_dict[label_str]
         if i in Trainindices:
@@ -75,7 +83,7 @@ def read_raw(refname, dir):
             test_label.append(y)
             test_data.append(x)
         lens.append(len(x))
-        if i%50==0: 
+        if i % 50 == 0:
             print('\rReading files: %05d   ' % i, end='', flush=True)
 
     print('\rReading files: %05d   ' % i, end='', flush=True)
@@ -87,8 +95,8 @@ def read_raw(refname, dir):
     train_label = np.array(train_label)
     test_data = np.array(test_data)
     test_label = np.array(test_label)
-    #lens = np.array(lens)  # it seems we do not use this at all???
-    #data_size = len(data)
+    # lens = np.array(lens)  # it seems we do not use this at all???
+    # data_size = len(data)
     train_class_hist = np.histogram(train_label, bins=len(label_dict))[0]
     test_class_hist = np.histogram(test_label, bins=len(label_dict))[0]
     
