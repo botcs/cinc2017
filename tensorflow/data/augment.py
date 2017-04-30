@@ -36,10 +36,7 @@ def read_mat(refname, dir):
 
 def write_mat(data, label, refname, dir):
 
-  refname = os.path.normpath(dir+os.path.basename(refname))
-  if not os.path.exists(os.path.dirname(refname)):
-    os.makedirs(os.path.dirname(refname))
-
+  refname = os.path.normpath(dir+'/'+os.path.basename(refname))
   annotations = open(refname, 'w')
   for i, (d, l) in enumerate(zip(data, label), 1):
     record_name = 'AUG%05d'%i
@@ -90,6 +87,7 @@ def main(args):
     res = augment(data_set, args.N, [label])
     aug_data.extend(res[0])
     aug_label.extend(res[1])
+    print('%s\t'%label, end='', flush=True)
   print('Done!')
   write_mat(aug_data, aug_label, args.ref, dir=args.to_dir)
 
