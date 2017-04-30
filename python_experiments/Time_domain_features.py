@@ -10,6 +10,7 @@ def Time_domain_features(min_batch):
 	from scipy import signal
 	from scipy.signal import lfilter, lfilter_zi, butter
 	import csv
+	import Pan_Tompkins
 	
 	feature_vector=[]
 
@@ -17,7 +18,8 @@ def Time_domain_features(min_batch):
 		## import signal
 		fs=300.
 		## PT algorithm
-
+		#y_SM2=Pan_Tompkins(y0)
+		
 		# LP filter
 		b_LPF=[1./32]+ [0]*5 + [-1./16] +[0]*5 +[1./32]
 		a_LPF=[1.,-1.99, 1.] + [0]*10
@@ -180,8 +182,10 @@ def Time_domain_features(min_batch):
 		pSR=round(float(len(S_index))/(len(R_index)-1),3)
 		'''pTR=round(float(len(T_index))/(len(R_index)-1),3)'''
 		
+		BPM=len(R_index)*60/(len(y0)/fs)
+		
 		#features=[pNN50,pQS5,pQT20,pPR20,pPR,pQR,pSR,pTR]
-		features=[pNN50,pQR,pSR]
+		features=[pNN50,pQR,pSR,BPM]
 		feature_vector.append(features)
 			
 	return feature_vector

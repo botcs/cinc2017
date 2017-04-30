@@ -14,7 +14,22 @@ a_DEV=[1]+[0]*6;
 
 b_SM=[1./30]*30;
 a_SM=[1]+[0]*30;
+'''
 
+N=[13, 33, 5, 30, 30]
+
+b_LPF=[1./32]+ [0]*5 + [-1./16] +[0]*5 +[1./32];
+a_LPF=[1.,-1.99, 1.] + [0]*10;
+
+b_HPF=[-1./32]+[0]*15+[1,-1]+[0]*14+[1./32];
+a_HPF=[1.,-0.99]+[0]*31;
+
+b_DEV=[1./4, 1./8, 0, -1./8,-1./4];
+a_DEV=[1]+[0]*4;
+
+b_SM=[1./30]*30;
+a_SM=[1]+[0]*30;
+'''
 DenomCoeff=[b_LPF, b_HPF, b_DEV, b_SM, b_SM]
 NumCoeff=[a_LPF,a_HPF,a_DEV,a_SM, a_SM];
 
@@ -48,8 +63,9 @@ def Pan_Tompkins(pSrc):
 	
 	fs=300.
 	time=np.linspace(0,len(pDst)/fs,len(pDst))
+	print "Hello"
 	#f, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=True)
-	plt.plot(time,pDst)
-	plt.show()
+	#plt.plot(time,pDst)
+	#plt.show()
 	return pDst
 	

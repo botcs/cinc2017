@@ -16,6 +16,8 @@ annotation=[]
 folder='A:/Uni/Subjects/ITK_PhD/PhD_2016_2017_2/Challenge_2017/Programok/entry/validation/';
 Reference_file='REFERENCE.csv'
 
+numer=0
+
 with open(folder+Reference_file) as csvfile:
 	spamreader = csv.reader(csvfile)
 	for row in spamreader:
@@ -206,6 +208,10 @@ with open(folder+Reference_file) as csvfile:
 		#features=[pNN50,pQS5,pQT20,pPR20,pPR,pQR,pSR,pTR]
 		features=[pNN50,pQS5,pQR,pSR]
 		feature_vector.append(features)
+		
+		numer=numer+1
+		if numer>1:
+			 break
 		
 print annotation
 print feature_vector
