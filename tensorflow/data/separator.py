@@ -11,11 +11,11 @@ def main(args):
   # class foo(object):
   #   pass
   # args = foo()
-  #args.ref='raw/training2017/REFERENCE.csv'
+  # args.ref='raw/training2017/REFERENCE.csv'
   annot_lines = open(args.ref, 'r').read().splitlines()
   np.random.shuffle(annot_lines)
-  annot_dict = {s:s.split(',')[1] for s in annot_lines}
-  index_dict = {'N':[],'A':[],'O':[],'~':[]}
+  annot_dict = {s: s.split(',')[1] for s in annot_lines}
+  index_dict = {'N': [], 'A': [], 'O': [], '~': []}
   for idx, line in enumerate(annot_lines):
     index_dict[annot_dict[line]].append(idx)
 
@@ -25,10 +25,11 @@ def main(args):
   print('\tTotal,\tTrain,\tValid,\tTest')
   for x in index_dict.items():
     l = len(x[1])
-    hist = (x[0], l, floor(l*TRAIN), floor(l*VAL), l-floor((TRAIN+VAL)*l))
-    print('%s,\t%d,\t%d,\t%d\t%d'%hist)
+    hist = (x[0], l, floor(l * TRAIN), floor(l * VAL),
+        l - floor((TRAIN + VAL) * l))
+    print('%s,\t%d,\t%d,\t%d\t%d' % hist)
 
-  fp = lambda x: os.path.normpath(os.path.dirname(args.ref)+'/'+x)
+  def fp(x): return os.path.normpath(os.path.dirname(args.ref) + '/' + x)
   train_reference = open(fp('TRAIN.csv'), 'w')
   validation_reference = open(fp('VALIDATION.csv'), 'w')
   test_reference = open(fp('TEST.csv'), 'w')
@@ -36,16 +37,18 @@ def main(args):
   for idxs in index_dict.values():
     l = len(idxs)
     train_reference.writelines(
-      '%s\n'%annot_lines[i] for i in idxs[:floor(l*TRAIN)])
+      '%s\n' % annot_lines[i] for i in idxs[:floor(l * TRAIN)])
     validation_reference.writelines(
-      '%s\n'%annot_lines[i] for i in idxs[floor(l*TRAIN):floor(l*(TRAIN+VAL))])
+      '%s\n' % annot_lines[i] for i in idxs[floor(l * TRAIN):floor(l * (TRAIN + VAL))])
     test_reference.writelines(
-      '%s\n'%annot_lines[i] for i in idxs[floor(l*(TRAIN+VAL)):])
+      '%s\n' % annot_lines[i] for i in idxs[floor(l * (TRAIN + VAL)):])
   print('References written succesfully to:')
   print(train_reference.name,
-        validation_reference.name,
-        test_reference.name,
-        sep='\n')
+      validation_reference.name,
+      test_reference.name,
+      sep='\n')
+
+
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument(
