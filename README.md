@@ -1,15 +1,9 @@
-# README #
+# Test branch #
+branch for hyper-parameter tuning.
+Only scripts, and `.json` files.
 
-This repo would store our exepriments for the af challenge
+## Usage
+ - To prepare files run `cd data && ./prepare_data.sh`
+ - (soon to be expanded)
 
-## RNN news:
-
-Generated sample after training for a single batch of 4 samples:
-
-![heart_beat.png](https://bitbucket.org/repo/8pKrpa/images/2141305241-heart_beat.png)
-
-Generated sample after 5 batches of total 20 samples:
-
-![4batch-heartbeat.png](https://bitbucket.org/repo/8pKrpa/images/2630089451-4batch-heartbeat.png)
-
-Model experiment notebook can be found at `./rnn/model-gen.ipynb`
+Structure motivated by [Morgan's proposal](https://blog.metaflow.fr/tensorflow-a-proposal-of-good-practices-for-files-folders-and-models-architecture-f23171501ae3)
