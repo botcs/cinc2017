@@ -1,11 +1,6 @@
 Botos, Csaba
-Goda, Márton Áron
-Hakkel, Tamás
+Goda, MÃ¡rton Ãron
+Hakkel, TamÃ¡s
 Herczeg, Szilvia
-<<<<<<< HEAD
-Osztheimer, István
-Horváth, András PhD
-=======
-Horváth, András PhD
-Osztheimer, István PhD
->>>>>>> 668ffaeb8312b3157c5d6528383706a50dbb0a2e
+Osztheimer, IstvÃ¡n
+HorvÃ¡th, AndrÃ¡s PhD

@@ -50,9 +50,6 @@ def write_mat(data, label, refname, dir):
     print('\rWriting files: %05d\t' % i, end='', flush=True)
     print('Writing successful!')
 
-
-def augment(data, num_samples, labels=None, alfa=.01, beta=.01):
-
 def augment(data, num_samples, labels=None, alfa=.01, beta=.01):
 
     res = []
