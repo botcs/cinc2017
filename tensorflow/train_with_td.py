@@ -25,9 +25,9 @@ import json
 flags = tf.app.flags
 flags.DEFINE_integer('gpu', 0, 'device to train on [0]')
 flags.DEFINE_string(
-  'model_def',
-  './hyperparams/test_model.json',
-  'load hyperparameters from ["model.json"]')
+    'model_def',
+    './hyperparams/test_model.json',
+    'load hyperparameters from ["model.json"]')
 FLAGS = flags.FLAGS
 FLAGS._parse_flags()
 
@@ -69,16 +69,16 @@ os.environ['CUDA_VISIBLE_DEVICES'] = str(FLAGS.gpu)
 # In[4]:
 
 with open(FLAGS.model_def) as f:
-  hyper_param = json.load(f)
-  cnn_params = hyper_param['cnn_params']
-  rnn_params = hyper_param['rnn_params']
-  fc_params = hyper_param['fc_params']
-  fourier_params = hyper_param['fourier_params']
-  time_domain_params = hyper_param['time_domain_params']
-  batch_size = hyper_param['batch_size']
-  model_name = os.path.split(FLAGS.model_def)[1]
-  # remove file ending
-  model_name = model_name[:model_name.find('.json')]
+    hyper_param = json.load(f)
+    cnn_params = hyper_param['cnn_params']
+    rnn_params = hyper_param['rnn_params']
+    fc_params = hyper_param['fc_params']
+    fourier_params = hyper_param['fourier_params']
+    time_domain_params = hyper_param['time_domain_params']
+    batch_size = hyper_param['batch_size']
+    model_name = os.path.split(FLAGS.model_def)[1]
+    # remove file ending
+    model_name = model_name[:model_name.find('.json')]
 
 
 # In[5]:
@@ -86,14 +86,14 @@ with open(FLAGS.model_def) as f:
 tf.reset_default_graph()
 batch_size = tf.placeholder_with_default(64, [], name='batch_size')
 input_op, seq_len, label, td_feature = data.ops_td.get_batch_producer(
-  batch_size=batch_size, path='./data/train_with_td_features.TFRecord')
+    batch_size=batch_size, path='./data/train_with_td_features.TFRecord')
 
 c = cnn.model(seq_len=seq_len, input_op=input_op, **cnn_params)
 r = rnn.get_model(
-  batch_size=batch_size,
-  seq_len=seq_len,
-  input_op=c.output,
-  **rnn_params)
+    batch_size=batch_size,
+    seq_len=seq_len,
+    input_op=c.output,
+    **rnn_params)
 f = fourier.get_output(seq_len=seq_len, input_op=input_op, **fourier_params)
 #td = time_domain.get_output(seq_len=seq_len, input_op=input_op,**time_domain_params)
 td = tf.reshape(td_feature, [-1, 4])
@@ -107,8 +107,8 @@ pred = fc.pred
 MODEL_PATH = '/tmp/model/' + model_name + c.name + r.name + fc.name
 MODEL_EXISTS = os.path.exists(MODEL_PATH)
 if MODEL_EXISTS:
-  print('Model directory is not empty, removing old files')
-  shutil.rmtree(MODEL_PATH)
+    print('Model directory is not empty, removing old files')
+    shutil.rmtree(MODEL_PATH)
 
 
 # # Time measure
@@ -118,23 +118,23 @@ if MODEL_EXISTS:
 # In[3]:
 
 def measure_time(op, feed_dict={}, n_times=10):
-  with tf.Session() as sess:
-    print('Sess started')
-    coord = tf.train.Coordinator()
-    tf.global_variables_initializer().run()
-    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+    with tf.Session() as sess:
+        print('Sess started')
+        coord = tf.train.Coordinator()
+        tf.global_variables_initializer().run()
+        threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
-    print('Evaluating')
-    for _ in range(n_times):
-      t = time.time()
-      fetch = sess.run(op, feed_dict)
-      print(fetch, 'Eval time:', time.time() - t)
+        print('Evaluating')
+        for _ in range(n_times):
+            t = time.time()
+            fetch = sess.run(op, feed_dict)
+            print(fetch, 'Eval time:', time.time() - t)
 
-    print('Closing threads')
-    coord.request_stop()
-    coord.join(threads)
+        print('Closing threads')
+        coord.request_stop()
+        coord.join(threads)
 
-    return fetch
+        return fetch
 
 
 # # Evaluation
@@ -146,22 +146,22 @@ def measure_time(op, feed_dict={}, n_times=10):
 # In[4]:
 
 with tf.name_scope('evaluation'):
-  with tf.name_scope('one_hot_encoding'):
-    y_oh = tf.cast(tf.equal(logits, tf.reduce_max(
-      logits, axis=1)[:, None]), tf.float32)[..., None]
+    with tf.name_scope('one_hot_encoding'):
+        y_oh = tf.cast(tf.equal(logits, tf.reduce_max(
+            logits, axis=1)[:, None]), tf.float32)[..., None]
 
-    label_oh = tf.one_hot(label, depth=4)[..., None]
-  with tf.name_scope('confusion_matrix'):
-    conf_op = tf.reduce_sum(tf.transpose(y_oh, perm=[0, 2, 1]) * label_oh,
-                axis=0, name='result')
+        label_oh = tf.one_hot(label, depth=4)[..., None]
+    with tf.name_scope('confusion_matrix'):
+        conf_op = tf.reduce_sum(tf.transpose(y_oh, perm=[0, 2, 1]) * label_oh,
+                                axis=0, name='result')
 
-  with tf.name_scope('accuracy'):
-    y_tot = tf.reduce_sum(conf_op, axis=0, name='label_class_sum')
-    label_tot = tf.reduce_sum(conf_op, axis=1, name='pred_class_sum')
-    correct_op = tf.diag_part(conf_op, name='correct_class_sum')
-    eps = tf.constant([1e-10] * 4, name='eps')
-    acc = tf.reduce_mean(
-      2 * correct_op / (y_tot + label_tot + eps), name='result')
+    with tf.name_scope('accuracy'):
+        y_tot = tf.reduce_sum(conf_op, axis=0, name='label_class_sum')
+        label_tot = tf.reduce_sum(conf_op, axis=1, name='pred_class_sum')
+        correct_op = tf.diag_part(conf_op, name='correct_class_sum')
+        eps = tf.constant([1e-10] * 4, name='eps')
+        acc = tf.reduce_mean(
+            2 * correct_op / (y_tot + label_tot + eps), name='result')
 
 
 # # Sparse, weighted softmax loss
@@ -170,18 +170,18 @@ with tf.name_scope('evaluation'):
 
 class_hist = np.load('./data/class_hist.npy')
 with tf.name_scope('loss'):
-  #weight = tf.constant([.1, 1, .2, 3])
-  weight = tf.constant(
-    1 -
-    np.sqrt(
-      class_hist /
-      class_hist.sum()),
-    name='weights')
-  weight = tf.gather(weight, label, name='weight_selector')
-  loss = tf.losses.sparse_softmax_cross_entropy(
-    label, logits, weight, scope='weighted_loss')
-  unweighted_loss = tf.losses.sparse_softmax_cross_entropy(
-    label, logits, scope='unweighted_loss')
+    #weight = tf.constant([.1, 1, .2, 3])
+    weight = tf.constant(
+        1 -
+        np.sqrt(
+            class_hist /
+            class_hist.sum()),
+        name='weights')
+    weight = tf.gather(weight, label, name='weight_selector')
+    loss = tf.losses.sparse_softmax_cross_entropy(
+        label, logits, weight, scope='weighted_loss')
+    unweighted_loss = tf.losses.sparse_softmax_cross_entropy(
+        label, logits, scope='unweighted_loss')
 
 
 # # Train operator
@@ -189,25 +189,25 @@ with tf.name_scope('loss'):
 # In[6]:
 
 with tf.name_scope('train'):
-  learning_rate = tf.Variable(
-    initial_value=.05,
-    trainable=False,
-    name='learning_rate')
-  global_step = tf.Variable(
-    initial_value=0,
-    trainable=False,
-    name='global_step')
-  grad_clip = tf.Variable(
-    initial_value=3.,
-    trainable=False,
-    name='grad_clip')
-  optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
-  gvs = optimizer.compute_gradients(loss)
-  with tf.name_scope('gradient_clipping'):
-    capped_gvs = [(tf.clip_by_value(grad, -grad_clip, grad_clip), var)
-            for grad, var in gvs]
+    learning_rate = tf.Variable(
+        initial_value=.05,
+        trainable=False,
+        name='learning_rate')
+    global_step = tf.Variable(
+        initial_value=0,
+        trainable=False,
+        name='global_step')
+    grad_clip = tf.Variable(
+        initial_value=3.,
+        trainable=False,
+        name='grad_clip')
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+    gvs = optimizer.compute_gradients(loss)
+    with tf.name_scope('gradient_clipping'):
+        capped_gvs = [(tf.clip_by_value(grad, -grad_clip, grad_clip), var)
+                      for grad, var in gvs]
 
-  opt = optimizer.apply_gradients(capped_gvs, global_step)
+    opt = optimizer.apply_gradients(capped_gvs, global_step)
 
 
 # # Summaries
@@ -217,45 +217,45 @@ with tf.name_scope('train'):
 train_writer = tf.summary.FileWriter(MODEL_PATH, graph=tf.get_default_graph())
 sum_ops = []
 for v in tf.trainable_variables():
-  sum_ops.append(tf.summary.histogram(v.name[:-2], v))
-  sum_ops.append(tf.summary.histogram(
-    'gradients/' + v.name[:-2], tf.gradients(loss, v)))
+    sum_ops.append(tf.summary.histogram(v.name[:-2], v))
+    sum_ops.append(tf.summary.histogram(
+        'gradients/' + v.name[:-2], tf.gradients(loss, v)))
 
 sum_ops.append(tf.summary.scalar('weighted_loss', loss))
 sum_ops.append(tf.summary.scalar('unweighted_loss', unweighted_loss))
 sum_ops.append(tf.summary.scalar('accuracy', acc))
 sum_ops.append(tf.summary.image('confusion_matrix',
-                conf_op[None, ..., None], max_outputs=10))
+                                conf_op[None, ..., None], max_outputs=10))
 summaries = tf.summary.merge(sum_ops)
 
 saver = tf.train.Saver(keep_checkpoint_every_n_hours=1)
 TRAIN_STEPS = 5000
 with tf.Session() as sess:
-  print('Sess started')
+    print('Sess started')
 
-  print('Initializing model')
-  tf.global_variables_initializer().run()
+    print('Initializing model')
+    tf.global_variables_initializer().run()
 
-  coord = tf.train.Coordinator()
-  threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
-  print('Training')
-  for i in range(TRAIN_STEPS):
-    t = time.time()
-    fetch = sess.run([opt, loss, acc, global_step])
-    step = fetch[-1]
-    print('%d/%d' % (step, TRAIN_STEPS),
-        'time:%f' % (time.time() - t),
-        'loss:%f' % fetch[1],
-        'acc:%f' % fetch[2]
-        )
-    if step % 10 == 0:
-      print('Evaluating summaries...')
-      train_writer.add_summary(summaries.eval(), global_step=fetch[-1])
-    if step % 50 == 0:
-      print('Saving model...')
-      print(saver.save(sess, MODEL_PATH, global_step=fetch[-1]))
+    print('Training')
+    for i in range(TRAIN_STEPS):
+        t = time.time()
+        fetch = sess.run([opt, loss, acc, global_step])
+        step = fetch[-1]
+        print('%d/%d' % (step, TRAIN_STEPS),
+              'time:%f' % (time.time() - t),
+              'loss:%f' % fetch[1],
+              'acc:%f' % fetch[2]
+              )
+        if step % 10 == 0:
+            print('Evaluating summaries...')
+            train_writer.add_summary(summaries.eval(), global_step=fetch[-1])
+        if step % 50 == 0:
+            print('Saving model...')
+            print(saver.save(sess, MODEL_PATH, global_step=fetch[-1]))
 
-  print('Ending, closing producer threads')
-  coord.request_stop()
-  coord.join(threads)
+    print('Ending, closing producer threads')
+    coord.request_stop()
+    coord.join(threads)

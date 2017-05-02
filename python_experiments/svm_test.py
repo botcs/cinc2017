@@ -11,11 +11,11 @@ plt.show()
 '''
 # The same data as 2d vector
 X = np.array([[1, 2],
-        [5, 8],
-        [1.5, 1.8],
-        [8, 8],
-        [1, 0.6],
-        [9, 11]])
+              [5, 8],
+              [1.5, 1.8],
+              [8, 8],
+              [1, 0.6],
+              [9, 11]])
 
 Z = np.load('feature_vector.npy')
 

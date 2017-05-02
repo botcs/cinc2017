@@ -35,37 +35,37 @@ NumCoeff = [a_LPF, a_HPF, a_DEV, a_SM, a_SM]
 
 
 def Pan_Tompkins(pSrc):
-  signal = tuple(pSrc)
-  BLOCK_SIZE = len(pSrc)
-  pDst = np.array([None] * BLOCK_SIZE)
-  s = len(N)
-  for i in range(s):
-    Reg = [0] * N[i]
-    for j in range(BLOCK_SIZE):
+    signal = tuple(pSrc)
+    BLOCK_SIZE = len(pSrc)
+    pDst = np.array([None] * BLOCK_SIZE)
+    s = len(N)
+    for i in range(s):
+        Reg = [0] * N[i]
+        for j in range(BLOCK_SIZE):
 
-      Reg[1:] = Reg[:-1]
+            Reg[1:] = Reg[:-1]
 
-      # The denominator
-      Reg[0] = pSrc[j]
-      for k in range(N[i]):
-        Reg[0] = Reg[0] - DenomCoeff[i][k] * Reg[k]
+            # The denominator
+            Reg[0] = pSrc[j]
+            for k in range(N[i]):
+                Reg[0] = Reg[0] - DenomCoeff[i][k] * Reg[k]
 
-      # The numerator
-      y = 0
-      for k in range(N[i]):
-        y = y + NumCoeff[i][k] * Reg[k]
+            # The numerator
+            y = 0
+            for k in range(N[i]):
+                y = y + NumCoeff[i][k] * Reg[k]
 
-      pDst[j] = y
+            pDst[j] = y
 
-    if i == 2:
-      pDst = pDst * pDst
-    if i > 1:
-      pSrc = pDst
+        if i == 2:
+            pDst = pDst * pDst
+        if i > 1:
+            pSrc = pDst
 
-  fs = 300.
-  time = np.linspace(0, len(pDst) / fs, len(pDst))
-  print "Hello"
-  #f, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=True)
-  # plt.plot(time,pDst)
-  # plt.show()
-  return pDst
+    fs = 300.
+    time = np.linspace(0, len(pDst) / fs, len(pDst))
+    print "Hello"
+    #f, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=True)
+    # plt.plot(time,pDst)
+    # plt.show()
+    return pDst

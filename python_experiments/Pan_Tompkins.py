@@ -82,50 +82,50 @@ max_PQ_d = 0.45 * fs
 
 # Q-R-S detection
 for index, value in enumerate(y_QRS):
-  if index > max_RR_d and index < len(y_QRS) - max_RR_d:
-  if y_SM2[index] == max(
-  y_SM2[index - int(max_RR_d / 2):index + int(max_RR_d / 2)]):
-  R_index.append(index / fs)
-  R_value.append(y_SM2[index])
-  y0_R.append(y0[index])
-  ind_R = len(R_index) - 1
-  if 2 < ind_R:
-  if abs(abs(R_index[ind_R] - R_index[ind_R - 1]) -
-     abs(R_index[ind_R - 2] - R_index[ind_R - 3])) > 0.05:
-    NN50 = NN50 + 1
+    if index > max_RR_d and index < len(y_QRS) - max_RR_d:
+    if y_SM2[index] == max(
+            y_SM2[index - int(max_RR_d / 2):index + int(max_RR_d / 2)]):
+    R_index.append(index / fs)
+    R_value.append(y_SM2[index])
+    y0_R.append(y0[index])
+    ind_R = len(R_index) - 1
+    if 2 < ind_R:
+    if abs(abs(R_index[ind_R] - R_index[ind_R - 1]) -
+           abs(R_index[ind_R - 2] - R_index[ind_R - 3])) > 0.05:
+        NN50 = NN50 + 1
 
-  if len(R_index) > 1:
-  start = int(R_index[len(R_index) - 1] * fs - max_QRS_d / 2)
-  middle = int(R_index[len(R_index) - 1] * fs)
-  stop = int(R_index[len(R_index) - 1] * fs + max_QRS_d / 2)
-  mod_index = int(index - max_QRS_d)
+    if len(R_index) > 1:
+    start = int(R_index[len(R_index) - 1] * fs - max_QRS_d / 2)
+    middle = int(R_index[len(R_index) - 1] * fs)
+    stop = int(R_index[len(R_index) - 1] * fs + max_QRS_d / 2)
+    mod_index = int(index - max_QRS_d)
 
-  if start < mod_index < middle:
-  if y_QRS[mod_index] == min(y_QRS[start:middle]):
-    Q_index.append((index - max_QRS_d) / fs)
-    Q_value.append(y_QRS[mod_index])
-    y0_Q.append(y0[index])
+    if start < mod_index < middle:
+    if y_QRS[mod_index] == min(y_QRS[start:middle]):
+        Q_index.append((index - max_QRS_d) / fs)
+        Q_value.append(y_QRS[mod_index])
+        y0_Q.append(y0[index])
 
-  if middle < index < stop:
-  if value == min(y_QRS[middle:stop]):
-    S_index.append(index / fs)
-    S_value.append(y_QRS[index])
-    y0_S.append(y0[index])
-    ind_QS = len(Q_index) - 1
-    if 1 < ind_QS < len(R_index):
-    # print ind_QS,Q_index[ind_QS],S_index[ind_QS]
-    if abs(abs(S_index[ind_QS] - Q_index[ind_QS]) -
-     abs(S_index[ind_QS - 1] - Q_index[ind_QS - 1])) > 0.005:
-    QS5 = QS5 + 1
+    if middle < index < stop:
+    if value == min(y_QRS[middle:stop]):
+        S_index.append(index / fs)
+        S_value.append(y_QRS[index])
+        y0_S.append(y0[index])
+        ind_QS = len(Q_index) - 1
+        if 1 < ind_QS < len(R_index):
+            # print ind_QS,Q_index[ind_QS],S_index[ind_QS]
+        if abs(abs(S_index[ind_QS] - Q_index[ind_QS]) -
+               abs(S_index[ind_QS - 1] - Q_index[ind_QS - 1])) > 0.005:
+        QS5 = QS5 + 1
 
-  # Delet QRS
-  if len(Q_index) > 1:
-  Q_ind = Q_index[len(Q_index) - 1] * fs
-  S_ind = S_index[len(S_index) - 1] * fs
-  ind = index - (S_ind - Q_ind)
-  if Q_ind < ind < S_ind:
-    y_PT[int(ind)] = (
-    (y_PT[int(Q_ind)] / y_PT[int(S_ind)]) / (Q_ind / S_ind)) * (ind - Q_ind)
+    # Delet QRS
+    if len(Q_index) > 1:
+    Q_ind = Q_index[len(Q_index) - 1] * fs
+    S_ind = S_index[len(S_index) - 1] * fs
+    ind = index - (S_ind - Q_ind)
+    if Q_ind < ind < S_ind:
+        y_PT[int(ind)] = ((y_PT[int(Q_ind)] / y_PT[int(S_ind)]) /
+                          (Q_ind / S_ind)) * (ind - Q_ind)
 
 
 # Smoothing
@@ -138,38 +138,38 @@ y_SM2_PT = signal.filtfilt(b_SM, a_SM, y_SM1_PT)
 # P-T detection
 i = 0
 for index, value in enumerate(y_SM2_PT):
-  P_ind = int(Q_index[i] * fs - max_QRS_d)
-  Q_ind = int(Q_index[i] * fs)
-  S_ind = int(S_index[i] * fs)
-  T_ind = int(S_index[i] * fs + max_QRS_d)
-  if index > T_ind and i < len(Q_index) - 1:
-  i = i + 1
+    P_ind = int(Q_index[i] * fs - max_QRS_d)
+    Q_ind = int(Q_index[i] * fs)
+    S_ind = int(S_index[i] * fs)
+    T_ind = int(S_index[i] * fs + max_QRS_d)
+    if index > T_ind and i < len(Q_index) - 1:
+    i = i + 1
 
-  if P_ind < index < Q_ind:
-  if y_SM2_PT[index - 1] < value > y_SM2_PT[index + 1]:
-  P_index.append(index / fs)
-  P_value.append(value)
-  y0_P.append(y0[index])
-  ind_P = len(P_index) - 1
-  if 1 < ind_P:
-  # print
-  # i,PR20,P_index[ind_P],R_index[i],P_index[ind_T-1],R_index[i-1]
-  if abs(abs(R_index[i] - P_index[ind_P]) -
-     abs(R_index[i - 1] - P_index[ind_P - 1])) > 0.02:
-    PR20 = PR20 + 1
+    if P_ind < index < Q_ind:
+    if y_SM2_PT[index - 1] < value > y_SM2_PT[index + 1]:
+    P_index.append(index / fs)
+    P_value.append(value)
+    y0_P.append(y0[index])
+    ind_P = len(P_index) - 1
+    if 1 < ind_P:
+        # print
+        # i,PR20,P_index[ind_P],R_index[i],P_index[ind_T-1],R_index[i-1]
+    if abs(abs(R_index[i] - P_index[ind_P]) -
+           abs(R_index[i - 1] - P_index[ind_P - 1])) > 0.02:
+        PR20 = PR20 + 1
 
-  if S_ind < index < T_ind:
-  if y_SM2_PT[index - 1] < value > y_SM2_PT[index + 1]:
-  T_index.append(index / fs)
-  T_value.append(value)
-  y0_T.append(y0[index])
-  ind_T = len(T_index) - 1
-  if 1 < ind_T:
-  # print
-  # i,QT20,T_index[ind_T],Q_index[i],T_index[ind_T-1],Q_index[i-1]
-  if abs(abs(T_index[ind_T] - Q_index[i]) -
-     abs(T_index[ind_T - 1] - Q_index[i - 1])) > 0.02:
-    QT20 = QT20 + 1
+    if S_ind < index < T_ind:
+    if y_SM2_PT[index - 1] < value > y_SM2_PT[index + 1]:
+    T_index.append(index / fs)
+    T_value.append(value)
+    y0_T.append(y0[index])
+    ind_T = len(T_index) - 1
+    if 1 < ind_T:
+        # print
+        # i,QT20,T_index[ind_T],Q_index[i],T_index[ind_T-1],Q_index[i-1]
+    if abs(abs(T_index[ind_T] - Q_index[i]) -
+           abs(T_index[ind_T - 1] - Q_index[i - 1])) > 0.02:
+        QT20 = QT20 + 1
 
 # Print values
 
@@ -231,8 +231,8 @@ row_labels = ['pNN50', 'pPR20', 'pQS5', 'pQT20', 'pPR', 'pQR', 'pSR', 'pTR']
 table_vals = [pNN50, pPR20, pQS5, pQT20, pPR, pQR, pSR, pTR]
 
 for i, v in enumerate(table_vals):
-  ax1.text(max(time) * 1.06, -i * 1000, row_labels[i])
-  ax1.text(max(time) * 1.095, -i * 1000, ':')
-  ax1.text(max(time) * 1.1, -i * 1000, v)
+    ax1.text(max(time) * 1.06, -i * 1000, row_labels[i])
+    ax1.text(max(time) * 1.095, -i * 1000, ':')
+    ax1.text(max(time) * 1.1, -i * 1000, v)
 
 plt.show()

@@ -6,10 +6,10 @@ import pylab as plot
 from sklearn import svm
 
 label_dict = {
-  'N': 0,
-  'A': 1,
-  'O': 2,
-  '~': 3
+    'N': 0,
+    'A': 1,
+    'O': 2,
+    '~': 3
 }
 
 
@@ -71,14 +71,14 @@ train_indices = random_indices[:num_train_elements]
 test_indices = random_indices[num_train_elements:]
 train_data = np.zeros((num_train_elements, num_features))
 for ind in range(num_train_elements):
-  train_data[ind, :] = fourier_data[train_indices[ind], feature_indices]
+    train_data[ind, :] = fourier_data[train_indices[ind], feature_indices]
 train_labels = label[train_indices]
 
 print "train data created"
 test_data = np.zeros((num_test_elements, num_features))
 for ind in range(num_test_elements):
-  fourier = np.fft.fft(data[test_indices[ind]])
-  test_data[ind, :] = fourier_data[test_indices[ind], feature_indices]
+    fourier = np.fft.fft(data[test_indices[ind]])
+    test_data[ind, :] = fourier_data[test_indices[ind], feature_indices]
 test_labels = label[test_indices]
 
 print "test data created"

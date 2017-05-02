@@ -6,10 +6,10 @@ import pylab as plot
 from sklearn import svm
 
 label_dict = {
-  'N': 0,
-  'A': 1,
-  'O': 2,
-  '~': 3
+    'N': 0,
+    'A': 1,
+    'O': 2,
+    '~': 3
 }
 
 # load data
@@ -21,8 +21,8 @@ spectrum_length = 200
 fourier_data = np.zeros((len(data), spectrum_length))
 
 for ind in range(len(data)):
-  print ind
-  f = np.fft.fft(data[ind])
-  fourier_data[ind] = np.absolute(f[:spectrum_length])
+    print ind
+    f = np.fft.fft(data[ind])
+    fourier_data[ind] = np.absolute(f[:spectrum_length])
 
 np.save('fourier_200.npy', fourier_data)
