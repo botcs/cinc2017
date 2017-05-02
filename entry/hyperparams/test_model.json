@@ -1,0 +1,21 @@
+{
+    "batch_size": 32,
+    "cnn_params": {
+        "kernel_sizes": [1024, 512, 512,256],
+        "out_dims": [64, 64, 32, 16 ],
+        "pool_sizes": [10,3,3,2]
+    },
+    "time_domain_params": {
+    },
+    "fourier_params": {
+	"use_magnitude": 1,
+        "featureindices": [33,  27, 17,  38, 134, 132]
+    },
+    "fc_params": {
+        "fc_sizes": [ 32,16,8]
+    },
+    "rnn_params": {
+        "rnn_sizes": [128,64,32,32,16 ],
+        "time_steps": 64
+    }
+}
