@@ -1,22 +1,34 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-Q_index=[];Q_value=[];y0_Q=[]
-R_index=[];R_value=[];y0_R=[]
-S_index=[];S_value=[];y0_S=[]
+def QRS_detect(input):
+	
+	y0=input[0]
+	y_HP=input[1]
+	y_SM2=input[2]
+	fs=300
+	
+	y_QRS=(y_HP*y_HP*y_HP)/200000.
+	y_PT=np.asarray(y0);
+	
+	Q_index=[];Q_value=[];
+	R_index=[];R_value=[];
+	S_index=[];S_value=[];
+	
+	#Variability indexes
+	NN50=0
+	QS5=0
+	ind_QS=0;
 
-ind=0;
-max_QRS_d=0.2*fs;
-max_RR_d=0.8*fs;
-max_PQ_d=0.45*fs
-
-def QRS_detect(inputsignal): 
+	ind=0;
+	max_QRS_d=0.2*fs;
+	max_RR_d=0.8*fs;
+	
 	for index,value in enumerate(y_QRS):
 			if index>max_RR_d and index<len(y_QRS)-max_RR_d:
 				if y_SM2[index]== max(y_SM2[index-int(max_RR_d/2):index+int(max_RR_d/2)]):
 					R_index.append(index/fs)
 					R_value.append(y_SM2[index])
-					y0_R.append(y0[index])
 					ind_R=len(R_index)-1
 					if 2<ind_R:
 						if abs(abs(R_index[ind_R]-R_index[ind_R-1])-abs(R_index[ind_R-2]-R_index[ind_R-3]))>0.05:
@@ -33,13 +45,11 @@ def QRS_detect(inputsignal):
 						if y_QRS[mod_index]==min(y_QRS[start:middle]):
 							Q_index.append((index-max_QRS_d)/fs)
 							Q_value.append(y_QRS[mod_index])
-							y0_Q.append(y0[index])
 					
 					if middle<index<stop:
 						if value==min(y_QRS[middle:stop]):
 							S_index.append(index/fs)
 							S_value.append(y_QRS[index])
-							y0_S.append(y0[index])
 							'''ind_QS=len(Q_index)-1
 							if 1<ind_QS<len(R_index):
 								#print ind_QS,Q_index[ind_QS],S_index[ind_QS]
@@ -75,3 +85,4 @@ def QRS_detect(inputsignal):
 									QS5=QS5+1
 
 	
+	return [Q_index,Q_value,R_index,R_value,S_index,S_value,NN50,QS5,ind_R,ind_QS]

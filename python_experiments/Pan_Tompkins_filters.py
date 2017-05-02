@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-N=[26, 50, 7, 30, 30]
+N=[19, 50, 7, 30, 30]
 
 b_LPF=[1./72]+ [0]*8 + [-1./36] +[0]*8 +[1./72];
-a_LPF=[1.,-1.99, 1.] + [0]*23;
+a_LPF=[1.,-1.99, 1.] + [0]*16;
 
 b_HPF=[-1./49]+[0]*24+[1,-1]+[0]*22+[1./49];
 a_HPF=[1.,-0.99]+[0]*48;
@@ -34,18 +34,22 @@ DenomCoeff=[b_LPF, b_HPF, b_DEV, b_SM, b_SM]
 NumCoeff=[a_LPF,a_HPF,a_DEV,a_SM, a_SM];
 
 def Pan_Tompkins(pSrc):
-	signal=tuple(pSrc)
+	signal=np.array(pSrc)
 	BLOCK_SIZE=len(pSrc)
+
+	#print "Hello Pan_Tompkins!",len(pSrc), len(signal)
+
 	pDst=np.array([None]*BLOCK_SIZE)
 	s=len(N)
+	pDst_signals=[]
+	
 	for i in range(s):
 		Reg=[0]*N[i]
 		for j in range(BLOCK_SIZE):
-		
 			Reg[1:]=Reg[:-1]
-
+	
 			# The denominator
-			Reg[0] = pSrc[j];
+			Reg[0] = signal[j];
 			for k in range(N[i]):
 				Reg[0] = Reg[0]-DenomCoeff[i][k] * Reg[k];
 
@@ -58,14 +62,25 @@ def Pan_Tompkins(pSrc):
 		
 		if i==2:
 			pDst=pDst*pDst
+			pDst_signals.append(pDst)
 		if i>1:
-			pSrc=pDst
+			signal=pDst
+		
+		pDst_signals.append(pDst)
+		
 	
 	fs=300.
-	time=np.linspace(0,len(pDst)/fs,len(pDst))
-	print "Hello"
-	#f, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=True)
-	#plt.plot(time,pDst)
-	#plt.show()
-	return pDst
+	
+	'''
+	time=np.linspace(0,len(pSrc)/fs,len(pSrc))
+	f, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=True)
+	p=2
+	original_signal=np.array(pSrc)/np.mean(pSrc)*np.mean(pDst_signals[p])
+	ax1.plot(time,original_signal)
+	ax1.plot(time,pDst_signals[p-1])
+	ax2.plot(time,pDst_signals[p])
+	plt.show()
+	'''
+	
+	return pDst_signals
 	

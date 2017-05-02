@@ -210,7 +210,7 @@ with open(folder+Reference_file) as csvfile:
 		feature_vector.append(features)
 		
 		numer=numer+1
-		if numer>1:
+		if numer>0:
 			 break
 		
 print annotation
