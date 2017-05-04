@@ -3,16 +3,11 @@
 
 import tensorflow as tf
 
-<<<<<<< HEAD
-class foo(object):
-    pass
-=======
 
 class foo(object):
     pass
 
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
 FLAGS = foo()
 FLAGS.input_dim = 1
 FLAGS.time_steps = 300
@@ -30,46 +25,20 @@ flags.DEFINE_float('keep_prob', FLAGS.keep_prob, 'Probability of keeping an acti
 FLAGS = flags.FLAGS
 '''
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
 class stackedLSTM(object):
     '''
     Build unrolled stacked LSTM with dropout, on top of last hidden RNN variable sized
     fully connected layers.
-<<<<<<< HEAD
-    
-    Convenience functions help fast-proto
-    Use this class for describing specific usage by implementing `build_graph`
-    '''
-    
-=======
 
     Convenience functions help fast-proto
     Use this class for describing specific usage by implementing `build_graph`
     '''
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
     def get_layers(self, batch_size, seq_len, x, rnn_sizes, keep_prob):
         with tf.variable_scope('LSTM'):
             cells = [tf.contrib.rnn.LSTMCell(size) for size in rnn_sizes]
             keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
-<<<<<<< HEAD
-            cells = [tf.contrib.rnn.DropoutWrapper(cell, output_keep_prob=keep_prob) 
-                     for cell in cells]
-            
-            multi_cell = tf.contrib.rnn.MultiRNNCell(cells)
-            
-            with tf.variable_scope('dynamic_wrapper'):
-                output, last_state = tf.nn.dynamic_rnn(
-                    dtype=tf.float32,
-                    inputs=x, cell=multi_cell, 
-                    sequence_length=seq_len)
-                zero_state = multi_cell.zero_state(batch_size, tf.float32)
-            print(*last_state, sep='\n')
-            
-=======
             cells = [
                 tf.contrib.rnn.DropoutWrapper(
                     cell, output_keep_prob=keep_prob) for cell in cells]
@@ -84,54 +53,19 @@ class stackedLSTM(object):
                 zero_state = multi_cell.zero_state(batch_size, tf.float32)
             print(*last_state, sep='\n')
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
         return output, last_state, keep_prob
 
     def get_name(self):
         rnn_sizes = [str(s) for s in self.rnn_sizes]
         name = '--rnn--steps'
-<<<<<<< HEAD
-        name += str(self.time_steps) 
-        name += '--sizes' + '-'.join(rnn_sizes) 
-        return name
-    
-=======
         name += str(self.time_steps)
         name += '--sizes' + '-'.join(rnn_sizes)
         return name
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
     def build_graph(self, model_name=None):
         if not model_name:
             model_name = self.get_name()
         self.name = model_name
-<<<<<<< HEAD
-        
-        self.keep_prob = tf.placeholder_with_default(self.def_keep_prob, [], 'keep_prob')
-        
-        rnn = self.get_layers(
-            self.batch_size, self.seq_len, self.input, self.rnn_sizes, self.keep_prob)
-        self.output, self.last_state, self.keep_prob = rnn[:3]
-        # Deprecated since 17.04.01
-        # self.init_state, self.zero_state = rnn[3:]
-        
-        # Last layer's tuple, second element: (c=, h=)
-        self.last_output = self.last_state[-1][1]
-        
-    
-    def __init__(self,
-            batch_size=None,
-            seq_len=None,
-            input_op=None,
-            time_steps=FLAGS.time_steps,
-            rnn_sizes=[int(s) for s in FLAGS.rnn_sizes.split(',')],
-            keep_prob=FLAGS.keep_prob,
-            model_name=None):
-        '''
-        Initializer default vales use tf.app.flags
-        returns an object, whose main fields are tensorflow graph nodes.
-        
-=======
 
         self.keep_prob = tf.placeholder_with_default(
             self.def_keep_prob, [], 'keep_prob')
@@ -161,7 +95,6 @@ class stackedLSTM(object):
         Initializer default vales use tf.app.flags
         returns an object, whose main fields are tensorflow graph nodes.
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
         time_steps: int, Maximum number of time steps which the model use for backprop
         rnn_sizes: [int, [int...]] Size of corresponding LSTM cell's hidden state
         keep_prob: float, Probability of keeping a value in DROPOUT layers
@@ -169,31 +102,17 @@ class stackedLSTM(object):
         self.batch_size = batch_size
         self.input = input_op
         self.seq_len = seq_len
-<<<<<<< HEAD
-        
-=======
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
         self.time_steps = time_steps
         self.rnn_sizes = rnn_sizes
         self.def_keep_prob = keep_prob
         self.name = self.get_name()
-<<<<<<< HEAD
-        
-=======
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
         with tf.variable_scope('RNN'):
             print('\nRNN' + self.name)
             self.build_graph()
 
-<<<<<<< HEAD
-def get_model(batch_size, seq_len, input_op, **kwargs):
-    r = stackedLSTM(batch_size, seq_len, input_op, **kwargs)
-    return r
-=======
 
 def get_model(batch_size, seq_len, input_op, **kwargs):
     r = stackedLSTM(batch_size, seq_len, input_op, **kwargs)
     return r
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218

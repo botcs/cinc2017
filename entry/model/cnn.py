@@ -3,16 +3,11 @@
 
 import tensorflow as tf
 
-<<<<<<< HEAD
-class foo(object):
-    pass
-=======
 
 class foo(object):
     pass
 
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
 FLAGS = foo()
 FLAGS.use_bnorm = True
 FLAGS.kernel_size = 5
@@ -20,12 +15,8 @@ FLAGS.keep_prob = 0.5
 FLAGS.out_dims = '512, 1024, 1024'
 FLAGS.kernel_sizes = '128, 64, 32'
 FLAGS.pool_sizes = '8, 4, 2'
-<<<<<<< HEAD
-# normal sinus rhythm, atrial fibrillation (AF), an alternative rhythm, or is too noisy
-=======
 # normal sinus rhythm, atrial fibrillation (AF), an alternative rhythm, or
 # is too noisy
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
 '''
 # Model Hyperparameters
 # FOR SCRIPTING
@@ -37,34 +28,11 @@ flags.DEFINE_bool('use_bnorm', def_use_bnorm, 'Use batch normalization if True, 
 FLAGS = flags.FLAGS
 '''
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
 class model(object):
     '''
     Classify fixed length features, with weighted loss
     classifier will return an object, whose main fields are tensorflow graph nodes.
-<<<<<<< HEAD
-    
-    '''
-
-    def get_layers(self, 
-        seq_len, in_node, 
-        out_dims, kernel_sizes,
-        pool_sizes, keep_prob, use_bnorm=True):
-        '''
-        `out_dims`: a list of integers for the featuremap [out_dims1, out_dims2, ...]
-        `kernels_sizes`: a single integer or 
-            a list of integers [kernel_size1, kernel_size2, ...] which must be the 
-            same length as out_dims
-        `pool_sizes`: a single integer or 
-            a list of integers [pool_size1, pool_size2, ...] which must be the 
-            same length as out_dims
-        '''
-        
-        
-=======
 
     '''
 
@@ -82,7 +50,6 @@ class model(object):
             same length as out_dims
         '''
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
         # Converting to NHWC where N is batch and H will be seq_len
         h = in_node[..., None, None]
         if use_bnorm:
@@ -91,21 +58,6 @@ class model(object):
         else:
             biases_initializer = tf.zeros_initializer
             normalizer_fn = None
-<<<<<<< HEAD
-            
-            
-        keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
-            
-        for i, (dim, ker, pool) in enumerate(zip(out_dims, kernel_sizes, pool_sizes)):
-            with tf.variable_scope('Conv%d' % (i+1)):
-                scope = 'Conv_dim%d_ker%d_pool%d' % (dim, ker, pool)
-                # does the same as 1d, but with convenience function
-                h = tf.contrib.layers.conv2d(h, dim, [ker, 1], 
-                                             normalizer_fn=normalizer_fn,
-                                             biases_initializer=biases_initializer,
-                                             scope=scope)
-                
-=======
 
         keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
 
@@ -122,23 +74,12 @@ class model(object):
                                              biases_initializer=biases_initializer,
                                              scope=scope)
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
                 h = tf.contrib.layers.max_pool2d(
                     h, kernel_size=[pool, 1], stride=[pool, 1])
                 seq_len /= 2
                 print(h)
                 h = tf.nn.dropout(h, keep_prob)
         return tf.squeeze(h, axis=2), seq_len
-<<<<<<< HEAD
-    
-    def get_name(self):
-        cnn_sizes = ['%dx%d'%(d, k) for d, k in 
-            zip(self.out_dims, self.kernel_sizes)]
-        
-        name = '--cnn' + '-'.join(cnn_sizes)
-        return name
-    
-=======
 
     def get_name(self):
         cnn_sizes = ['%dx%d' % (d, k) for d, k in
@@ -147,30 +88,10 @@ class model(object):
         name = '--cnn' + '-'.join(cnn_sizes)
         return name
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
     def build_graph(self, model_name=None):
         if not model_name:
             model_name = self.get_name()
         self.name = model_name
-<<<<<<< HEAD
-        
-        self.keep_prob = tf.placeholder_with_default(self.def_keep_prob, [], 'keep_prob')
-        
-        self.output, self.seq_len = self.get_layers(
-            self.seq_len, self.input, 
-            self.out_dims, self.kernel_sizes, 
-            self.pool_sizes, self.keep_prob)
-    
-        
-    def __init__(self,
-            seq_len,
-            input_op,
-            out_dims=[int(s) for s in FLAGS.out_dims.split(',')],
-            kernel_sizes=[int(s) for s in FLAGS.kernel_sizes.split(',')],
-            pool_sizes=[int(s) for s in FLAGS.pool_sizes.split(',')],
-            keep_prob=FLAGS.keep_prob,
-            model_name=None):
-=======
 
         self.keep_prob = tf.placeholder_with_default(
             self.def_keep_prob, [], 'keep_prob')
@@ -188,28 +109,10 @@ class model(object):
                  pool_sizes=[int(s) for s in FLAGS.pool_sizes.split(',')],
                  keep_prob=FLAGS.keep_prob,
                  model_name=None):
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
         '''
         Initializer default vales use tf.app.flags
         returns an object, whose main fields are tensorflow graph nodes.
         '''
-<<<<<<< HEAD
-        
-        self.seq_len = seq_len
-        self.input = input_op
-        
-        if type(kernel_sizes) is int:
-            kernel_sizes = [kernel_sizes] * len(out_dims)
-        if type(pool_sizes) is int:
-            pool_sizes = [pool_sizes] * len(out_dims)
-        assert len(out_dims) == len(kernel_sizes) == len(pool_sizes)
-        
-        self.out_dims = out_dims
-        self.kernel_sizes = kernel_sizes
-        self.pool_sizes = pool_sizes
-        
-        
-=======
 
         self.seq_len = seq_len
         self.input = input_op
@@ -224,23 +127,15 @@ class model(object):
         self.kernel_sizes = kernel_sizes
         self.pool_sizes = pool_sizes
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
         self.def_keep_prob = keep_prob
         self.name = self.get_name()
         with tf.variable_scope('CNN'):
             print('\nCNN' + self.name)
             self.build_graph()
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
 def get_output(seq_len, input_op, return_name=True, **kwargs):
     cnn = model(seq_len, input_op, **kwargs)
     if return_name:
         return cnn.output, cnn.name
-<<<<<<< HEAD
     return cnn.output
-=======
-    return cnn.output
->>>>>>> 89b6a43314e18ded2ed7ab8f7e2938583d71c218
