@@ -8,12 +8,10 @@ RECORDS
 *.pyc
 *.TFRecord
 *.npy
-<<<<<<< HEAD
 entry/validation/
 entry/ckpt
 website/AFchallenge
-=======
 **/ckpt/**
 **/logs/**
 *.out
->>>>>>> origin/deep_learn_develop
+python_experiments/training_set
