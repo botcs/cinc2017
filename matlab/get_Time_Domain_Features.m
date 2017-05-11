@@ -2,7 +2,7 @@ clc;
 clear all;
 close all;
 
-folder='..\..\af_challenge_2017\validation\';
+folder='..\..\..\Challenge_2017\training2017\';
 records='REFERENCE.csv';
 filename=[folder,records];
 
@@ -23,7 +23,8 @@ for i=1:length(textData)
     [time_domain_features;...
      pNN50,SDNN,RMSSD,...
      BPM,pQR,pSR];
+    i
 end
 
-output_filename='time_domain_featurtes_v1.mat';
-save(output_filename,'time_domain_features');
+output_filename='time_domain_features_v2.mat';
+save(output_filename,'time_domain_features_v2');
