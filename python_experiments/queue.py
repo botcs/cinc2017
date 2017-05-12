@@ -29,14 +29,14 @@ y = input + 1
 
 # We start the session as usual
 with tf.Session() as sess:
-  print('start')
-  # We first run the enqueue_op to load our data into the queue
-  sess.run(enqueue_op)
-  # Now, our queue holds 3 elements, it's full.
-  # We can start to consume our data
-  sess.run(y)
-  sess.run(y)
-  sess.run(y)
-  # Now our queue is empty, if we call it again, our program will hang right here
-  # waiting for the queue to be filled by at least one more datum
-  # sess.run(y)
+    print('start')
+    # We first run the enqueue_op to load our data into the queue
+    sess.run(enqueue_op)
+    # Now, our queue holds 3 elements, it's full.
+    # We can start to consume our data
+    sess.run(y)
+    sess.run(y)
+    sess.run(y)
+    # Now our queue is empty, if we call it again, our program will hang right here
+    # waiting for the queue to be filled by at least one more datum
+    # sess.run(y)
