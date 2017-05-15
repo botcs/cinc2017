@@ -23,13 +23,12 @@ def get_model_logits(seq_len, input_op, **params):
     # Fixed length feature extraction
     if params.get('rnn'):
         pass
-    else:
-        if params.get('partition_num'):
-            # Instead of global averaging,
-            # Use variable sized windows to make equal fractions of input
-            # Preserving the raw locality of the features
-            var_features = variable_size_window(
-                *var_features, params['partition_num'])
+    elif params.get('partition_num'):
+        # Instead of global averaging,
+        # Use variable sized windows to make equal fractions of input
+        # Preserving the raw locality of the features
+        var_features = variable_size_window(
+            *var_features, params['partition_num'])
         # seq_len is no longer needed, therefore discarded
         features = tf.reduce_mean(var_features[1], axis=2)
 
