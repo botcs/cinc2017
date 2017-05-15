@@ -4,11 +4,11 @@
 import tensorflow as tf
 
 
-class foo(object):
+class _foo(object):
     pass
 
 
-FLAGS = foo()
+FLAGS = _foo()
 FLAGS.use_bnorm = True
 FLAGS.kernel_size = 5
 FLAGS.keep_prob = 0.5
@@ -21,10 +21,15 @@ FLAGS.pool_sizes = '8, 4, 2'
 # Model Hyperparameters
 # FOR SCRIPTING
 flags = tf.app.flags
-flags.DEFINE_string('out_dims', FLAGS.out_dims, 'Size of feature map dimensions. Use comma separated integers [%s]'%FLAGS.out_dims)
-flags.DEFINE_string('kernel_sizes', FLAGS.out_dims, 'Size of convolution kernels. Use comma separated integers [%s]'%FLAGS.out_dims)
-flags.DEFINE_float('keep_prob', FLAGS.keep_prob, 'Probability of keeping an activation value after the DROPOUT layer, during training [%f]'%FLAGS.keep_prob)
-flags.DEFINE_bool('use_bnorm', def_use_bnorm, 'Use batch normalization if True, else use simply biases [%b]'%FLAGS.use_bnorm)
+flags.DEFINE_string('out_dims', FLAGS.out_dims, 'Size of feature map
+ dimensions. Use comma separated integers [%s]'%FLAGS.out_dims)
+flags.DEFINE_string('kernel_sizes', FLAGS.out_dims, 'Size of convolution
+ kernels. Use comma separated integers [%s]'%FLAGS.out_dims)
+flags.DEFINE_float('keep_prob', FLAGS.keep_prob, 'Probability of keeping an
+ activation value after the DROPOUT layer, during training
+  [%f]'%FLAGS.keep_prob)
+flags.DEFINE_bool('use_bnorm', def_use_bnorm, 'Use batch normalization if True,
+ else use simply biases [%b]'%FLAGS.use_bnorm)
 FLAGS = flags.FLAGS
 '''
 
@@ -32,7 +37,8 @@ FLAGS = flags.FLAGS
 class model(object):
     '''
     Classify fixed length features, with weighted loss
-    classifier will return an object, whose main fields are tensorflow graph nodes.
+    classifier will return an object,
+    whose main fields are tensorflow graph nodes.
 
     '''
 
@@ -42,7 +48,8 @@ class model(object):
                    pool_sizes, residual, keep_prob,
                    use_bnorm=True):
         '''
-        `out_dims`: a list of integers for the featuremap [out_dims1, out_dims2, ...]
+        `out_dims`: a list of integers for the featuremap [out_dims1,
+         out_dims2, ...]
         `kernels_sizes`: a single integer or
           a list of integers [kernel_size1, kernel_size2, ...] which must be the
           same length as out_dims
@@ -72,20 +79,18 @@ class model(object):
             with tf.variable_scope('Conv%d' % (i + 1)):
                 scope = 'Conv_dim%d_ker%d_pool%d' % (dim, ker, pool)
                 # does the same as 1d, but with convenience function
-                h = tf.contrib.layers.conv2d(h,
-                                             dim,
-                                             [ker,
-                                              1],
-                                             normalizer_fn=normalizer_fn,
-                                             biases_initializer=biases_initializer,
-                                             scope=scope)
+                h = tf.contrib.layers.conv2d(
+                    h, dim, [ker, 1],
+                    normalizer_fn=normalizer_fn,
+                    biases_initializer=biases_initializer,
+                    scope=scope)
 
                 if pool > 1:
                     h = tf.contrib.layers.max_pool2d(
                         h, kernel_size=[pool, 1], stride=[pool, 1])
-                    seq_len /= 2
+                    seq_len /= pool
 
-                #h = tf.nn.dropout(h, keep_prob)
+                # h = tf.nn.dropout(h, keep_prob)
                 print(h)
         if residual:
             return h, seq_len
@@ -154,5 +159,5 @@ class model(object):
 def get_output(seq_len, input_op, return_name=True, **kwargs):
     cnn = model(seq_len, input_op, **kwargs)
     if return_name:
-        return cnn.output, cnn.name
-    return cnn.output
+        return seq_len, cnn.output, cnn.name
+    return seq_len, cnn.output
