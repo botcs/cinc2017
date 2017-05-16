@@ -31,6 +31,8 @@ def get_model_logits(seq_len, input_op, **params):
             *var_features, params['partition_num'])
         # seq_len is no longer needed, therefore discarded
         features = tf.reduce_mean(var_features[1], axis=2)
+        print('Local reduce:')
+        print(features)
 
     classifier_in = tf.contrib.layers.flatten(features)
     fc_params = params['fc_params']

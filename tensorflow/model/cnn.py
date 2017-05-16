@@ -11,11 +11,8 @@ class model(object):
 
     '''
 
-    def get_layers(self,
-                   seq_len, in_node,
-                   out_dims, kernel_sizes,
-                   pool_sizes, residual, keep_prob,
-                   use_bnorm=True):
+    def get_layers(self, seq_len, in_node, out_dims, kernel_sizes, pool_sizes,
+                   residual, use_bnorm=True):
         '''
         `out_dims`: a list of integers for the featuremap [out_dims1,
          out_dims2, ...]
@@ -41,7 +38,7 @@ class model(object):
             biases_initializer = tf.zeros_initializer
             normalizer_fn = None
 
-        keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
+        # keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
 
         for i, (dim, ker, pool) in enumerate(
                 zip(out_dims, kernel_sizes, pool_sizes)):
@@ -77,8 +74,8 @@ class model(object):
             model_name = self.get_name()
         self.name = model_name
 
-        self.keep_prob = tf.placeholder_with_default(
-            self.def_keep_prob, [], 'keep_prob')
+        # self.keep_prob = tf.placeholder_with_default(
+        #     self.def_keep_prob, [], 'keep_prob')
 
         self.output, self.seq_len = self.get_layers(
             seq_len=self.seq_len,
@@ -86,11 +83,10 @@ class model(object):
             out_dims=self.out_dims,
             kernel_sizes=self.kernel_sizes,
             pool_sizes=self.pool_sizes,
-            residual=self.residual,
-            keep_prob=self.keep_prob)
+            residual=self.residual)
 
     def __init__(self, seq_len, input_op, out_dims, kernel_sizes, pool_sizes,
-                 keep_prob, residual, model_name=None, **kwargs):
+                 residual, model_name=None, **kwargs):
         '''
         Initializer default vales use tf.app.flags
         returns an object, whose main fields are tensorflow graph nodes.
@@ -109,7 +105,7 @@ class model(object):
         self.kernel_sizes = kernel_sizes
         self.pool_sizes = pool_sizes
 
-        self.def_keep_prob = keep_prob
+        # self.def_keep_prob = keep_prob
         self.residual = residual
         self.name = self.get_name()
         with tf.variable_scope(model_name):

@@ -11,11 +11,11 @@ class model(object):
     nodes.
     '''
 
-    def get_layers(self, in_node, fc_sizes, out_dim, keep_prob):
+    def get_layers(self, in_node, fc_sizes, out_dim):
 
         act_fn = tf.nn.relu
         h = in_node
-        keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
+        # keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
         for i, size in enumerate(fc_sizes):
             with tf.variable_scope('hidden_layer%d' % i):
                 h = tf.contrib.layers.fully_connected(h, size, act_fn)
@@ -23,7 +23,7 @@ class model(object):
         logits = tf.contrib.layers.fully_connected(
             h, out_dim, None, scope='logits')
         print(logits)
-        return logits, keep_prob
+        return logits
 
     def get_name(self):
         fc_sizes = [str(s) for s in self.fc_sizes]
@@ -35,16 +35,17 @@ class model(object):
             model_name = self.get_name()
         self.name = model_name
 
-        self.keep_prob = tf.placeholder_with_default(
-            self.def_keep_prob, [], 'keep_prob')
+        # self.keep_prob = tf.placeholder_with_default(
+        #     self.def_keep_prob, [], 'keep_prob')
 
-        self.logits, self.fc_keep_prob = self.get_layers(
-            self.input, self.fc_sizes, FLAGS.label_dim, self.keep_prob)
+        self.logits = self.get_layers(
+            self.input, self.fc_sizes, self.num_classes)
 
         self.pred = tf.nn.softmax(logits=self.logits, name='predictions')
         print(self.pred)
 
-    def __init__(self, input_op, fc_sizes, keep_prob, model_name=None):
+    def __init__(self, input_op, fc_sizes, num_classes=4, model_name=None,
+                 **kwargs):
         '''
         Initializer default vales use tf.app.flags
         returns an object, whose main fields are tensorflow graph nodes.
@@ -55,7 +56,8 @@ class model(object):
         '''
         self.input = input_op
         self.fc_sizes = fc_sizes
-        self.def_keep_prob = keep_prob
+        # self.def_keep_prob = keep_prob
+        self.num_classes = num_classes
         self.name = self.get_name()
         with tf.variable_scope('classifier'):
             print('\nFC' + self.name)

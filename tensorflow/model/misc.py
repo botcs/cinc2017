@@ -9,7 +9,8 @@ def variable_size_window(seq_len, x, N):
 
     Returns `N` equal slices
     '''
-    print(seq_len, '\n!'*2, x)
+    print('Variable sized windowing -- number of windows: %d' % N)
+    print('  Dimensions: [batch_size, num_windows, window_size, num_features]')
     with tf.name_scope('sample_division'):
         if len(x.get_shape()) == 3:
             x = x[..., None, :]
@@ -31,4 +32,5 @@ def variable_size_window(seq_len, x, N):
 
         # Convenience variable
         seq_len = tf.ones([batch_size]) * N
+        print(div_x)
         return seq_len, div_x
