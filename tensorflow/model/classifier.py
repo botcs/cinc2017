@@ -4,30 +4,11 @@
 import tensorflow as tf
 
 
-class foo(object):
-    pass
-
-
-FLAGS = foo()
-FLAGS.input_dim = 1  # Scalar
-FLAGS.label_dim = 4
-FLAGS.keep_prob = 0.5
-FLAGS.fc_sizes = '30, 10'
-'''
-# Model Hyperparameters
-# FOR SCRIPTING
-flags = tf.app.flags
-flags.DEFINE_string('fc_sizes', FLAGS.fc_sizes, 'Size of fully connected layers. Use comma separated integers [%s]'%FLAGS.fc_sizes)
-flags.DEFINE_float('keep_prob', FLAGS.keep_prob, 'Probability of keeping an activation value after the DROPOUT layer, during training [%f]'%FLAGS.keep_prob)
-FLAGS = flags.FLAGS
-'''
-
-
 class model(object):
     '''
     Classify fixed length features, with weighted loss
-    classifier will return an object, whose main fields are tensorflow graph nodes.
-
+    classifier will return an object, whose main fields are tensorflow graph
+    nodes.
     '''
 
     def get_layers(self, in_node, fc_sizes, out_dim, keep_prob):
@@ -39,7 +20,6 @@ class model(object):
             with tf.variable_scope('hidden_layer%d' % i):
                 h = tf.contrib.layers.fully_connected(h, size, act_fn)
                 print(h)
-                #h = tf.nn.dropout(h, keep_prob)
         logits = tf.contrib.layers.fully_connected(
             h, out_dim, None, scope='logits')
         print(logits)
@@ -64,16 +44,13 @@ class model(object):
         self.pred = tf.nn.softmax(logits=self.logits, name='predictions')
         print(self.pred)
 
-    def __init__(self,
-                 input_op,
-                 fc_sizes=[int(s) for s in FLAGS.fc_sizes.split(',')],
-                 keep_prob=FLAGS.keep_prob,
-                 model_name=None):
+    def __init__(self, input_op, fc_sizes, keep_prob, model_name=None):
         '''
         Initializer default vales use tf.app.flags
         returns an object, whose main fields are tensorflow graph nodes.
 
-        fc_sizes: [int, [int...]] Size of fc layers connected to the last LSTM cell's output
+        fc_sizes: [int, [int...]] Size of fc layers connected to the last LSTM
+        cell's output
         keep_prob: float, Probability of keeping a value in DROPOUT layers
         '''
         self.input = input_op

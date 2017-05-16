@@ -59,9 +59,6 @@ cnn_params = {
 }
 c = cnn.model(seq_len=seq_len, input_op=input_op, **cnn_params)
 
-#a = tf.transpose(c.output, perm=[0, 2, 1])
-#a = tf.nn.top_k(a, k=8, sorted=False, name='MAX_POOL').values
-#a = tf.transpose(a, perm=[0, 2, 1])
 a = tf.reduce_mean(c.output, axis=1)
 fc = classifier.model(input_op=a, fc_sizes=[16])
 
@@ -75,40 +72,11 @@ if MODEL_EXISTS:
     shutil.rmtree(MODEL_PATH)
 
 
-# In[6]:
-
-def measure_time(op, feed_dict={}, n_times=10):
-    with tf.Session() as sess:
-        print('Sess started')
-        coord = tf.train.Coordinator()
-        tf.global_variables_initializer().run()
-        threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-
-        print('Evaluating')
-        for _ in range(n_times):
-            t = time.time()
-            fetch = sess.run(op, feed_dict)
-            print('Eval time:', time.time() - t)
-
-        print('Closing threads')
-        coord.request_stop()
-        coord.join(threads)
-
-        return fetch
-
-
-# In[7]:
-
-measure_time(label)
-
-
 # # Evaluation
 #
 # ## **Confusion matrix**
 #
 # ## **Accuracy operator**
-
-# In[8]:
 
 with tf.name_scope('evaluation'):
     with tf.name_scope('one_hot_encoding'):
@@ -129,12 +97,8 @@ with tf.name_scope('evaluation'):
         acc = tf.reduce_mean(
             2 * correct_op / (y_tot + label_tot + eps), name='result')
 
-
-# In[9]:
-
 class_hist = np.load('./data/class_histogramTRAIN.npy')
 with tf.name_scope('loss'):
-    #weight = tf.constant([.1, 1, .2, 3])
     weight = tf.constant(
         1 -
         np.sqrt(
@@ -151,10 +115,6 @@ with tf.name_scope('loss'):
                              for v in tf.trainable_variables()])
     beta = 0.0001
     loss = unweighted_loss + beta * l2_loss
-#class_hist, weight
-
-
-# In[10]:
 
 with tf.name_scope('train'):
     TS = tf.constant(7000, name='TRAIN_STEPS')
