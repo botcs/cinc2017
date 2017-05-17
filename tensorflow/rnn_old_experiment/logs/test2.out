@@ -1,43 +1,0 @@
-I tensorflow/stream_executor/dso_loader.cc:135] successfully opened CUDA library libcublas.so.8.0 locally
-I tensorflow/stream_executor/dso_loader.cc:135] successfully opened CUDA library libcudnn.so.5 locally
-I tensorflow/stream_executor/dso_loader.cc:135] successfully opened CUDA library libcufft.so.8.0 locally
-I tensorflow/stream_executor/dso_loader.cc:135] successfully opened CUDA library libcuda.so.1 locally
-I tensorflow/stream_executor/dso_loader.cc:135] successfully opened CUDA library libcurand.so.8.0 locally
-Reading files: 00000   Reading files: 00050   Reading files: 00100   Reading files: 00150   Reading files: 00200   Reading files: 00250   Reading files: 00300   Reading files: 00350   Reading files: 00400   Reading files: 00450   Reading files: 00500   Reading files: 00550   Reading files: 00600   Reading files: 00650   Reading files: 00700   Reading files: 00750   Reading files: 00800   Reading files: 00850   Reading files: 00900   Reading files: 00950   Reading files: 01000   Reading files: 01050   Reading files: 01100   Reading files: 01150   Reading files: 01200   Reading files: 01250   Reading files: 01300   Reading files: 01350   Reading files: 01400   Reading files: 01450   Reading files: 01500   Reading files: 01550   Reading files: 01600   Reading files: 01650   Reading files: 01700   Reading files: 01750   Reading files: 01800   Reading files: 01850   Reading files: 01900   Reading files: 01950   Reading files: 02000   Reading files: 02050   Reading files: 02100   Reading files: 02150   Reading files: 02200   Reading files: 02250   Reading files: 02300   Reading files: 02350   Reading files: 02400   Reading files: 02450   Reading files: 02500   Reading files: 02550   Reading files: 02600   Reading files: 02650   Reading files: 02700   Reading files: 02750   Reading files: 02800   Reading files: 02850   Reading files: 02900   Reading files: 02950   Reading files: 03000   Reading files: 03050   Reading files: 03100   Reading files: 03150   Reading files: 03200   Reading files: 03250   Reading files: 03300   Reading files: 03350   Reading files: 03400   Reading files: 03450   Reading files: 03500   Reading files: 03550   Reading files: 03600   Reading files: 03650   Reading files: 03700   Reading files: 03750   Reading files: 03800   Reading files: 03850   Reading files: 03900   Reading files: 03950   Reading files: 04000   Reading files: 04050   Reading files: 04100   Reading files: 04150   Reading files: 04200   Reading files: 04250   Reading files: 04300   Reading files: 04350   Reading files: 04400   Reading files: 04450   Reading files: 04500   Reading files: 04550   Reading files: 04600   Reading files: 04650   Reading files: 04700   Reading files: 04750   Reading files: 04800   Reading files: 04850   Reading files: 04900   Reading files: 04950   Reading files: 05000   Reading files: 05050   Reading files: 05100   Reading files: 05150   Reading files: 05200   Reading files: 05250   Reading files: 05300   Reading files: 05350   Reading files: 05400   Reading files: 05450   Reading files: 05500   Reading files: 05550   Reading files: 05600   Reading files: 05650   Reading files: 05700   Reading files: 05750   Reading files: 05800   Reading files: 05850   Reading files: 05900   Reading files: 05950   Reading files: 06000   Reading files: 06050   Reading files: 06100   Reading files: 06150   Reading files: 06200   Reading files: 06250   Reading files: 06300   Reading files: 06350   Reading files: 06400   Reading files: 06450   Reading files: 06500   Reading files: 06550   Reading files: 06600   Reading files: 06650   Reading files: 06700   Reading files: 06750   Reading files: 06800   Reading files: 06850   Reading files: 06900   Reading files: 06950   Reading files: 07000   Reading files: 07050   Reading files: 07100   Reading files: 07150   Reading files: 07200   Reading files: 07250   Reading files: 07300   Reading files: 07350   Reading files: 07400   Reading files: 07450   Reading files: 07500   Reading files: 07550   Reading files: 07600   Reading files: 07650   Reading files: 07700   Reading files: 07750   Reading files: 07800   Reading files: 07850   Reading files: 07900   Reading files: 07950   Reading files: 08000   Reading files: 08050   Reading files: 08100   Reading files: 08150   Reading files: 08200   Reading files: 08250   Reading files: 08300   Reading files: 08350   Reading files: 08400   Reading files: 08450   Reading files: 08500   Reading files: 08527   W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE3 instructions, but these are available on your machine and could speed up CPU computations.
-W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
-W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
-W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
-W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
-W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
-I tensorflow/core/common_runtime/gpu/gpu_device.cc:885] Found device 0 with properties: 
-name: Tesla K80
-major: 3 minor: 7 memoryClockRate (GHz) 0.8235
-pciBusID 0000:8d:00.0
-Total memory: 11.92GiB
-Free memory: 11.86GiB
-I tensorflow/core/common_runtime/gpu/gpu_device.cc:906] DMA: 0 
-I tensorflow/core/common_runtime/gpu/gpu_device.cc:916] 0:   Y 
-I tensorflow/core/common_runtime/gpu/gpu_device.cc:975] Creating TensorFlow device (/gpu:0) -> (device: 0, name: Tesla K80, pci bus id: 0000:8d:00.0)
-I tensorflow/core/common_runtime/gpu/pool_allocator.cc:247] PoolAllocator: After 36846 get requests, put_count=36408 evicted_count=1000 eviction_rate=0.0274665 and unsatisfied allocation rate=0.0417413
-I tensorflow/core/common_runtime/gpu/pool_allocator.cc:259] Raising pool_size_limit_ from 100 to 110
-
-Reading successful!
-/tmp/model/1200rnn128-128--fc64---2017-03-05
-00000 val/sec: 46802400 val/sec: 600I tensorflow/core/common_runtime/gpu/pool_allocator.cc:247] PoolAllocator: After 19349 get requests, put_count=20368 evicted_count=1000 eviction_rate=0.0490966 and unsatisfied allocation rate=0
-04800 val/sec: 58507200 val/sec: 58509600 val/sec: 591I tensorflow/core/common_runtime/gpu/pool_allocator.cc:247] PoolAllocator: After 39683 get requests, put_count=39633 evicted_count=1000 eviction_rate=0.0252315 and unsatisfied allocation rate=0.0274677
-I tensorflow/core/common_runtime/gpu/pool_allocator.cc:259] Raising pool_size_limit_ from 449 to 493
-12000 val/sec: 56414400 val/sec: 55616800 val/sec: 604	 it: 00000 sample_time: 48.3s loss: 578.910278
-Traceback (most recent call last):
-  File "generator.py", line 195, in <module>
-    plot = gen_plot(eval(3*g.time_steps, sess), 3, fname)
-  File "generator.py", line 100, in gen_plot
-    fig = plt.figure(1)
-  File "/usr/lib64/python3.5/site-packages/matplotlib/pyplot.py", line 535, in figure
-    **kwargs)
-  File "/usr/lib64/python3.5/site-packages/matplotlib/backends/backend_tkagg.py", line 84, in new_figure_manager
-    return new_figure_manager_given_figure(num, figure)
-  File "/usr/lib64/python3.5/site-packages/matplotlib/backends/backend_tkagg.py", line 92, in new_figure_manager_given_figure
-    window = Tk.Tk()
-  File "/usr/lib64/python3.5/tkinter/__init__.py", line 1877, in __init__
-    self.tk = _tkinter.create(screenName, baseName, className, interactive, wantobjects, useTk, sync, use)
-_tkinter.TclError: couldn't connect to display "localhost:10.0"
