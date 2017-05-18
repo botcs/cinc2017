@@ -11,7 +11,7 @@ class foo(object):
 FLAGS = foo()
 FLAGS.input_dim = 1  # Scalar
 FLAGS.label_dim = 4
-FLAGS.keep_prob = 0.5
+FLAGS.keep_prob = 1.
 FLAGS.fc_sizes = '30, 10'
 '''
 # Model Hyperparameters

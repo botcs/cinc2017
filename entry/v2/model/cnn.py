@@ -11,7 +11,7 @@ class foo(object):
 FLAGS = foo()
 FLAGS.use_bnorm = True
 FLAGS.kernel_size = 5
-FLAGS.keep_prob = 0.5
+FLAGS.keep_prob = 1.
 FLAGS.out_dims = '512, 1024, 1024'
 FLAGS.kernel_sizes = '128, 64, 32'
 FLAGS.pool_sizes = '8, 4, 2'

@@ -25,7 +25,7 @@ data /= data.std()
 print('Building model graph...')
 tf.reset_default_graph()
 batch_size = tf.placeholder_with_default(1, [], name='batch_size')
-
+keep_prob = tf.placeholder_with_default(1.,[], name='keep_prob')
 input_op = tf.placeholder(tf.float32, [1, None])
 seq_len = tf.placeholder(tf.float32, [1])
 
@@ -38,6 +38,7 @@ cnn_params = {
 c = cnn.model(
     seq_len=seq_len, 
     input_op=input_op, 
+    keep_prob=keep_prob,
     model_name='CNN_block',
     **cnn_params)
 
@@ -54,13 +55,14 @@ for i in range(1, 4):
         seq_len=seq_len, 
         input_op=residual_input, 
         residual=True, 
+        keep_prob=keep_prob,
         model_name='CNN_block_%d'%i,
         **cnn_params)
     residual_input += c.output
 
 res_out = tf.squeeze(residual_input, axis=2)
 a = tf.reduce_mean(res_out, axis=1)
-fc = classifier.model(input_op=a, fc_sizes=[16])
+fc = classifier.model(input_op=a, fc_sizes=[16], keep_prob=keep_prob)
 
 pred = fc.pred
 
@@ -80,6 +82,7 @@ with tf.Session() as sess:
     print('Evaluating')
     output = sess.run(pred, feed_dict={input_op: [data],
                                        seq_len: [len(data)],
+                                       keep_prob: 1.,
                                        batch_size: 1})
 
     print('Closing threads')
@@ -93,5 +96,5 @@ with tf.Session() as sess:
 # ### Save result
 
 with open("answers.txt", "a") as file:
-    file.write(fname + ',' + result)
+    file.write(fname + ',' + result + '\n')
 
