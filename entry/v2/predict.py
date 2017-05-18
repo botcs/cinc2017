@@ -12,6 +12,7 @@ from scipy import io
 
 
 # ### Load recording
+tf.set_random_seed(42)
 
 fname = sys.argv[1]
 assert os.path.isfile(fname + ".mat"), "Not existing file: " + fname + ".mat"
