@@ -12,7 +12,7 @@ def get_update_op(loss, accuracy, global_step=None):
     values = [0.001, 0.0005, 0.0001, 0.00005, 0.0001]
     learning_rate = tf.train.piecewise_constant(
         global_step, boundaries, values)
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+    optimizer = tf.contrib.opt.LazyAdamOptimizer(learning_rate=learning_rate)
     update = optimizer.minimize(loss)
     return tf.tuple([global_step, loss, accuracy], 'update_weights', update)
 
@@ -76,28 +76,29 @@ def get_accuracy(conf_op, eps=1e-10):
         label_tot = tf.reduce_sum(conf_op, axis=1, name='pred_class_sum')
         correct_op = tf.diag_part(conf_op, name='correct_class_sum')
         eps = tf.constant([1e-10] * 4, name='eps')
-        acc = tf.reduce_sum(
+        acc = tf.reduce_mean(
             2 * correct_op / (y_tot + label_tot + eps), name='accuracy')
 
     return acc
 
 
-''' TEST SCRIPT
+''' TEST SCRIPT'''
 tf.reset_default_graph()
 preds = tf.placeholder(1, [None, 4])
 labels = tf.placeholder(tf.int32, [None])
 num_classes = 4
 
-conf = get_confusion(preds, labels)
+conf = get_confusion(labels, preds, differentiable=False, use_softmax=False)
 acc = get_accuracy(conf)
 
-diff_conf = get_confusion(preds, labels, differentiable=True)
+diff_conf = get_confusion(labels, preds,
+                          differentiable=True, use_softmax=False)
 diff_acc = get_accuracy(diff_conf)
 
 with tf.Session() as sess:
     feed_dict = {
-            preds: [[.1, .7, .1, .1], [0, 1, 0, 0]],
-            labels: [1, 1]}
+            preds: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+            labels: [0, 1, 2, 3]}
     print(acc.eval(feed_dict))
     print(diff_acc.eval(feed_dict))
-'''
+''''''
