@@ -1,7 +1,23 @@
 import tensorflow as tf
 
 
-def get_update_op(loss, accuracy, global_step=None):
+def get_trainer(labels, logits, use_dict=False, **kwargs):
+    loss, conf, acc = get_loss(labels, logits, return_aux=True, **kwargs)
+    step, update, lrate = get_update_op(loss, group=False, **kwargs)
+    if use_dict:
+        ret = {
+            'step': step,
+            'update': update,
+            'loss': loss,
+            'confusion': conf,
+            'acc': acc,
+            'learning_rate': lrate}
+        return ret
+    return step, update, loss, conf, acc, lrate
+
+
+def get_update_op(loss, global_step=None, group=True, 
+                  MOVING_AVERAGE_DECAY=.999, **kwargs):
     if global_step is None:
         global_step = tf.Variable(
             initial_value=0,
@@ -11,14 +27,37 @@ def get_update_op(loss, accuracy, global_step=None):
     boundaries = [4000, 6000, 8000, 10000]
     values = [0.001, 0.0005, 0.0001, 0.00005, 0.0001]
     learning_rate = tf.train.piecewise_constant(
-        global_step, boundaries, values)
+        global_step, boundaries, values, name='learning_rate')
     optimizer = tf.contrib.opt.LazyAdamOptimizer(learning_rate=learning_rate)
-    update = optimizer.minimize(loss)
-    return tf.tuple([global_step, loss, accuracy], 'update_weights', update)
+    grads_and_vars = optimizer.compute_gradients(loss)
+    update = optimizer.apply_gradients(
+        grads_and_vars, global_step)
+    for grad, var in grads_and_vars:
+        if grad is not None:
+            tf.add_to_collection('gradients', grad)
+    
+    variable_averages = tf.train.ExponentialMovingAverage(
+        MOVING_AVERAGE_DECAY, global_step)
+    variables_averages_op = variable_averages.apply(tf.trainable_variables())
+    
+    with tf.control_dependencies([variables_averages_op]):
+        train_op 
+    
+    if group:
+        # Convenience return 
+        # -> evaluation of either values will update the network
+        tuple_op = tf.tuple([global_step, loss, learning_rate], 
+                            'update_weights', [update])
+        # step = tf.identity(tuple_op[0], name='step')
+        # loss = tf.identity(tuple_op[1], name='loss')
+        # lrate = tf.identity(tuple_op[2], name='learning_rate')
+        return step, loss, lrate
+    
+    return global_step, update, learning_rate
 
 
 def get_loss(labels, logits, use_confusion='linear', return_aux=True,
-             lamb=1e-4, **kwargs):
+             beta=1e-4, **kwargs):
 
     '''Returns:
       loss: 1-accuracy if `use_confusion` is "linear" (default),
@@ -30,8 +69,8 @@ def get_loss(labels, logits, use_confusion='linear', return_aux=True,
       accuracy_operator: using confusion matrix
     '''
     confusion_matrix = get_confusion(labels=labels, logits=logits, **kwargs)
-    accuracy_operator = get_accuracy(confusion_matrix)
-    with tf.name_scope('loss'):
+    accuracy_operator = get_accuracy(confusion_matrix, **kwargs)
+    with tf.name_scope('loss_aux'):
         if use_confusion.lower() == 'linear':
             train_loss = 1 - accuracy_operator
         elif use_confusion.lower() == 'log':
@@ -42,19 +81,29 @@ def get_loss(labels, logits, use_confusion='linear', return_aux=True,
         else:
             raise ValueError('Invalid value for parameter `use_confusion`:%s'
                              % use_confusion)
-
-        l2_loss = tf.reduce_sum([tf.nn.l2_loss(v, name='L2_reg_loss')
-                                 for v in tf.trainable_variables()])
-
-        loss = unweighted_loss + lamb * l2_loss
+        train_loss = tf.identity(train_loss, name='train_loss')
+        tf.add_to_collection('losses', train_loss)
+        penal_vars = [v for v in tf.trainable_variables() 
+                      if v.name.find('weights') != -1]
+        l2_losses = [tf.nn.l2_loss(v,name=v.name[
+            :v.name.find('weights')]+'l2_loss') for v in penal_vars]
+        for l in l2_losses:
+            tf.add_to_collection('losses', l)
+        l2_loss = tf.reduce_sum(l2_losses, name='l2_loss_all')
+        tf.add_to_collection('losses', l2_loss)
+    
+    loss_averages = tf.train.ExponentialMovingAverage(0.95, name='loss_avg')
+    loss_averages_op = loss_averages.apply(tf.get_collection('losses'))
+    with tf.control_dependencies([loss_averages_op]):
+        loss = tf.identity(train_loss + beta * l2_loss, name='total_loss')
 
     if return_aux:
-        return loss, confusion_matrix, accuracy_operator
+        return loss, confusion_matrix, accuracy_operator, loss_averages
     return loss
 
 
 def get_confusion(labels, logits, num_classes=4, differentiable=False,
-                  use_softmax=True):
+                  use_softmax=True, **kwargs):
     y = logits
     if use_softmax:
         y = tf.nn.softmax(logits)
@@ -82,7 +131,7 @@ def get_accuracy(conf_op, eps=1e-10):
     return acc
 
 
-''' TEST SCRIPT'''
+''' TEST SCRIPT
 tf.reset_default_graph()
 preds = tf.placeholder(1, [None, 4])
 labels = tf.placeholder(tf.int32, [None])
@@ -101,4 +150,4 @@ with tf.Session() as sess:
             labels: [0, 1, 2, 3]}
     print(acc.eval(feed_dict))
     print(diff_acc.eval(feed_dict))
-''''''
+'''

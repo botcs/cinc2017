@@ -1,0 +1,32 @@
+{
+  "fc_params": {
+    "fc_sizes": []
+  },
+  "partition_num": 5,
+  "resnet": {
+    "avg_pool": true,
+    "block0": {
+      "RESIDUAL_POOL": 3,
+      "dropout": 1,
+      "kernel_sizes": 16,
+      "out_dims": [
+        4,
+        8,
+        8
+      ],
+      "pool_sizes": 1
+    },
+    "block1": {
+      "RESIDUAL_POOL": 3,
+      "dropout": 1,
+      "kernel_sizes": 16,
+      "out_dims": [
+        4,
+        8,
+        8
+      ],
+      "pool_sizes": 1
+    },
+    "block_num": 2
+  }
+}

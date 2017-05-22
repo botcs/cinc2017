@@ -42,8 +42,8 @@ class model(object):
 
         for i, (dim, ker, pool) in enumerate(
                 zip(out_dims, kernel_sizes, pool_sizes)):
-            with tf.variable_scope('Conv%d' % (i + 1)):
-                scope = 'Conv_dim%d_ker%d_pool%d' % (dim, ker, pool)
+            with tf.variable_scope('conv%d' % (i + 1)):
+                scope = 'c%dk%dw%d' % (dim, ker, pool)
                 # does the same as 1d, but with convenience function
                 h = tf.contrib.layers.conv2d(
                     h, dim, [ker, 1],

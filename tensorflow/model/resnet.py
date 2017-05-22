@@ -1,5 +1,5 @@
 import tensorflow as tf
-import cnn
+from . import cnn
 
 
 def get_resnet_output(seq_len, input_op, squeeze=True, avg_pool=False,
@@ -37,7 +37,7 @@ required shape: [batch_size, sequence_length]')
             seq_len=seq_len,
             input_op=residual_input,
             residual=True,
-            model_name='CNN_block_%d' % i,
+            model_name='FCN_block_%d' % i,
             **cnn_block_params)
 
         residual_input += c.output

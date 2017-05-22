@@ -1,10 +1,10 @@
 import tensorflow as tf
 import json
-import resnet
-import cnn
-import rnn
-import classifier
-from misc import variable_size_window
+from . import resnet
+from . import cnn
+from . import rnn
+from . import classifier
+from .misc import variable_size_window
 
 
 def get_model_logits(seq_len, input_op, **params):
