@@ -8,6 +8,8 @@ from .misc import variable_size_window
 
 
 def get_model_logits(seq_len, input_op, **params):
+    is_training = tf.Variable(True, trainable=False, name='is_training')
+    tf.add_to_collection('inference_vars', is_training)
     ####################################
     # Variable length feature extraction
     var_features = seq_len, input_op

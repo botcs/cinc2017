@@ -17,7 +17,7 @@ def get_trainer(labels, logits, use_dict=False, **kwargs):
             'acc': acc,
             'learning_rate': lrate}
         return ret
-    return step, train, loss, conf, acc, lrate, var_avg, loss_avg
+    return step, train, loss, conf, acc, lrate, loss_avg, var_avg
 
 
 def get_update_op(loss, global_step=None, group=False, **kwargs):
@@ -44,8 +44,9 @@ def get_update_op(loss, global_step=None, group=False, **kwargs):
     variable_averages = tf.train.ExponentialMovingAverage(
         MOVING_AVERAGE_DECAY, global_step, name='variable_avg')
     variables_averages_op = variable_averages.apply(tf.trainable_variables())
-    
-    with tf.control_dependencies([variables_averages_op, update]):
+    tf.add_to_collection('update_ops', variables_averages_op)
+    with tf.control_dependencies(
+        tf.get_collection('update_ops') + [update]):
         train_op = tf.no_op(name='train_step')
     
     # tf.add_to_collection('averages', variable_averages)
@@ -107,8 +108,10 @@ def get_loss(labels, logits, use_confusion='log', return_aux=True,
     tf.add_to_collection('losses', total_loss)
     
     
-    loss_averages = tf.train.ExponentialMovingAverage(0.95, name='loss_avg')
+    loss_averages = tf.train.ExponentialMovingAverage(
+        MOVING_AVERAGE_DECAY, name='loss_avg')
     loss_averages_op = loss_averages.apply(tf.get_collection('losses'))
+    tf.add_to_collection('update_ops', loss_averages_op)
     with tf.control_dependencies([loss_averages_op]):
         loss = tf.identity(total_loss, name='loss')
         

@@ -11,8 +11,9 @@ def _get_FCN_block(conv_in, kernel_sizes, out_dims, is_training,
             bn = tf.layers.batch_normalization(
                 conv_in, scale=False, training=is_training)
             relu = tf.nn.relu(bn)
+            n = 2 * (k_size * in_c * out_c) ** .5
             W = tf.Variable(
-                tf.truncated_normal([k_size, in_c, out_c]),
+                tf.truncated_normal([k_size, in_c, out_c])/n,
                 collections=[tf.GraphKeys.GLOBAL_VARIABLES, 'weights'],
                 name='weights')
             conv_out = tf.nn.conv1d(relu, W, 1, 'SAME')
@@ -29,19 +30,16 @@ def _get_FCN_block(conv_in, kernel_sizes, out_dims, is_training,
             'AVG' if avg_pool else 'MAX', RESIDUAL_POOL)
         conv_out = pool_fn(
             conv_out,
-            pool_size=RESIDUAL_POOL*2//3, # stay close to resnets
+            pool_size=RESIDUAL_POOL,
             strides=RESIDUAL_POOL)
     
     return conv_out
     
 def get_resnet_output(
     seq_len, input_op, avg_pool=False, 
-    block_num=None, is_training=None, **resnet_params):
-
-    if is_training is None:
-        #is_training = tf.Variable(True, trainable=False, name='is_training')
-        is_training=True
+    block_num=None, **resnet_params):
     
+    is_training = tf.get_collection('inference_vars')[0]
     if block_num is None:
         raise ValueError('`block_num` must be defined for ResNet parameters')
 
@@ -72,8 +70,9 @@ required shape: [batch_size, sequence_length]')
             # ...
             in_c = res_in.get_shape()[-1].value
             out_c = conv_out.get_shape()[-1].value
+            n = 2 * (pool_factor * in_c * out_c) ** .5
             W = tf.Variable(
-                tf.random_normal([pool_factor, in_c, out_c]),
+                tf.random_normal([pool_factor, in_c, out_c])/n,
                 collections=[tf.GraphKeys.GLOBAL_VARIABLES, 'weights'],
                 name='weights')
             shortcut = tf.nn.conv1d(res_in, W, pool_factor, 'VALID')

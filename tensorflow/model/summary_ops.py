@@ -1,12 +1,14 @@
 import tensorflow as tf
 
+MOVING_AVERAGE_DECAY = 0.999
+
 
 def get_all_summaries(step, train, loss, conf, 
-                      acc, lrate, var_avg, loss_avg):
+                      acc, lrate, loss_avg, var_avg, **kwargs):
     '''High level function, adds currently defined summaries to the graph
     merges the operations, and returns the summary operator'''
     add_variables_histogram()
-    add_loss_summaries(loss_averages=loss_avg)
+    add_loss_summaries(loss_avg=loss_avg)
     add_activation_summaries()
     add_eval_summaries(acc, lrate, conf)
     
@@ -28,7 +30,7 @@ def add_label_hist(label):
     tf.summary.histogram('label', label)
 
     
-def add_loss_summaries(losses=None, loss_averages=None):
+def add_loss_summaries(losses=None, loss_avg=None):
     '''
     This function is a high level callable, it only adds summaries 
     to the graph, and does not return anything.
@@ -44,8 +46,9 @@ def add_loss_summaries(losses=None, loss_averages=None):
     losses = [train_loss, l2_loss, total_loss]
     for l in losses:
         tf.summary.scalar('raw_losses/' + l.op.name, l)
-        tf.summary.scalar(
-            'smoothed_losses/' + l.op.name, loss_averages.average(l))
+        if loss_avg:
+            tf.summary.scalar(
+                'smoothed_losses/' + l.op.name, loss_avg.average(l))
     
     
 def add_activation_summaries(activations=None):
@@ -53,7 +56,6 @@ def add_activation_summaries(activations=None):
         activations = tf.get_collection('activations')
     
     for ac in activations:
-        #print('!!! ', ac.op.name)
         tf.summary.histogram('activations/' + ac.op.name, ac)
         tf.summary.scalar('sparsity/' + ac.op.name, 
                           tf.nn.zero_fraction(ac))

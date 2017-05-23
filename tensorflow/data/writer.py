@@ -75,6 +75,11 @@ def write_TFRecord(data, label, fname='train', threads=8):
 
 def main(args):
     data, label, class_hist, fname = read_raw(args.ref, args.from_dir)
+    
+    c = list(zip(data, label))
+    np.random.shuffle(c)
+    data, label = zip(*c)
+    
     if not os.path.exists(os.path.dirname(args.to)):
         print('make directory:', os.path.dirname(args.to))
         os.mkdir(os.path.dirname(args.to))

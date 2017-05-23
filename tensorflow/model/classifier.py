@@ -12,18 +12,22 @@ class model(object):
     '''
 
     def get_layers(self, in_node, fc_sizes, out_dim):
-
+        is_training = tf.get_collection('inference_vars')[0]
         act_fn = tf.nn.relu
         h = in_node
         # keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
         for i, size in enumerate(fc_sizes):
             with tf.variable_scope('hidden_layer%d' % i):
                 h = tf.contrib.layers.fully_connected(
-                    h, size, act_fn, tf.contrib.layers.batch_norm)
+                    h, size, act_fn, biases_inirializer=None)
                 tf.add_to_collection('activations', h)
+                h = tf.layers.batch_normalization(
+                    h, scale=False, training=is_training)
                 print(h)
         logits = tf.contrib.layers.fully_connected(
-            h, out_dim, None, tf.contrib.layers.batch_norm, scope='logits')
+            h, out_dim, None, biases_initializer=None, scope='logits')
+        logits = tf.layers.batch_normalization(
+            logits, scale=False, training=is_training)
         tf.add_to_collection('activations', logits)
         print(logits)
         return logits
