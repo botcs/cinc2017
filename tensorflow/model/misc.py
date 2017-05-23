@@ -29,7 +29,7 @@ def variable_size_window(seq_len, x, N):
         max_seq_len = tf.shape(new_x)[1]
         div_x = tf.reshape(
             new_x, [batch_size, N, max_seq_len//N, x.get_shape()[-1].value])
-
+        
         # Convenience variable
         seq_len = tf.ones([batch_size]) * N
         print(div_x)

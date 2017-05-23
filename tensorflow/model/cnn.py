@@ -39,14 +39,21 @@ class model(object):
             normalizer_fn = None
 
         # keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
-
-        for i, (dim, ker, pool) in enumerate(
-                zip(out_dims, kernel_sizes, pool_sizes)):
+        num_layers = len(out_dims)
+        for i, (dim, ker, pool) in enumerate(zip(
+            out_dims, kernel_sizes, pool_sizes)):
+            
+            activation_fn = tf.nn.relu 
+            # Last block doesn't need to use ReLU
+            if i == num_layers - 1 and residual:
+                activation_fn = None
+                
             with tf.variable_scope('conv%d' % (i + 1)):
                 scope = 'c%dk%dw%d' % (dim, ker, pool)
                 # does the same as 1d, but with convenience function
                 h = tf.contrib.layers.conv2d(
                     h, dim, [ker, 1],
+                    activation_fn=activation_fn,
                     normalizer_fn=normalizer_fn,
                     biases_initializer=biases_initializer,
                     scope=scope)
@@ -55,8 +62,9 @@ class model(object):
                     h = tf.contrib.layers.max_pool2d(
                         h, kernel_size=[pool, 1], stride=[pool, 1])
                     seq_len /= pool
-
+                
                 # h = tf.nn.dropout(h, keep_prob)
+                tf.add_to_collection('activations', h)
                 print(h)
         if residual:
             return h, seq_len
@@ -85,8 +93,8 @@ class model(object):
             pool_sizes=self.pool_sizes,
             residual=self.residual)
 
-    def __init__(self, seq_len, input_op, out_dims, kernel_sizes, pool_sizes,
-                 residual, model_name=None, **kwargs):
+    def __init__(self, seq_len, input_op, out_dims, kernel_sizes, pool_sizes=1,
+                 residual=False, model_name=None, **kwargs):
         '''
         Initializer default vales use tf.app.flags
         returns an object, whose main fields are tensorflow graph nodes.

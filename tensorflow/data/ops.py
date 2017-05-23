@@ -11,7 +11,7 @@ class foo(object):
 
 FLAGS = foo()
 FLAGS.path = 'train.TFRecord'
-FLAGS.batch_size = tf.constant(16, name='batch_size')
+FLAGS.batch_size = 16
 FLAGS.capacity = 512
 FLAGS.threads = 8
 

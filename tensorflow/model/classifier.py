@@ -18,10 +18,13 @@ class model(object):
         # keep_prob = tf.placeholder_with_default(keep_prob, [], 'keep_prob')
         for i, size in enumerate(fc_sizes):
             with tf.variable_scope('hidden_layer%d' % i):
-                h = tf.contrib.layers.fully_connected(h, size, act_fn)
+                h = tf.contrib.layers.fully_connected(
+                    h, size, act_fn, tf.contrib.layers.batch_norm)
+                tf.add_to_collection('activations', h)
                 print(h)
         logits = tf.contrib.layers.fully_connected(
-            h, out_dim, None, scope='logits')
+            h, out_dim, None, tf.contrib.layers.batch_norm, scope='logits')
+        tf.add_to_collection('activations', logits)
         print(logits)
         return logits
 

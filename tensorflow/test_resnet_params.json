@@ -6,27 +6,20 @@
   "resnet": {
     "avg_pool": true,
     "block0": {
-      "RESIDUAL_POOL": 3,
-      "dropout": 1,
-      "kernel_sizes": 16,
-      "out_dims": [
-        4,
-        8,
-        8
-      ],
-      "pool_sizes": 1
+      "RESIDUAL_POOL": 2,
+      "kernel_sizes": [64, 64],
+      "out_dims": [32, 32]
     },
     "block1": {
-      "RESIDUAL_POOL": 3,
-      "dropout": 1,
-      "kernel_sizes": 16,
-      "out_dims": [
-        4,
-        8,
-        8
-      ],
-      "pool_sizes": 1
+      "RESIDUAL_POOL": 2,
+      "kernel_sizes": [32, 32],
+      "out_dims": [64, 64]
     },
-    "block_num": 2
+    "block2": {
+     "RESIDUAL_POOL": 2,
+     "kernel_sizes": [16, 16],
+      "out_dims": [128, 128]
+    },
+    "block_num": 3
   }
 }
