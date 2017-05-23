@@ -11,3 +11,7 @@ RECORDS
 **/ckpt/**
 **/logs/**
 *.out
+*.tfevents*
+*.data-*
+*.pbtxt*
+tensorflow/training
