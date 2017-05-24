@@ -34,8 +34,8 @@ T2=T_windows(2,:);
       [pks1,locs1] = findpeaks(yt_SM);
       [pks2,locs2] = findpeaks(-yt_SM);
 
-      locs_yt=[locs1,locs2];
-      pks_yt=[pks1,-pks2];
+      locs_yt=[locs1',locs2'];
+      pks_yt=[pks1',-pks2'];
 
 %       abs_pks_yt=abs((pks_yt+abs(min(yt_SM)))-(mean_yt(1)+abs(min(yt_SM))));
 %       [M,I]=max(abs_pks_yt);

@@ -1,6 +1,6 @@
-function [Q_index,Q_value]=Q_detection(y0,y_HP,R_index,fs)	
-	%Q hullamok csucsai
-    Q_index=[];Q_value=[];
+function [S_index,S_value]=S_detection(y0,y_HP,R_index,fs)	
+	%S hullamok csucsai
+    S_index=[];S_value=[];
 	
 	%Variabilitási indexek
 	QS5=0;
@@ -16,12 +16,13 @@ function [Q_index,Q_value]=Q_detection(y0,y_HP,R_index,fs)
     R_index2=R_index+delay;
     
     for i=round(max_RR_d/2)+1:round(length(y_HP3)-max_RR_d/2)-1
-        start=R_index2(j)-max_QRS_d/2;
-        stop=R_index2(j);
+        start=R_index2(j);
+        stop=R_index2(j)+max_QRS_d/2;
         
         if start<=i && i<=stop && y_HP3(i)== min(y_HP3(start:stop))
-            Q_index=[Q_index i-delay];
-            Q_value=[Q_value y0(i-delay)];  
+            S_index=[S_index i-delay];
+            S_value=[S_value y0(i-delay)];    
+            
             if j<length(R_index)
                 j=j+1;
             end

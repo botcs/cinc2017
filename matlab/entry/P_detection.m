@@ -34,8 +34,8 @@ P2=P_windows(2,:);
       [pks1,locs1] = findpeaks(yp_SM);
       [pks2,locs2] = findpeaks(-yp_SM);
 
-      locs_yp=[locs1,locs2];
-      pks_yp=[pks1,-pks2];
+      locs_yp=[locs1',locs2'];
+      pks_yp=[pks1',-pks2'];
 
 %       abs_pks_yp=abs((pks_yp+abs(min(yp_SM)))-(mean_yp(1)+abs(min(yp_SM))));
 %       [M,I]=max(abs_pks_yp);

@@ -4,7 +4,5 @@ function RMSSD=RMSSD_function(R_index)
     NN=R_index(2:end)-R_index(1:end-1);
     N=length(NN);
     I=sqrt(1/N*sum(NN));
-    
-
-    
+       
 end

@@ -4,12 +4,14 @@ function [SDQT,RMSSD_QT]=TDA_QT(Q_index,T_index,fs)
     max_RR_d=0.8*fs;
     j=1;
     for i=1:length(T_index)
-        diff_QT=Q_index(i)-T_index(j);
-        if diff_QT>0 && diff_QT<max_RR_d
-            QT=[QT diff_QT];
-            j=j+1;
-        elseif diff_QT>max_RR_d && (j+2)<length(T_index)
-            j=j+2;
+        if i<=length(Q_index)
+            diff_QT=Q_index(i)-T_index(j);
+            if diff_QT>0 && diff_QT<max_RR_d && j+1<length(T_index)
+                QT=[QT diff_QT];
+                j=j+1;
+            elseif diff_QT>max_RR_d && (j+2)<length(T_index)
+                j=j+2;
+            end
         end
     end
     
