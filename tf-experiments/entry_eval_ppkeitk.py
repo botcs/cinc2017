@@ -1,6 +1,6 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python3.5
 
-
+from tensorflow.python import debug as tf_debug
 import json
 import os
 import numpy as np
@@ -9,6 +9,7 @@ import tensorflow as tf
 from time import time, sleep
 
 from model.assembler import get_model_logits
+tf.set_random_seed(42)
 
 
 class data_handler:
@@ -58,10 +59,12 @@ class data_handler:
         assert fname == self.processing
 
         print(sample['name'], 'evaluated to',
-              dh.map_logits(logits_val),
+              dh.map_logits(logits),
+              (np.exp(logits)/np.exp(logits).sum() * 100).astype(int),
               'Wall time: %4.3f' % (time() - self.start_time))
         with open(self.answers, 'a') as f:
             f.write(fname + ',' + self.map_logits(logits) + '\n')
+
         self.processing = None
         self.processed.add(fname)
         self.last_update = time()
@@ -82,8 +85,9 @@ class data_handler:
             return True
         return False
 
+
 dh = data_handler('data/raw/training2017/')
-proto_path = 'test_scripts/wide_resnet.json'
+proto_path = 'proto/small_resnet.json'
 proto_name = os.path.splitext(proto_path)[0]
 proto_name = os.path.basename(proto_name)
 
@@ -105,25 +109,29 @@ sv = tf.train.Supervisor(
 WAIT_TIME = .1
 MAX_TIME = 10.
 
-#'''
+'''
 if tf.gfile.Exists('answers.txt'):
     print('!!!REMOVING previous answers.txt')
     tf.gfile.Remove('answers.txt')
-#'''
+'''
 
 with sv.managed_session() as sess:
+    # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
     start_time = time()
     t = time() - start_time
-    while not sv.should_stop() and dh.t_since_update() < MAX_TIME:
+    while not sv.should_stop():
         print('Checking RECORDS:', end='')
         if dh.check():
             while len(dh.waiting) > 0:
                 sample = dh.next()
-                logits_val = sess.run(logits, {input_op: sample['val']})
+                feed = {'is_training:0': False, input_op: sample['val']}
+                logits_val = sess.run(logits, feed)
                 dh.write(sample['name'], logits_val)
         else:
             print('No file to process, waiting %1.1f sec(s)...' %
                   WAIT_TIME)
             sleep(WAIT_TIME)
+        if dh.t_since_update() > MAX_TIME:
+            break
 
     print('Max idle time (%d secs) expired, quitting' % MAX_TIME)

@@ -26,8 +26,8 @@ class model(object):
                 print(h)
         logits = tf.contrib.layers.fully_connected(
             h, out_dim, None, biases_initializer=None, scope='logits')
-        # logits = tf.layers.batch_normalization(
-        #     logits, scale=False, training=is_training)
+        logits = tf.layers.batch_normalization(
+            logits, scale=False, training=is_training)
         tf.add_to_collection('activations', logits)
         print(logits)
         return logits
