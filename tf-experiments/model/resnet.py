@@ -1,10 +1,10 @@
 import tensorflow as tf
 from . import cnn
 
-
-def _get_FCN_block(conv_in, kernel_sizes, out_dims, is_training,
+    
+def _get_FCN_block(conv_in, kernel_sizes, out_dims, is_training, 
                    avg_pool=False, RESIDUAL_POOL=1, **block_params):
-
+    
     for it, (k_size, out_c) in enumerate(zip(kernel_sizes, out_dims)):
         in_c = conv_in.get_shape()[-1].value
         with tf.name_scope('Conv%d' % it):
@@ -20,7 +20,7 @@ def _get_FCN_block(conv_in, kernel_sizes, out_dims, is_training,
             print(conv_out)
             tf.add_to_collection('activations', conv_out)
             conv_in = conv_out
-
+            
     if RESIDUAL_POOL > 1:
         if avg_pool:
             pool_fn = tf.layers.average_pooling1d
@@ -32,13 +32,13 @@ def _get_FCN_block(conv_in, kernel_sizes, out_dims, is_training,
             conv_out,
             pool_size=RESIDUAL_POOL,
             strides=RESIDUAL_POOL)
-
+    
     return conv_out
-
+    
 def get_resnet_output(
-    seq_len, input_op, avg_pool=False,
+    seq_len, input_op, avg_pool=False, 
     block_num=None, **resnet_params):
-
+    
     is_training = tf.get_collection('inference_vars')[0]
     if block_num is None:
         raise ValueError('`block_num` must be defined for ResNet parameters')
@@ -49,7 +49,7 @@ def get_resnet_output(
     else:
         raise ValueError('`input_op` has incorrect number of dimensions. \
 required shape: [batch_size, sequence_length]')
-
+    
     res_in = input_op
     # Model assembly
     for i in range(block_num):
@@ -62,9 +62,9 @@ required shape: [batch_size, sequence_length]')
             conv_out = _get_FCN_block(conv_in, **block_params)
             conv_in = conv_out
             seq_len /= pool_factor
-
+        
         with tf.name_scope('shortcut_connection_%d' % i):
-            # https://arxiv.org/pdf/1512.03385.pdf
+            # https://arxiv.org/pdf/1512.03385.pdf 
             # using modified B) shortcut
             # since model is small
             # ...
@@ -76,9 +76,9 @@ required shape: [batch_size, sequence_length]')
                 collections=[tf.GraphKeys.GLOBAL_VARIABLES, 'weights'],
                 name='weights')
             shortcut = tf.nn.conv1d(res_in, W, pool_factor, 'VALID')
-
+            
         res_in = tf.nn.relu(shortcut + conv_out)
-
+        
         print('')
     res_out = res_in
 
