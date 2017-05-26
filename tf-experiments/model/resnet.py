@@ -7,7 +7,7 @@ def _get_FCN_block(conv_in, kernel_sizes, out_dims, is_training,
 
     for it, (k_size, out_c) in enumerate(zip(kernel_sizes, out_dims)):
         in_c = conv_in.get_shape()[-1].value
-        with tf.variable_scope('Conv%d' % it):
+        with tf.name_scope('Conv%d' % it):
             bn = tf.layers.batch_normalization(
                 conv_in, scale=False, training=is_training)
             relu = tf.nn.relu(bn)
@@ -35,7 +35,6 @@ def _get_FCN_block(conv_in, kernel_sizes, out_dims, is_training,
 
     return conv_out
 
-
 def get_resnet_output(
     seq_len, input_op, avg_pool=False,
     block_num=None, **resnet_params):
@@ -43,6 +42,7 @@ def get_resnet_output(
     is_training = tf.get_collection('inference_vars')[0]
     if block_num is None:
         raise ValueError('`block_num` must be defined for ResNet parameters')
+
 
     if len(input_op.get_shape()) == 2:
         input_op = input_op[..., None]
@@ -57,13 +57,13 @@ required shape: [batch_size, sequence_length]')
         pool_factor = block_params['RESIDUAL_POOL']
         conv_in = res_in
         # if dimensions are not compatible, tf will catch the error
-        with tf.variable_scope('FCN_block_%d' % i):
+        with tf.name_scope('FCN_block_%d' % i):
             block_params['is_training'] = is_training
             conv_out = _get_FCN_block(conv_in, **block_params)
             conv_in = conv_out
             seq_len /= pool_factor
 
-        with tf.variable_scope('shortcut_connection_%d' % i):
+        with tf.name_scope('shortcut_connection_%d' % i):
             # https://arxiv.org/pdf/1512.03385.pdf
             # using modified B) shortcut
             # since model is small

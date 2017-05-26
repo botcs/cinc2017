@@ -13,7 +13,7 @@ def variable_size_window(seq_len, x, N):
     print('  Dimensions: [batch_size, num_windows, window_size, num_features]')
     with tf.name_scope('sample_division'):
         if len(x.get_shape()) == 3:
-            x = x[..., None, :]
+            x = x[:, :, None, :]
         else:
             raise ValueError('`input_op` has incorrect number of dimensions. \
         required shape: [batch_size, sequence_length, num_features]')
@@ -27,9 +27,13 @@ def variable_size_window(seq_len, x, N):
         # Don't pad if not necessary, i.e. max_seq_len%N == 0
         new_x = tf.cond(tf.equal(max_seq_len % N, 0), lambda: x, lambda: x_pad)
         max_seq_len = tf.shape(new_x)[1]
-        div_x = tf.reshape(
-            new_x, [batch_size, N, max_seq_len//N, x.get_shape()[-1].value])
-        
+        new_shape = [x.get_shape()[0].value,
+                     N,
+                     max_seq_len//N,
+                     x.get_shape()[-1].value]
+
+        div_x = tf.reshape(new_x, new_shape)
+
         # Convenience variable
         seq_len = tf.ones([batch_size]) * N
         print(div_x)
