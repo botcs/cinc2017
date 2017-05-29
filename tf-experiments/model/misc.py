@@ -17,20 +17,21 @@ def variable_size_window(seq_len, x, N):
         else:
             raise ValueError('`input_op` has incorrect number of dimensions. \
         required shape: [batch_size, sequence_length, num_features]')
+        with tf.name_scope('windowing'):
+            x_shape = tf.shape(x)
+            batch_size, max_seq_len = x_shape[0], x_shape[1]
+            # Make sure sequence can be divided to equal parts
+            padding = [[0, 0], [0, N-max_seq_len % N], [0, 0], [0, 0]]
+            x_pad = tf.pad(x, padding, 'SYMMETRIC')
 
-        x_shape = tf.shape(x)
-        batch_size, max_seq_len = x_shape[0], x_shape[1]
-        # Make sure sequence can be divided to equal parts
-        padding = [[0, 0], [0, N-max_seq_len % N], [0, 0], [0, 0]]
-        x_pad = tf.pad(x, padding, 'SYMMETRIC')
+            # Don't pad if not necessary, i.e. max_seq_len%N == 0
+            new_x = tf.cond(tf.equal(max_seq_len % N, 0),
+                            lambda: x, lambda: x_pad)
+            max_seq_len = tf.shape(new_x)[1]
+            new_shape = [batch_size, N, max_seq_len//N, x.get_shape()[-1].value]
+            div_x = tf.reshape(new_x, new_shape)
 
-        # Don't pad if not necessary, i.e. max_seq_len%N == 0
-        new_x = tf.cond(tf.equal(max_seq_len % N, 0), lambda: x, lambda: x_pad)
-        max_seq_len = tf.shape(new_x)[1]
-        div_x = tf.reshape(
-            new_x, [batch_size, N, max_seq_len//N, x.get_shape()[-1].value])
-        
-        # Convenience variable
-        seq_len = tf.ones([batch_size]) * N
-        print(div_x)
-        return seq_len, div_x
+            # Convenience variable
+            seq_len = tf.ones([batch_size]) * N
+            print(div_x)
+            return seq_len, div_x

@@ -21,13 +21,13 @@ class model(object):
                 h = tf.contrib.layers.fully_connected(
                     h, size, act_fn, biases_inirializer=None)
                 tf.add_to_collection('activations', h)
-                h = tf.layers.batch_normalization(
-                    h, scale=False, training=is_training)
+                h = tf.contrib.layers.batch_norm(
+                    h, scale=False, is_training=is_training)
                 print(h)
         logits = tf.contrib.layers.fully_connected(
             h, out_dim, None, biases_initializer=None, scope='logits')
-        logits = tf.layers.batch_normalization(
-            logits, scale=False, training=is_training)
+        logits = tf.contrib.layers.batch_norm(
+            logits, scale=False, is_training=is_training)
         tf.add_to_collection('activations', logits)
         print(logits)
         return logits

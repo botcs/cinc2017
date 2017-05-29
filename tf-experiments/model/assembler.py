@@ -14,14 +14,15 @@ def get_model_logits(seq_len, input_op, **params):
     # Variable length feature extraction
     var_features = seq_len, input_op
     if params.get('resnet'):
-        with tf.name_scope('ResNet'):
+        with tf.variable_scope('ResNet'):
             var_features = resnet.get_resnet_output(
                 var_features[0], var_features[1], **params['resnet'])
 
     elif params.get('fcn'):
-        var_features = cnn.get_output(
-            var_features[0], var_features[1],
-            return_name=False, **params['fcn'])
+        with tf.variable_scope('FCN'):
+            var_features = cnn.get_output(
+                var_features[0], var_features[1],
+                return_name=False, **params['fcn'])
 
     ####################################
     # Fixed length feature extraction
