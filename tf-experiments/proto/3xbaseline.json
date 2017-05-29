@@ -1,0 +1,55 @@
+{
+  "fc_params": {
+    "fc_sizes": []
+  },
+  "partition_num": 1,
+  "resnet": {
+    "avg_pool": false,
+    "block0": {
+      "RESIDUAL_POOL": 4,
+      "kernel_sizes": [7, 7, 7],
+      "out_dims": [128, 128, 128]
+    },
+    "block1": {
+      "RESIDUAL_POOL": 1,
+      "kernel_sizes": [7, 7, 7],
+      "out_dims": [128, 128, 128]
+    },
+    "block2": {
+      "RESIDUAL_POOL": 1,
+      "kernel_sizes": [7, 7, 7],
+      "out_dims": [128, 128, 128]
+    },
+    "block0": {
+      "RESIDUAL_POOL": 4,
+      "kernel_sizes": [7, 7, 7],
+      "out_dims": [128, 128, 128]
+    },
+    "block1": {
+      "RESIDUAL_POOL": 1,
+      "kernel_sizes": [7, 7, 7],
+      "out_dims": [128, 128, 128]
+    },
+    "block2": {
+      "RESIDUAL_POOL": 1,
+      "kernel_sizes": [7, 7, 7],
+      "out_dims": [128, 128, 128]
+    },
+    "block0": {
+      "RESIDUAL_POOL": 4,
+      "kernel_sizes": [7, 7, 7],
+      "out_dims": [128, 128, 128]
+    },
+    "block1": {
+      "RESIDUAL_POOL": 4,
+      "kernel_sizes": [7, 7, 7],
+      "out_dims": [128, 128, 128]
+    },
+    "block2": {
+      "RESIDUAL_POOL": 1,
+      "kernel_sizes": [7, 7, 7],
+      "out_dims": [128, 128, 128]
+    },
+   "block_num": 3
+  }
+}
