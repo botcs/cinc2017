@@ -19,7 +19,7 @@ function [S_index,S_value]=S_detection(y0,y_HP,R_index,fs)
         start=R_index2(j);
         stop=R_index2(j)+max_QRS_d/2;
         
-        if start<=i && i<=stop && y_HP3(i)== min(y_HP3(start:stop))
+        if start<=i && i<=stop && y_HP3(i)== min(y_HP3(ceil(start):ceil(stop)))
             S_index=[S_index i-delay];
             S_value=[S_value y0(i-delay)];    
             

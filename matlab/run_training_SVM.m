@@ -34,7 +34,7 @@ X=real(cell2mat(train_set(:,3:end)));
 %% Training
 SVMModel = fitcecoc(X, Y)
 CVSVMModel = crossval(SVMModel);
-%%time_domain_featurtes
+%% time_domain_featurtes
 oosLoss = kfoldLoss(CVSVMModel);
 FirstModel = CVSVMModel.Trained{1};
 [yfit,score] = predict(FirstModel, X_val);
@@ -70,5 +70,5 @@ value_fit_mat=cell2mat(value_fit');
 index_mat=num2str(index');
 eval_matrix=[strcat(index_mat,',',value_val_mat,',',value_fit_mat)];
 
- output_filename='CVSVMModel.mat';
- save(output_filename,'CVSVMModel');
+output_filename='CVSVMModel.mat';
+save(output_filename,'CVSVMModel');

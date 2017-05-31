@@ -9,7 +9,7 @@ filename=[folder,records];
 
 [numData,textData,rawData] = xlsread(filename);
 
-time_domain_features_v7=[]
+time_domain_features_v8=[]
 s=rng('shuffle');
 r = randi(length(textData),1,600);
 for ii=1:1200%length(textData)%length(r)
@@ -18,12 +18,12 @@ for ii=1:1200%length(textData)%length(r)
     data=load(record_name);
     y0=data.val;
     
-%     fs=300;
-%     t=0:1/fs:(length(y0)-1)/fs;
-%     plot(t,y0);
-%     ylabel('Amplitude');
-%     xlabel('Time (s)'); 
-%     title([textData(jj,1),textData(jj,2)]);
+    fs=300;
+    t=0:1/fs:(length(y0)-1)/fs;
+    plot(t,y0);
+    ylabel('Amplitude');
+    xlabel('Time (s)'); 
+    title([textData(jj,1),textData(jj,2)]);
     
     [pNN50,SDNN,RMSSD,...
      SDPR,RMSSD_PR,...
@@ -31,8 +31,8 @@ for ii=1:1200%length(textData)%length(r)
      BPM,...
      pPR,pQR,pSR,pTR]=Time_Domain_Features(y0);
      
-    time_domain_features_v7=...
-    [time_domain_features_v7;...
+    time_domain_features_v8=...
+    [time_domain_features_v8;...
      textData(jj,1),textData(jj,2),...
      pNN50,SDNN,RMSSD,...
      SDPR,RMSSD_PR,...
@@ -43,5 +43,5 @@ for ii=1:1200%length(textData)%length(r)
     ii
 end
 %% 
- output_filename='time_domain_features_v7.mat';
- save(output_filename,'time_domain_features_v7');
+%  output_filename='time_domain_features_v8.mat';
+%  save(output_filename,'time_domain_features_v8');

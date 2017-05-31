@@ -28,11 +28,9 @@ function [pNN50,SDNN,RMSSD,...
     
     %P detection
     [P_index,P_value]=P_detection(y0,R_index,BPM,fs);
-%	[P_index,P_value]=P_detection(y0,R_index,y_PT_wave_SM,fs);
     
     %T detection
     [T_index,T_value]=T_detection(y0,R_index,BPM,fs);
-% 	[T_index,T_value]=T_detection(y0,R_index,y_PT_wave_SM,fs);  
 
     %Plot ECG waves
     t=0:1/fs:(length(y0)-1)/fs;
