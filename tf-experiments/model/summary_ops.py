@@ -8,6 +8,7 @@ def get_all_summaries(step, train, loss, conf, acc, lrate, **kwargs):
     add_loss_summaries()
     add_activation_summaries()
     add_eval_summaries(acc, lrate, conf)
+    add_smooth_summaries()
 
     return tf.summary.merge_all()
 
@@ -24,9 +25,9 @@ def add_variables_histogram():
 
     for g, v in grads_and_vars:
         tf.summary.histogram(
-            'gradient/' + v.op.name, g)
+            v.op.name + '/gradient', g)
         tf.summary.histogram(
-            'variable/' + v.op.name, v)
+            v.op.name + '/variable', v)
 
 
 def add_label_hist(label):

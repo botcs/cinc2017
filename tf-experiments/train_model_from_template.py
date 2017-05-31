@@ -24,11 +24,11 @@ def main(argv):
     tf.reset_default_graph()
     network_params = json.load(open(proto_path))
     bsize = tf.placeholder_with_default(BATCH_SIZE, [], 'batch_size')
-    #input_op, seq_len, label_op = data.ops.get_batch_producer(
-    #    './data/TFRecords/aug_train.TFRecord', bsize)
-    input_op = tf.placeholder(1, [None, None])
-    seq_len = tf.placeholder(tf.int32, [None])
-    label_op = tf.placeholder(tf.int32, [None])
+    input_op, seq_len, label_op = data.ops.get_batch_producer(
+        './data/TFRecords/aug_train.TFRecord', bsize)
+    # input_op = tf.placeholder(1, [None, None])
+    # seq_len = tf.placeholder(tf.int32, [None])
+    # label_op = tf.placeholder(tf.int32, [None])
 
     # for debug!!!
     summary_ops.add_label_hist(label_op)
