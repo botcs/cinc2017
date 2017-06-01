@@ -73,8 +73,10 @@ def augment(data, num_samples, labels=None, alfa=.01, beta=.01):
 def main(args):
 
     orig = read_mat(refname=args.ref, dir=args.from_dir)
+    # orig = read_mat(
+    #     refname='raw/training2017/REFERENCE.csv', dir='raw/training2017')
     data, label = orig[:2]
-    classes = 'NAO~'
+    classes = args.classes
 
     if not os.path.exists(args.to_dir):
         print('make directory:', args.to_dir)
@@ -101,6 +103,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '--to_dir', help='location of destination',
         default='./raw/augment/')
+    parser.add_argument(
+        '--classes', help='classes to process, possible classes [NAO~]',
+        default='NAO~')
     parser.add_argument(
         '--ref', help='location of reference file',
         default='./raw/training2017/REFERENCE.csv')

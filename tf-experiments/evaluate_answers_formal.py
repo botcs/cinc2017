@@ -16,6 +16,8 @@ def main(argv):
     merged = preds.sort_values('name').merge(
             truth.sort_values('name'), on='name')
 
+    pd.get_dummies(merged, columns=['label', 'prediction'])
+
     def f1(class_char):
         all_pred = merged[merged['prediction'] == class_char]
         all_label = merged[merged['label'] == class_char]
