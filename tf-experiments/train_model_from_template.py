@@ -13,8 +13,8 @@ import data.ops
 def main(argv):
 
     EPOCHS = 1000
-    BATCH_SIZE = 8
-    TRAIN_STEPS = (EPOCHS * 8525) // BATCH_SIZE
+    BATCH_SIZE = 16
+    TRAIN_STEPS = (EPOCHS * 8528) // BATCH_SIZE
 
     proto_path = argv[-1]
     # proto_path = 'small_resnet.json'
@@ -39,15 +39,17 @@ def main(argv):
 
     tf.summary.histogram('sample_diversity', label_op)
     s_op = summary_ops.get_all_summaries(*t_ops)
-
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
     sv = tf.train.Supervisor(
-        logdir='./training/%s/' % proto_name, summary_op=s_op,
-    )
-    with sv.managed_session() as sess:
+        logdir='./training/%s/' % proto_name, summary_op=s_op)
+    with sv.managed_session(config=config) as sess:
         it = 0
         while not sv.should_stop() and it < TRAIN_STEPS:
             it, loss_val, acc_val, _ = sess.run([step, loss, acc, train])
-            print('it:%d, loss:%02.4f, acc:%02.4f' % (it, loss_val, acc_val))
+            if it % 100 == 0: 
+                print('it:%d, loss:%02.4f, acc:%02.4f' % 
+                      (it, loss_val, acc_val))
 
 
 if __name__ == '__main__':

@@ -13,7 +13,9 @@ def get_all_summaries(step, train, loss, conf, acc, lrate, **kwargs):
     return tf.summary.merge_all()
 
 
-def add_smooth_summaries(avgs=tf.get_collection('stat_avgs')):
+def add_smooth_summaries():
+    avgs=tf.get_collection('stat_avg')
+    
     for a in avgs:
         tf.summary.scalar('smoothed/'+a.op.name, a)
 
@@ -34,7 +36,7 @@ def add_label_hist(label):
     tf.summary.histogram('label', label)
 
 
-def add_loss_summaries(losses=tf.get_collection('losses')):
+def add_loss_summaries():
     '''
     This function is a high level callable, it only adds summaries
     to the graph, and does not return anything.
@@ -46,16 +48,16 @@ def add_loss_summaries(losses=tf.get_collection('losses')):
     # l2_loss = [l for l in losses if l.name.find('l2_loss_all') > -1][0]
     # total_loss = [l for l in losses if l.name.find('total_loss') > -1][0]
     # losses = [train_loss, l2_loss, total_loss]
+    losses=tf.get_collection('losses')
     for l in losses:
         tf.summary.scalar('raw_losses/' + l.op.name, l)
 
 
-def add_activation_summaries(activations=tf.get_collection('activations')):
-
+def add_activation_summaries():
+    activations=tf.get_collection('activations')
     for ac in activations:
         tf.summary.histogram('activations/' + ac.op.name, ac)
-        tf.summary.scalar('sparsity/' + ac.op.name,
-                          tf.nn.zero_fraction(ac))
+        tf.summary.scalar('sparsity/' + ac.op.name, tf.nn.zero_fraction(ac))
 
 
 def add_eval_summaries(acc, lrate, conf):
