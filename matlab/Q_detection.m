@@ -19,7 +19,7 @@ function [Q_index,Q_value]=Q_detection(y0,y_HP,R_index,fs)
         start=R_index2(j)-max_QRS_d/2;
         stop=R_index2(j);
         
-        if start<=i && i<=stop && y_HP3(i)== min(y_HP3(start:stop))
+        if start<=i && i<=stop && y_HP3(i)== min(y_HP3(ceil(start):ceil(stop)))
             Q_index=[Q_index i-delay];
             Q_value=[Q_value y0(i-delay)];  
             if j<length(R_index)

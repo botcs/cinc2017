@@ -2,7 +2,9 @@ function [pNN50,SDNN,RMSSD,...
           SDPR,RMSSD_PR,...
           SDQT,RMSSD_RT,...
           BPM,...
-          pPR,pQR,pSR,pTR]=Time_Domain_Features(y0)
+          pPR,pQR,pSR,pTR,...
+          cD1, cD2, cD3, cA3,...
+          selected_frequencies]=Time_Domain_Features(y0)
     fs=300;
     
     %Pan Tompkins algorithm
@@ -28,11 +30,9 @@ function [pNN50,SDNN,RMSSD,...
     
     %P detection
     [P_index,P_value]=P_detection(y0,R_index,BPM,fs);
-%	[P_index,P_value]=P_detection(y0,R_index,y_PT_wave_SM,fs);
     
     %T detection
     [T_index,T_value]=T_detection(y0,R_index,BPM,fs);
-% 	[T_index,T_value]=T_detection(y0,R_index,y_PT_wave_SM,fs);  
 
     %Plot ECG waves
     t=0:1/fs:(length(y0)-1)/fs;
@@ -73,5 +73,11 @@ function [pNN50,SDNN,RMSSD,...
     pQR=length(Q_index)/length(R_index);
     pSR=length(S_index)/length(R_index);
     pTR=length(T_index)/length(R_index);
+    
+    % Wavelet Features
+    [cD1, cD2, cD3, cA3] = Wavelet_Features(y0, R_index);
+    
+    % Frequency_Domain_Features
+    [selected_frequencies]=Frequency_Domain_Features(y0, R_index, fs);
     
 end

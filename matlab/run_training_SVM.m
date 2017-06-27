@@ -1,7 +1,11 @@
-load('time_domain_features_v6.mat');
-load('time_domain_features_validation.mat');
+load('time_domain_features_v11.mat');
+load('time_domain_features_validation_v3.mat');
+load('training_features_v01.mat');
+load('validation_features_v01.mat');
 
-train_set=time_domain_features_v6;
+
+train_set=training_features_v01;
+validation_set=validation_features_v01;
 len_train=length(train_set);
 
 folder_validation='..\..\af_challenge_2017\validation';
@@ -13,14 +17,29 @@ filename_validation=[folder_validation filesep records];
 [numData_v,textData_v,rawData_v] = xlsread(filename_validation);
 [numData_t,textData_t,rawData_t] = xlsread(filename_training);
 
-Y0_val=time_domain_features_validation(:,2);
-Y_val=time_domain_features_validation(:,2);
+Y0_val=validation_set(:,2);
+Y_val=validation_set(:,2);
 Y_val(cell2mat(cellfun(@(elem) elem == 'N', Y_val(:, :),'UniformOutput', false))) = {1};
 Y_val(cell2mat(cellfun(@(elem) elem == 'A', Y_val(:, :),'UniformOutput', false))) = {2};
 Y_val(cell2mat(cellfun(@(elem) elem == 'O', Y_val(:, :),'UniformOutput', false))) = {3};
 Y_val(cell2mat(cellfun(@(elem) elem == '~', Y_val(:, :),'UniformOutput', false))) = {4};
 Y_val=cell2mat(Y_val);
-X_val=real(cell2mat(time_domain_features_validation(:,3:end)));
+
+for i=1:length(Y_val)
+    if cellfun('length',validation_set(i,15))==1
+        validation_set(i,15) = {zeros(1,55)}
+    end
+    if cellfun('length',validation_set(i,16))==1
+        validation_set(i,16) = {zeros(1,33)}
+    end
+    if cellfun('length',validation_set(i,17))==1
+        validation_set(i,17) = {zeros(1,22)}
+    end
+    if cellfun('length',validation_set(i,18))==1
+        validation_set(i,18) = {zeros(1,22)}
+    end
+end
+X_val=real(cell2mat(validation_set(:,3:end)));
 
 Y0=train_set(:,2);
 Y=train_set(:,2);
@@ -29,6 +48,22 @@ Y(cell2mat(cellfun(@(elem) elem == 'A', Y(:, :),'UniformOutput', false))) = {2};
 Y(cell2mat(cellfun(@(elem) elem == 'O', Y(:, :),'UniformOutput', false))) = {3};
 Y(cell2mat(cellfun(@(elem) elem == '~', Y(:, :),'UniformOutput', false))) = {4};
 Y=cell2mat(Y);
+
+for i=1:length(Y)
+    if cellfun('length',train_set(i,15))==1
+        train_set(i,15) = {zeros(1,55)};
+    end
+    if cellfun('length',train_set(i,16))==1
+        train_set(i,16) = {zeros(1,33)};
+    end
+    if cellfun('length',train_set(i,17))==1
+        train_set(i,17) = {zeros(1,22)};
+    end
+    if cellfun('length',train_set(i,18))==1
+        train_set(i,18) = {zeros(1,22)};
+    end
+end
+
 X=real(cell2mat(train_set(:,3:end)));
 
 %% Training

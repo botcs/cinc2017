@@ -10,10 +10,10 @@ s=0.1*c*fs; %P wave duration
 
 P_index=[];
 P_value=[];
-P_windows=abs(round([R_index-0.5*w-u;R_index-0.5*w-u+s]));
+P_windows=round([R_index-0.5*w-u;R_index-0.5*w-u+s]);
+P_windows(P_windows<=0)=1;
 P1=P_windows(1,:);
 P2=P_windows(2,:);
-
 
     for i=1:length(P_windows)
       yp=y0(P_windows(1,i):P_windows(2,i));

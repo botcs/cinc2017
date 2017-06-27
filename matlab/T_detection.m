@@ -11,6 +11,7 @@ s=0.1*c*fs; %P wave duration
 T_index=[];
 T_value=[];
 T_windows=round([R_index+0.5*w+v;R_index-0.5*w+z]);
+T_windows(T_windows<=0)=1;
 T1=T_windows(1,:);
 T2=T_windows(2,:);
 
