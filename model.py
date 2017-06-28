@@ -87,9 +87,9 @@ class BaseLineFCN(nn.Module):
         self.logit = nn.Conv1d(channels[2], num_classes, 1)
 
     def forward(self, x, lens):
-        out = nn.ReLU(self.bn1(self.conv1(x)))
-        out = nn.ReLU(self.bn2(self.conv2(x)))
-        out = nn.ReLU(self.bn3(self.conv3(x)))
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = F.relu(self.bn2(self.conv2(x)))
+        out = F.relu(self.bn3(self.conv3(x)))
         # Avg POOLing
         num_features = out.size()[1]
         lens = lens[:, None].expand(len(x), num_features)
@@ -97,11 +97,11 @@ class BaseLineFCN(nn.Module):
         return self.logit(out[:, :, None]).squeeze()
 
     def forward_conv(self, x):
-        out = nn.ReLU(self.bn1(self.conv1(x)))
-        out = nn.ReLU(self.bn2(self.conv2(out)))
-        out = nn.ReLU(self.bn3(self.conv3(out)))
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = F.relu(self.bn2(self.conv2(out)))
+        out = F.relu(self.bn3(self.conv3(out)))
 
-        return nn.Softmax(self.logit(out))
+        return F.softmax(self.logit(out))
 
 
 class ResNet(nn.Module):
@@ -114,8 +114,7 @@ class ResNet(nn.Module):
         self.res1 = BasicBlock(channels, channels)
         self.res2 = BasicBlock(channels, channels)
         self.res3 = BasicBlock(channels, channels)
-        self.bn_out = nn.BatchNorm1d(channels)
-        self.logit = nn.Conv1d(channels, num_classes, 1, bias=False)
+        self.logit = nn.Conv1d(channels, num_classes, 1, bias=True)
 
     def forward(self, x, lens):
         out = F.relu(self.conv_init(self.bn_init(x)))
@@ -125,7 +124,7 @@ class ResNet(nn.Module):
         num_features = out.size()[1]
         lens = lens[:, None].expand(len(x), num_features)
         features = torch.sum(out, dim=-1).squeeze() / lens
-        out = self.logit(self.bn_out(features)[:, :, None]).squeeze()
+        out = self.logit(features[:, :, None]).squeeze()
 
         return out
 
@@ -134,7 +133,7 @@ class ResNet(nn.Module):
         out = self.res1(out)
         out = self.res2(out)
         out = self.res3(out)
-        out = self.logit(self.bn_out(out))
+        out = F.softmax(self.bn_out(self.logit(out)))
 
         return out
 
@@ -146,7 +145,7 @@ class WideResNet(nn.Module):
         self.conv1 = nn.Sequential(
             nn.Conv1d(in_channels, init_depth*k, 7, padding=3),
             nn.BatchNorm1d(init_depth*k),
-            nn.ReLU(inplace=True)
+            F.relu(inplace=True)
         )
 
         self.conv2 = ConvModule(init_depth*k, 2*init_depth*k, N)
@@ -174,7 +173,3 @@ class WideResNet(nn.Module):
         out = self.conv4(out)
 
         return self.logit(out)
-
-
-batches = iter(dataset)
-data = batches.next()
