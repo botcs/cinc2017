@@ -39,21 +39,25 @@ class BasicBlock(nn.Module):
 
 class MultiKernelBlock(nn.Module):
     # Mentioned here: https://arxiv.org/pdf/1611.06455.pdf
+    '''def cuda(self, *args, **kwargs):
+    super(MultiKernelBlock, self).cuda(*args, **kwargs)
+    for conv in self.kernel_list:
+        conv.cuda(*args, **kwargs)
+        return self'''
 
-    def __init__(self, in_channels, out_channels, kernel_sizes=[8, 5, 3]):
+    def __init__(self, in_channels, out_channels, kernel_sizes=[9, 5, 3]):
         super(MultiKernelBlock, self).__init__()
 
-        self.kernel_list = []
+        self.kernel_list = nn.ModuleList()
         for k in kernel_sizes:
             self.kernel_list.append(nn.Conv1d(
                 in_channels, out_channels, k,
-                padding=kernel_size//2, bias=False))
+                padding=k//2, bias=False))
 
     def forward(self, x):
-        y = self.kernel_list[0](x)
-        for conv in self.kernel_list[1:]:
-            y += conv(x)
-        return y
+        act = [conv(x) for conv in self.kernel_list]
+        out = th.sum(th.stack(act), dim=0).squeeze(0)
+        return out
 
 
 class ConvModule(nn.Module):
@@ -88,12 +92,12 @@ class BaseLineFCN(nn.Module):
 
     def forward(self, x, lens):
         out = F.relu(self.bn1(self.conv1(x)))
-        out = F.relu(self.bn2(self.conv2(x)))
-        out = F.relu(self.bn3(self.conv3(x)))
+        out = F.relu(self.bn2(self.conv2(out)))
+        out = F.relu(self.bn3(self.conv3(out)))
         # Avg POOLing
         num_features = out.size()[1]
         lens = lens[:, None].expand(len(x), num_features)
-        out = torch.sum(out, dim=-1).squeeze() / lens
+        out = th.sum(out, dim=-1).squeeze() / lens
         return self.logit(out[:, :, None]).squeeze()
 
     def forward_conv(self, x):
@@ -123,7 +127,7 @@ class ResNet(nn.Module):
         out = self.res3(out)
         num_features = out.size()[1]
         lens = lens[:, None].expand(len(x), num_features)
-        features = torch.sum(out, dim=-1).squeeze() / lens
+        features = th.sum(out, dim=-1).squeeze() / lens
         out = self.logit(features[:, :, None]).squeeze()
 
         return out
@@ -162,7 +166,7 @@ class WideResNet(nn.Module):
 
         num_features = out.size()[1]
         lens = lens[:, None].expand(len(x), num_features)
-        out = torch.sum(out, dim=-1).squeeze() / lens
+        out = th.sum(out, dim=-1).squeeze() / lens
 
         return self.logit(out[:, :, None]).squeeze()
 

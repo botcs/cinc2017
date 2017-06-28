@@ -17,3 +17,4 @@ RECORDS
 tensorflow/training
 tf-experiments/**/training/
 *RECORDS
+data/raw/

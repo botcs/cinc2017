@@ -13,8 +13,8 @@ def_tokens = 'NAO'
 
 
 class DataSet(th.utils.data.Dataset):
-    def __init__(self, elems, load=lambda x: x, path=None,
-                 remove_noise=True, tokens=def_tokens):
+    def __init__(self, elems, load, path=None,
+                 remove_noise=True, tokens=def_tokens, **kwargs):
         num_classes = len(tokens)
 
         super(DataSet, self).__init__()
@@ -39,7 +39,7 @@ class DataSet(th.utils.data.Dataset):
         self.path = path
         self.remove_noise = remove_noise
         self.tokens = tokens
-
+        self.loadargs = kwargs
 
     def __len__(self):
         return len(self.list)
@@ -51,9 +51,9 @@ class DataSet(th.utils.data.Dataset):
         ref = self.class_lists[class_idx][idx]
 
         if self.path is not None:
-            return self.load("%s/%s" % (self.path, ref))
+            return self.load("%s/%s" % (self.path, ref), **self.loadargs)
 
-        return self.load(self.list[idx])
+        return self.load(self.list[idx], **self.loadargs)
 
     def disjunct_split(self, ratio=.8):
         # Split keeps the ratio of classes
@@ -62,8 +62,10 @@ class DataSet(th.utils.data.Dataset):
             A.update(random.sample(cl, int(len(cl) * ratio)))
         B = set(self.list) - A
 
-        A = DataSet(A, self.load, self.path, self.remove_noise, self.tokens)
-        B = DataSet(B, self.load, self.path, self.remove_noise, self.tokens)
+        A = DataSet(A, self.load, self.path, self.remove_noise,
+                    self.tokens, **self.loadargs)
+        B = DataSet(B, self.load, self.path, self.remove_noise,
+                    self.tokens, **self.loadargs)
         return A, B
 
 
@@ -91,12 +93,14 @@ def load_crop(line, crop_len=900, tokens=def_tokens):
 
     ref, label = line.split(',')
     data = load_mat(ref)
-    start_idx = np.random.randint(len(data) - crop_len)
-    cropped_data = data[start_idx : start_idx + crop_len]
+    if len(data) > crop_len:
+        start_idx = np.random.randint(len(data) - crop_len)
+        data = data[start_idx: start_idx + crop_len]
+
     res = {
-        'x': th.from_numpy(cropped_data[None, :]),
+        'x': th.from_numpy(data[None, :]),
         'y': tokens.find(label),
-        'len': crop_len}
+        'len': len(data)}
     return res
 
 
