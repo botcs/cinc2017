@@ -1,11 +1,8 @@
-load('time_domain_features_v11.mat');
-load('time_domain_features_validation_v3.mat');
-load('training_features_v01.mat');
-load('validation_features_v01.mat');
+load('training_features_v04.mat');
+load('validation_features_v04.mat');
 
-
-train_set=training_features_v01;
-validation_set=validation_features_v01;
+train_set=training_features_v04;
+validation_set=validation_features_v04;
 len_train=length(train_set);
 
 folder_validation='..\..\af_challenge_2017\validation';
@@ -39,7 +36,8 @@ for i=1:length(Y_val)
         validation_set(i,18) = {zeros(1,22)}
     end
 end
-X_val=real(cell2mat(validation_set(:,3:end)));
+X_val=real(cell2mat(validation_set(:,3:19)));
+X_val=X_val(:,1:end);
 
 Y0=train_set(:,2);
 Y=train_set(:,2);
@@ -64,8 +62,8 @@ for i=1:length(Y)
     end
 end
 
-X=real(cell2mat(train_set(:,3:end)));
-
+X=real(cell2mat(train_set(:,3:19)));
+X=X(:,1:end);
 %% Training
 SVMModel = fitcecoc(X, Y)
 CVSVMModel = crossval(SVMModel);
