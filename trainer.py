@@ -35,12 +35,12 @@ def ema(series, alpha=0.001):
     return res
 
 
-def evaluate(net, test_producer):
+def evaluate(net, test_producer, gpu_id):
     net.eval()
     T = 0
     for i, data in enumerate(test_producer, 1):
         t = time.time()
-        outputs = net(data['x'].cuda(), data['len'].cuda())
+        outputs = net(data['x'].cuda(gpu_id), data['len'].cuda(gpu_id))
         T += time.time() - t
         if i == 1:
             acc_sum = accuracy(outputs.data, data['y'].data)
@@ -51,56 +51,15 @@ def evaluate(net, test_producer):
     return acc_sum[None, :] / i
 
 
-def train(net, path, dataset, epochs=100):
-    net.cuda()
-    net.train()
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(net.parameters())
-    for epoch in range(1, epochs+1):
-        acc_sum = 0
-        for i, data in enumerate(dataset, 1):
-            start_t = time.time()
-
-            optimizer.zero_grad()
-            outputs = net(data['x'].cuda(0), data['len'].cuda(0))
-
-            inference_t = time.time() - start_t
-
-            loss = criterion(outputs, data['y'].cuda(0))
-            loss.backward()
-            optimizer.step()
-
-            update_t = time.time() - start_t
-            losses.append(loss.data.tolist()[0])
-
-            train_F1.append(
-                accuracy(outputs.data, data['y'].data)[None, :])
-            acc_sum += train_F1[-1]
-            if i % 100 == 0:
-                print_data = epoch, i, outputs.size()[0]/update_t
-                print('[%d, %3d] sample/sec %3.2f' % print_data)
-
-        if path and (epochs//epoch) % 2 == 0:
-            th.save(net.state_dict(), path)
-
-        print('Train acc:', acc_sum/i)
-        print('Test acc:')
-        self.test_F1.append(evaluate(net))
-
-    return losses, train_F1, test_F1
-
-
 class trainer:
-    def __init__(self, net, save_path):
-        self.net = net
+    def __init__(self, save_path):
         self.path = save_path
         self.losses = []
         self.train_F1 = []
         self.test_F1 = []
 
-    def train(self, train_producer, test_producer, epochs=100):
-        net = self.net
-        net.cuda()
+    def train(self, net, train_producer, test_producer, epochs=100, gpu_id=0):
+        net.cuda(gpu_id)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(net.parameters(), weight_decay=0.0001)
         epoch_t_sum = 0
@@ -112,10 +71,10 @@ class trainer:
                 start_t = time.time()
 
                 optimizer.zero_grad()
-                outputs = net(data['x'].cuda(), data['len'].cuda())
+                outputs = net(data['x'].cuda(gpu_id), data['len'].cuda(gpu_id))
 
                 inference_t = time.time() - start_t
-                loss = criterion(outputs, data['y'].cuda())
+                loss = criterion(outputs, data['y'].cuda(gpu_id))
                 loss.backward()
                 optimizer.step()
 
@@ -125,7 +84,7 @@ class trainer:
                 self.train_F1.append(
                     accuracy(outputs.data, data['y'].data)[None, :])
                 acc_sum += self.train_F1[-1]
-                if i % 100 == 0:
+                if i % (len(train_producer) // 10) == 0:
                     stat = epoch, i, outputs.size()[0]/update_t
                     print('[%d, %3d] sample/sec %3.2f' % stat)
 
@@ -134,13 +93,13 @@ class trainer:
 
             print('Train acc:', acc_sum/i)
             print('Test acc:')
-            self.test_F1.append(evaluate(net, test_producer))
+            self.test_F1.append(evaluate(net, test_producer, gpu_id))
 
             epoch_t_sum += time.time() - epoch_start
             epoch_time = epoch_t_sum / 60 / epoch
             ETL = (epochs - epoch) * epoch_time
             print('epoch time: %10.2f min' % epoch_time)
-            print('     total: %10.2f min' % epoch_t_sum)
+            print('     total: %10.2f min' % (epoch_t_sum/60))
             print(' est. left: %10.2f min' % ETL)
             print('-' * 40)
         return self.losses, self.train_F1, self.test_F1

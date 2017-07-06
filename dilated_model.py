@@ -8,11 +8,11 @@ from torch import optim
 import torchvision
 
 
-class BasicBlock(nn.Module):
+class DilatedBlock(nn.Module):
     # Stg. like:
     # [(3, 3), 16*k]
-    def __init__(self, in_channels=8, out_channels=8, kernel_size=7):
-        super(BasicBlock, self).__init__()
+    def __init__(self, in_channels=8, out_channels=8, kernel_size=7, dilation=1):
+        super(DilatedBlock, self).__init__()
 
         self.identity = lambda x: x
         if in_channels != out_channels:
@@ -45,14 +45,15 @@ class MultiKernelBlock(nn.Module):
         conv.cuda(*args, **kwargs)
         return self'''
 
-    def __init__(self, in_channels, out_channels, kernel_sizes=[9, 5, 3]):
+    def __init__(self, in_channels, out_channels,
+                 kernel_sizes=[9, 5, 3], dilations=[9, 5, 3]):
         super(MultiKernelBlock, self).__init__()
 
         self.kernel_list = nn.ModuleList()
-        for k in kernel_sizes:
+        for k, d in zip(kernel_sizes, dilations):
             self.kernel_list.append(nn.Conv1d(
                 in_channels, out_channels, k,
-                padding=k//2, bias=False))
+                padding=k//2*d, bias=False, dilation=d)) # k-dilation is just a wild guess
 
     def forward(self, x):
         act = [conv(x) for conv in self.kernel_list]
@@ -65,12 +66,12 @@ class ConvModule(nn.Module):
     # [(3, 3), 16*k]
     # [(3, 3), 16*k]
     # [(3, 3), 16*k]
-    def __init__(self, block=BasicBlock, in_channels=8, channels=8, N=1,
+    def __init__(self, block=DilatedBlock, in_channels=8, channels=8, N=1,
                  num_classes=3):
         super(ConvModule, self).__init__()
-        residuals = [BasicBlock(in_channels, channels)]
+        residuals = [DilatedBlock(in_channels, channels)]
         for n in range(1, N):
-            residuals.append(BasicBlock(channels, channels))
+            residuals.append(DilatedBlock(channels, channels, n**2))
 
         self.residuals = nn.Sequential(*residuals)
 
@@ -78,15 +79,19 @@ class ConvModule(nn.Module):
         return self.residuals(x)
 
 
-class BaseLineFCN(nn.Module):
-    def __init__(self, in_channels, channels=[128, 256, 128], num_classes=3):
-        super(BaseLineFCN, self).__init__()
+class DilatedFCN(nn.Module):
+    def __init__(self, in_channels, channels, dilations,
+                 num_classes=3):
+        super(DilatedFCN, self).__init__()
 
-        self.conv1 = MultiKernelBlock(in_channels, channels[0])
+        self.conv1 = MultiKernelBlock(in_channels, channels[0],
+                                      dilations=dilations[0])
         self.bn1 = nn.BatchNorm1d(channels[0])
-        self.conv2 = MultiKernelBlock(channels[0], channels[1])
+        self.conv2 = MultiKernelBlock(channels[0], channels[1],
+                                      dilations=dilations[1])
         self.bn2 = nn.BatchNorm1d(channels[1])
-        self.conv3 = MultiKernelBlock(channels[1], channels[2])
+        self.conv3 = MultiKernelBlock(channels[1], channels[2],
+                                      dilations=dilations[2])
         self.bn3 = nn.BatchNorm1d(channels[2])
         self.logit = nn.Conv1d(channels[2], num_classes, 1)
 
@@ -110,15 +115,16 @@ class BaseLineFCN(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, in_channels=32, channels=8, kernel_size=7,
+    def __init__(self, in_channels=32, channels=8, kernel_size=7, init_dilation=4,
                  num_classes=3):
         super(ResNet, self).__init__()
         self.conv_init = nn.Conv1d(
-            in_channels, channels, kernel_size, padding=kernel_size//2)
+            in_channels, channels, kernel_size,
+            padding=kernel_size//2*init_dilation, dilation=init_dilation)
         self.bn_init = nn.BatchNorm1d(in_channels)
-        self.res1 = BasicBlock(channels, channels)
-        self.res2 = BasicBlock(channels, channels)
-        self.res3 = BasicBlock(channels, channels)
+        self.res1 = DilatedBlock(channels, channels, N=4)
+        self.res2 = DilatedBlock(channels, channels, N=4)
+        self.res3 = DilatedBlock(channels, channels, N=4)
         self.logit = nn.Conv1d(channels, num_classes, 1, bias=True)
 
     def forward(self, x, lens):
@@ -146,7 +152,7 @@ class ResNet(nn.Module):
 
 
 class WideResNet(nn.Module):
-    def __init__(self, in_channels=32, k=2, N=1, num_classes=3):
+    def __init__(self, in_channels=32, k=2, N=3, num_classes=3):
         super(WideResNet, self).__init__()
         init_depth = 8
         self.conv1 = nn.Sequential(

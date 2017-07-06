@@ -76,7 +76,7 @@ def load_mat(ref, normalize=True):
     return data
 
 
-def load_raw(line, tokens=def_tokens):
+def load_raw(line, tokens=def_tokens, **kwargs):
     # gets a line from REFERENCE.csv
     # i.e. A000001,N
     ref, label = line.split(',')
@@ -88,7 +88,7 @@ def load_raw(line, tokens=def_tokens):
     return res
 
 
-def load_crop(line, crop_len=900, tokens=def_tokens):
+def load_crop(line, crop_len=2100, tokens=def_tokens, **kwargs):
     # Samples are recorded with 300 Hz
 
     ref, label = line.split(',')
@@ -104,7 +104,7 @@ def load_crop(line, crop_len=900, tokens=def_tokens):
     return res
 
 
-def load_freq(line, NFFT=100, tokens=def_tokens):
+def load_freq(line, NFFT=100, tokens=def_tokens, **kwargs):
 
     ref, label = line.split(',')
     data = load_mat(ref)
@@ -121,7 +121,7 @@ def load_freq(line, NFFT=100, tokens=def_tokens):
     return res
 
 
-def load_freq_crop(line, NFFT=100, crop_len=1500, tokens=def_tokens):
+def load_freq_crop(line, NFFT=100, crop_len=900, tokens=def_tokens, **kwargs):
 
     ref, label = line.split(',')
     data = load_mat(ref)
@@ -143,7 +143,7 @@ def load_freq_crop(line, NFFT=100, crop_len=1500, tokens=def_tokens):
     return res
 
 
-def load_norm(line, crop=True, crop_len=1000, tokens=def_tokens):
+def load_norm(line, crop=True, crop_len=1000, tokens=def_tokens, **kwargs):
     ref, label = line.split(',')
     data = load_mat(ref)
     peaks = detect_beats(data, 300, lowfreq=3., highfreq=12.5)
