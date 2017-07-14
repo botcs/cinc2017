@@ -103,6 +103,21 @@ def load_crop(line, crop_len=2100, tokens=def_tokens, **kwargs):
         'len': len(data)}
     return res
 
+def load_crop_thresholded(line, crop_len=2100, sigma=3, tokens=def_tokens, **kwargs):
+    # Samples are recorded with 300 Hz
+
+    ref, label = line.split(',')
+    data = load_mat(ref)
+    if len(data) > crop_len:
+        start_idx = np.random.randint(len(data) - crop_len)
+        data = data[start_idx: start_idx + crop_len]
+    
+    data[None, np.abs(data) > data.std()*sigma] = data.std()*sigma
+    res = {
+        'x': th.from_numpy(data),
+        'y': tokens.find(label),
+        'len': len(data)}
+    return res
 
 def load_freq(line, NFFT=100, tokens=def_tokens, **kwargs):
 

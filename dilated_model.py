@@ -8,33 +8,6 @@ from torch import optim
 import torchvision
 
 
-class DilatedBlock(nn.Module):
-    # Stg. like:
-    # [(3, 3), 16*k]
-    def __init__(self, in_channels=8, out_channels=8, kernel_size=7, dilation=1):
-        super(DilatedBlock, self).__init__()
-
-        self.identity = lambda x: x
-        if in_channels != out_channels:
-            self.identity = nn.Conv1d(in_channels, out_channels, 1)
-
-        self.bn1 = nn.BatchNorm1d(in_channels)
-        self.conv1 = nn.Conv1d(
-            in_channels, out_channels, kernel_size,
-            padding=kernel_size//2, bias=False)
-        self.dropout = nn.Dropout(inplace=True)
-        self.bn2 = nn.BatchNorm1d(out_channels)
-        self.conv2 = nn.Conv1d(
-            out_channels, out_channels, kernel_size,
-            padding=kernel_size//2, bias=False)
-
-    def forward(self, x):
-        h = self.conv1(F.relu(self.bn1(x)))
-        self.dropout(h)
-        h = self.conv2(F.relu(self.bn2(h)))
-
-        out = self.identity(x) + h
-        return out
 
 
 class MultiKernelBlock(nn.Module):
@@ -60,23 +33,6 @@ class MultiKernelBlock(nn.Module):
         out = th.sum(th.stack(act), dim=0).squeeze(0)
         return out
 
-
-class ConvModule(nn.Module):
-    # Stg. like: N = 3
-    # [(3, 3), 16*k]
-    # [(3, 3), 16*k]
-    # [(3, 3), 16*k]
-    def __init__(self, block=DilatedBlock, in_channels=8, channels=8, N=1,
-                 num_classes=3):
-        super(ConvModule, self).__init__()
-        residuals = [DilatedBlock(in_channels, channels)]
-        for n in range(1, N):
-            residuals.append(DilatedBlock(channels, channels, n**2))
-
-        self.residuals = nn.Sequential(*residuals)
-
-    def forward(self, x):
-        return self.residuals(x)
 
 
 class DilatedFCN(nn.Module):
@@ -114,25 +70,82 @@ class DilatedFCN(nn.Module):
         return self.logit(out)
 
 
+class DilatedBlock(nn.Module):
+    # Stg. like:
+    # [(3, 3), 16*k]
+    def __init__(self, in_channels=8, out_channels=8, kernel_size=7, dilation=2):
+        super(DilatedBlock, self).__init__()
+
+        self.identity = lambda x: x
+        if in_channels != out_channels:
+            self.identity = nn.Conv1d(in_channels, out_channels, 1)
+
+        self.bn1 = nn.BatchNorm1d(in_channels)
+        self.conv1 = nn.Conv1d(
+            in_channels, out_channels, kernel_size,
+            padding=kernel_size//2, bias=False)
+        self.bn2 = nn.BatchNorm1d(out_channels)
+        self.dropout = nn.Dropout(inplace=True)
+        self.conv2 = nn.Conv1d(
+            out_channels, out_channels, kernel_size,
+            padding=kernel_size//2*dilation, bias=False,
+            dilation=dilation)
+
+    def forward(self, x):
+        h = self.conv1(F.relu(self.bn1(x)))
+        h = self.conv2(self.dropout(F.relu(self.bn2(h))))
+        print(h.size(), self.identity(x).size())
+        out = self.identity(x) + h
+        return out
+
+class ConvModule(nn.Module):
+    # Stg. like: N = 3
+    # [(3, 3), 16*k]
+    # [(3, 3), 16*k]
+    # [(3, 3), 16*k]
+    def __init__(self, in_channel, channel=8, block=DilatedBlock, N=32):
+        super(ConvModule, self).__init__()
+        residuals = []
+        residuals.append(DilatedBlock(in_channel, channel, 17))
+        for n in range(1, N):
+            residuals.append(DilatedBlock(channel, channel, 17))
+
+        self.residuals = nn.Sequential(*residuals)
+
+    def forward(self, x):
+        return self.residuals(x)
+                       
 class ResNet(nn.Module):
-    def __init__(self, in_channels=32, channels=8, kernel_size=7, init_dilation=4,
-                 num_classes=3):
+    def __init__(self, N_blocks, channel, in_channel=1, kernel_size=32, 
+                 init_dilation=2, num_classes=3, pool_after_M_blocks=1):
+        
         super(ResNet, self).__init__()
+        
+        self.N_blocks = N_blocks
+        self.channel = channel
+        self.pool_after_M_blocks = pool_after_M_blocks
+        self.init_dilation = init_dilation
+        self.kernels_size = kernel_size
         self.conv_init = nn.Conv1d(
-            in_channels, channels, kernel_size,
-            padding=kernel_size//2*init_dilation, dilation=init_dilation)
-        self.bn_init = nn.BatchNorm1d(in_channels)
-        self.res1 = DilatedBlock(channels, channels, N=4)
-        self.res2 = DilatedBlock(channels, channels, N=4)
-        self.res3 = DilatedBlock(channels, channels, N=4)
-        self.logit = nn.Conv1d(channels, num_classes, 1, bias=True)
+            in_channel, channel, kernel_size,
+            padding=kernel_size//2*init_dilation, 
+            dilation=init_dilation, bias=False)
+        self.bn_init = nn.BatchNorm1d(channel)
+        blocks = [ConvModule(channel, channel)]
+        for N in range(1, N_blocks):
+            print('generating block:', N)
+            blocks.append(ConvModule(channel*N, channel*(N+1), N=4))
+            #print(blocks[-1])
+            if N % pool_after_M_blocks == 0:           
+                blocks.append(nn.MaxPool1d(2))
+        self.net = nn.Sequential(*blocks)
+        self.bn_end = nn.BatchNorm1d(channel * N_blocks)
+        self.logit = nn.Conv1d(channel * N_blocks, num_classes, 1, bias=True)
 
     def forward(self, x, lens):
-        out = F.relu(self.conv_init(self.bn_init(x)))
-        out = self.res1(out)
-        out = self.res2(out)
-        out = self.res3(out)
-        num_features = out.size()[1]
+        out = F.relu(self.bn_init(self.conv_init(x)))
+        out = self.net(out)
+        num_features = self.N_blocks, self.channels
         lens = lens[:, None].expand(len(x), num_features)
         features = th.sum(out, dim=-1).squeeze() / lens
         out = self.logit(features[:, :, None]).squeeze()
@@ -140,10 +153,8 @@ class ResNet(nn.Module):
         return out
 
     def forward_conv(self, x, softmax=False):
-        out = F.relu(self.conv_init(self.bn_init(x)))
-        out = self.res1(out)
-        out = self.res2(out)
-        out = self.res3(out)
+        out = F.relu(self.bn_init(self.conv_init(x)))
+        out = self.net(out)
         out = self.logit(out)
         if softmax:
             out = F.softmax(out)

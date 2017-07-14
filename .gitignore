@@ -18,3 +18,7 @@ tensorflow/training
 tf-experiments/**/training/
 *RECORDS
 data/raw/
+*.log
+*.pkl
+*.TRAINER
+*F1
