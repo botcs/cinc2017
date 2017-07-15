@@ -94,7 +94,6 @@ class DilatedBlock(nn.Module):
     def forward(self, x):
         h = self.conv1(F.relu(self.bn1(x)))
         h = self.conv2(self.dropout(F.relu(self.bn2(h))))
-        print(h.size(), self.identity(x).size())
         out = self.identity(x) + h
         return out
 
@@ -116,11 +115,11 @@ class ConvModule(nn.Module):
         return self.residuals(x)
                        
 class ResNet(nn.Module):
-    def __init__(self, N_blocks, channel, in_channel=1, kernel_size=32, 
-                 init_dilation=2, num_classes=3, pool_after_M_blocks=1):
-        
+    def __init__(self, N_blocks, 
+                 channel, in_channel=1, kernel_size=32, 
+                 init_dilation=2, num_classes=3, 
+                 pool_after_M_blocks=1, ema=0.0001):
         super(ResNet, self).__init__()
-        
         self.N_blocks = N_blocks
         self.channel = channel
         self.pool_after_M_blocks = pool_after_M_blocks
@@ -141,11 +140,16 @@ class ResNet(nn.Module):
         self.net = nn.Sequential(*blocks)
         self.bn_end = nn.BatchNorm1d(channel * N_blocks)
         self.logit = nn.Conv1d(channel * N_blocks, num_classes, 1, bias=True)
+        
+        ## EXPONENTIAL MOVING AVERAGE FOR TEST TIME ## 
+        
+        self.ema = ema
+        self.ema_params = self.get_params()
 
     def forward(self, x, lens):
         out = F.relu(self.bn_init(self.conv_init(x)))
         out = self.net(out)
-        num_features = self.N_blocks, self.channels
+        num_features = self.N_blocks * self.channel
         lens = lens[:, None].expand(len(x), num_features)
         features = th.sum(out, dim=-1).squeeze() / lens
         out = self.logit(features[:, :, None]).squeeze()

@@ -59,6 +59,7 @@ class trainer:
         self.test_F1 = []
 
     def train(self, net, train_producer, test_producer, epochs=100, gpu_id=0):
+        #net.ema_parameters = net.
         net.cuda(gpu_id)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(net.parameters(), weight_decay=0.0001)
@@ -71,7 +72,8 @@ class trainer:
                 start_t = time.time()
 
                 optimizer.zero_grad()
-                outputs = net(data['x'].cuda(gpu_id), data['len'].cuda(gpu_id))
+                input = data['x'].cuda(gpu_id)
+                outputs = net(input, data['len'].cuda(gpu_id))
 
                 inference_t = time.time() - start_t
                 loss = criterion(outputs, data['y'].cuda(gpu_id))
@@ -88,13 +90,14 @@ class trainer:
                     stat = epoch, i, outputs.size()[0]/update_t
                     print('[%d, %3d] sample/sec %3.2f' % stat)
 
+            
             if self.path and (epochs//epoch) % 2 == 0:
                 th.save(net.state_dict(), self.path)
+                
 
             print('Train acc:', acc_sum/i)
             print('Test acc:')
             self.test_F1.append(evaluate(net, test_producer, gpu_id))
-
             epoch_t_sum += time.time() - epoch_start
             epoch_time = epoch_t_sum / 60 / epoch
             ETL = (epochs - epoch) * epoch_time
@@ -104,32 +107,36 @@ class trainer:
             print('-' * 40)
         return self.losses, self.train_F1, self.test_F1
 
-    def plot(self):
+    def plot(self, ema_loss, ema_train_f1, ema_test_f1, filename=None):
         import matplotlib.pyplot as plt
         losses = self.losses
         F1 = self.train_F1
         test_F1 = self.test_F1
-
-        plt.plot(ema(losses))
+        fig = plt.figure()
+        plt.subplot(1, 3, 1)
+        plt.plot(ema(losses, ema_loss))
         plt.title('Train Loss')
-        plt.show()
-
-        alpha = 0.001
+        
+        plt.subplot(1, 3, 2)
+        alpha = ema_train_f1
         plt.plot(ema(th.cat(F1)[:, 0], alpha), label='N')
         plt.plot(ema(th.cat(F1)[:, 1], alpha), label='A')
         plt.plot(ema(th.cat(F1)[:, 2], alpha), label='O')
         plt.title('Train Accuracy')
         plt.legend()
-        plt.show()
-
-        alpha = 0.1
+        
+        plt.subplot(1, 3, 3)
+        alpha = ema_test_f1
         plt.plot(ema(th.cat(test_F1)[:, 0], alpha), label='N')
         plt.plot(ema(th.cat(test_F1)[:, 1], alpha), label='A')
         plt.plot(ema(th.cat(test_F1)[:, 2], alpha), label='O')
         plt.title('Test Accuracy')
         plt.legend()
-
-        plt.show()
+        if filename is None:
+            plt.show()
+        else:
+            fig.savefig(filename)
+        return fig
 
     def __call__(self, *args, **kwargs):
         self.train(*args, **kwargs)
