@@ -70,19 +70,88 @@ class DataSet(th.utils.data.Dataset):
 
 
 def load_mat(ref, normalize=True):
-    data = loadmat(ref)['val'].squeeze()
+    mat = loadmat(ref)
+    data = mat['val'].squeeze() 
+    features = mat['features'][0, -5:]
+    features = np.concatenate(features, axis=1).squeeze().astype(np.float32)
     if normalize:
-        return (data - data.mean()) / data.std()
-    return data
+        data = (data - data.mean()) / data.std()
+        features = (features - features.mean()) / features.std()
+        #features = (features - features.min()) / features.max()
+    
+    return data, features
 
 
+def load_composed(line, transformations=[], **kwargs):
+    ref, label = line.split(',')
+    data, features = load_mat(ref)
+    
+    for trans in transformations:
+        data = trans(data)
+    
+    res = {
+        'x': th.from_numpy(data[None, :]),
+        'features': th.from_numpy(data[None, :]),
+        'y': tokens.find(label),
+        'len': len(data)}
+    return res
+
+
+class Crop:
+    def __init__(self, crop_len):
+        self.crop_len = crop_len
+    
+    def __call__(self, data):
+        if len(data) > crop_len:
+            start_idx = np.random.randint(len(data) - crop_len)
+            data = data[start_idx: start_idx + crop_len]
+        return data
+
+class Threshold:
+    def __init__(threshold=None, sigma=None):
+        assert bool(threshold is None) != bool(sigma is None)
+        self.thr = threshold
+        self.sigma = sigma
+        
+    
+    def __call__(data):
+        if self.sigma is None:
+            data[np.abs(data) > self.thr] = self.thr
+        else:
+            data[np.abs(data) > data.std()*self.sigma] = data.std()*self.sigma
+        return data
+    
+class RandomMultiplier:
+    def __init__(self, multiplier=-1.):
+        self.multiplier
+    def __call__(self, data):
+        multiplier = self.multiplier if random.random() < .5 else 1.
+        return data * multiplier
+    
+    
+class Spectogram:
+    def __init__(self, NFFT, overlap=None):
+        self.NFFT = NFFT
+        self.overlap = overlap
+        if overlap is None:
+            self.overlap = NFFT / 2
+    def __call__(self, data):
+        Sx = specgram(
+            x=data,
+            NFFT=NFFT,
+            Fs=300,
+            noverlap=NFFT/2,
+            window=np.hamming(NFFT))[0]    
+        return Sx
+    
 def load_raw(line, tokens=def_tokens, **kwargs):
     # gets a line from REFERENCE.csv
     # i.e. A000001,N
     ref, label = line.split(',')
-    data = load_mat(ref)
+    data, features = load_mat(ref)
     res = {
         'x': th.from_numpy(data[None, :]),
+        'features': th.from_numpy(data[None, :]),
         'y': tokens.find(label),
         'len': len(data)}
     return res
@@ -107,7 +176,7 @@ def load_crop_thresholded(line, crop_len=2100, sigma=3, random_invert=True, toke
     # Samples are recorded with 300 Hz
     
     ref, label = line.split(',')
-    data = load_mat(ref)
+    data, features = load_mat(ref)
     if len(data) > crop_len:
         start_idx = np.random.randint(len(data) - crop_len)
         data = data[start_idx: start_idx + crop_len]
@@ -119,6 +188,7 @@ def load_crop_thresholded(line, crop_len=2100, sigma=3, random_invert=True, toke
     data[np.abs(data) > data.std()*sigma] = data.std()*sigma
     res = {
         'x': th.from_numpy(data[None, :]),
+        'features': th.from_numpy(features[None, :]),
         'y': tokens.find(label),
         'len': len(data)}
     return res
@@ -188,11 +258,15 @@ def batchify(batch):
         x_batch[idx, :, :batch[idx]['len']] = batch[idx]['x']
 
     y_batch = th.LongTensor([s['y'] for s in batch])
+    feature_batch = th.cat([s['features'] for s in batch], dim=0)
     len_batch = Float([s['len'] for s in batch])
+    
 
     res = {'x': Variable(x_batch),
            'y': Variable(y_batch),
-           'len': Variable(len_batch)}
+           'len': Variable(len_batch),
+           'features': Variable(feature_batch)
+          }
     return res
 
 

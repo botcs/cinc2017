@@ -69,7 +69,60 @@ class DilatedFCN(nn.Module):
             return F.softmax(self.logit(out))
         return self.logit(out)
 
+class FCN(nn.Module):
+    def __init__(self, in_channels, channels, dilations, num_ext_features=222,
+                 num_classes=3):
+        super(FCN, self).__init__()
 
+        self.pool = nn.MaxPool1d(2)
+        
+        self.conv1 = nn.Conv1d(in_channels, channels[0], 17, padding=8,
+                                      dilation=dilations[0])
+        self.bn1 = nn.BatchNorm1d(channels[0])
+        self.conv2 = nn.Conv1d(channels[0], channels[1], 9, padding=4,
+                                      dilation=dilations[1])
+        self.bn2 = nn.BatchNorm1d(channels[1])
+        
+        
+        self.conv3 = nn.Conv1d(channels[1], channels[2], 9, padding=4,
+                                      dilation=dilations[2])
+        self.bn3 = nn.BatchNorm1d(channels[2])
+        self.conv4 = nn.Conv1d(channels[2], channels[3], 9, padding=4,
+                                      dilation=dilations[3])
+        self.bn4 = nn.BatchNorm1d(channels[3])
+        
+        
+        self.conv5 = nn.Conv1d(channels[3], channels[4], 9, padding=4,
+                                      dilation=dilations[4])
+        self.bn5 = nn.BatchNorm1d(channels[4])
+        self.conv6 = nn.Conv1d(channels[4], channels[5], 9, padding=4,
+                                      dilation=dilations[5])
+        self.bn6 = nn.BatchNorm1d(channels[5])
+        
+        self.logit = nn.Conv1d(channels[5] + num_ext_features, num_classes, 1)
+
+    def forward(self, x, lens, mat_features):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = F.relu(self.bn2(self.conv2(out)))
+        out = F.relu(self.bn3(self.conv3(out)))
+        out = self.pool(out)
+        out = F.relu(self.bn4(self.conv4(out)))
+        out = F.relu(self.bn5(self.conv5(out)))
+        out = F.relu(self.bn6(self.conv6(out)))
+        out = self.pool(out)
+        # Avg POOLing
+        num_features = out.size()[1]
+        lens = lens[:, None].expand(len(x), num_features)
+    
+        net_features = th.sum(out, dim=-1).squeeze() / lens
+        features = th.cat([mat_features, net_features], dim=1)
+        out = self.logit(features[:, :, None]).squeeze()
+
+        return out
+
+    
+    
+    
 class DilatedBlock(nn.Module):
     # Stg. like:
     # [(3, 3), 16*k]
@@ -117,8 +170,8 @@ class ConvModule(nn.Module):
 class ResNet(nn.Module):
     def __init__(self, N_blocks, 
                  channel, in_channel=1, kernel_size=32, 
-                 init_dilation=2, num_classes=3, 
-                 pool_after_M_blocks=1, ema=0.0001):
+                 init_dilation=2, num_classes=3, num_ext_features=222,
+                 pool_after_M_blocks=1):
         super(ResNet, self).__init__()
         self.N_blocks = N_blocks
         self.channel = channel
@@ -139,29 +192,24 @@ class ResNet(nn.Module):
                 blocks.append(nn.MaxPool1d(2))
         self.net = nn.Sequential(*blocks)
         self.bn_end = nn.BatchNorm1d(channel * N_blocks)
-        self.logit = nn.Conv1d(channel * N_blocks, num_classes, 1, bias=True)
+        self.logit = nn.Conv1d(channel * N_blocks + num_ext_features, 
+                               num_classes, 1, bias=True)
         
-        ## EXPONENTIAL MOVING AVERAGE FOR TEST TIME ## 
-        
-        self.ema = ema
-        self.ema_params = self.get_params()
 
-    def forward(self, x, lens):
+    def forward(self, x, lens, mat_features):
         out = F.relu(self.bn_init(self.conv_init(x)))
         out = self.net(out)
         num_features = self.N_blocks * self.channel
         lens = lens[:, None].expand(len(x), num_features)
-        features = th.sum(out, dim=-1).squeeze() / lens
+        net_features = th.sum(out, dim=-1).squeeze() / lens
+        features = th.cat([mat_features, net_features], dim=1)
         out = self.logit(features[:, :, None]).squeeze()
 
         return out
-
-    def forward_conv(self, x, softmax=False):
+    
+    def forward_features(self, x):
         out = F.relu(self.bn_init(self.conv_init(x)))
         out = self.net(out)
-        out = self.logit(out)
-        if softmax:
-            out = F.softmax(out)
 
         return out
 
