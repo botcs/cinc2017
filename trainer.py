@@ -40,14 +40,13 @@ def evaluate(net, test_producer, gpu_id):
     T = 0
     for i, data in enumerate(test_producer, 1):
         t = time.time()
-        outputs = net(data['x'].cuda(gpu_id), data['len'].cuda(gpu_id),
-                      data['features'].cuda(gpu_id))
+        outputs = net(data['x'].cuda(gpu_id), data['len'].cuda(gpu_id))
         T += time.time() - t
         if i == 1:
             acc_sum = accuracy(outputs.data, data['y'].data)
 
         acc_sum += accuracy(outputs.data, data['y'].data)
-        print('\r%4d, sample/sec: %3.2f' % (i, len(data) / T * i), end='')
+        #print('\r%4d, sample/sec: %3.2f' % (i, len(data) / T * i), end='')
     print(acc_sum[None, :]/i)
     return acc_sum[None, :] / i
 
@@ -63,9 +62,12 @@ class trainer:
         #net.ema_parameters = net.
         net.cuda(gpu_id)
         criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(net.parameters(), weight_decay=0.0001)
         epoch_t_sum = 0
+        learning_rate = 1e-4
         for epoch in range(1, epochs+1):
+            if epoch % (epochs // 3) == 0:
+                learning_rate /= 10.
+            optimizer = optim.Adam( net.parameters(), learning_rate, weight_decay=0.0005)
             acc_sum = 0
             net.train()
             epoch_start = time.time()
@@ -74,8 +76,7 @@ class trainer:
 
                 optimizer.zero_grad()
                 input = data['x'].cuda(gpu_id)
-                outputs = net(input, data['len'].cuda(gpu_id),
-                              data['features'].cuda(gpu_id))
+                outputs = net.forward(input, data['len'].cuda(gpu_id))
 
                 inference_t = time.time() - start_t
                 loss = criterion(outputs, data['y'].cuda(gpu_id))
@@ -93,7 +94,7 @@ class trainer:
                     print('[%d, %3d] sample/sec %3.2f' % stat)
 
             
-            if self.path and (epochs//epoch) % 2 == 0:
+            if self.path and epoch % (epochs // 2) == 0:
                 th.save(net.state_dict(), self.path)
             
             th.save(self, self.path+'trainer')
@@ -111,36 +112,36 @@ class trainer:
             print('-' * 40)
         return self.losses, self.train_F1, self.test_F1
 
-    def plot(self, ema_loss, ema_train_f1, ema_test_f1, filename=None):
+    def plot(self, ema_loss=.1, ema_train_f1=.1, ema_test_f1=.8, filename=None):
         import matplotlib.pyplot as plt
         losses = self.losses
         F1 = self.train_F1
         test_F1 = self.test_F1
-        fig = plt.figure()
-        plt.subplot(3, 1, 1)
+        fig1 = plt.figure()
+        #plt.subplot(3, 1, 1)
         plt.plot(ema(losses, ema_loss))
         plt.title('Train Loss')
         
-        plt.subplot(3, 1, 2)
+        #plt.subplot(3, 1, 2)
+        fig2 = plt.figure()
         alpha = ema_train_f1
         plt.plot(ema(th.cat(F1)[:, 0], alpha), label='N')
         plt.plot(ema(th.cat(F1)[:, 1], alpha), label='A')
         plt.plot(ema(th.cat(F1)[:, 2], alpha), label='O')
         plt.title('Train Accuracy')
-        plt.legend()
+        plt.legend(loc='lower right')
         
-        plt.subplot(3, 1, 3)
+        #plt.subplot(3, 1, 3)
+        fig3 = plt.figure()
         alpha = ema_test_f1
         plt.plot(ema(th.cat(test_F1)[:, 0], alpha), label='N')
         plt.plot(ema(th.cat(test_F1)[:, 1], alpha), label='A')
         plt.plot(ema(th.cat(test_F1)[:, 2], alpha), label='O')
         plt.title('Test Accuracy')
-        plt.legend()
-        if filename is None:
-            plt.show()
-        else:
-            fig.savefig(filename)
-        return fig
+        plt.legend(loc='lower right')
+        if filename is not None:
+            fig3.savefig(filename+'test.png')
+        return fig1, fig2, fig3
 
     def __call__(self, *args, **kwargs):
         self.train(*args, **kwargs)

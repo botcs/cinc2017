@@ -72,26 +72,26 @@ class DataSet(th.utils.data.Dataset):
 def load_mat(ref, normalize=True):
     mat = loadmat(ref)
     data = mat['val'].squeeze() 
-    features = mat['features'][0, -5:]
-    features = np.concatenate(features, axis=1).squeeze().astype(np.float32)
+    #features = mat['features'][0, -5:]
+    #features = np.concatenate(features, axis=1).squeeze().astype(np.float32)
     if normalize:
         data = (data - data.mean()) / data.std()
-        features = (features - features.mean()) / features.std()
+        #features = (features - features.mean()) / features.std()
         #features = (features - features.min()) / features.max()
     
-    return data, features
+    return data #, features
 
 
-def load_composed(line, transformations=[], **kwargs):
+def load_composed(line, tokens=def_tokens, transformations=[], **kwargs):
     ref, label = line.split(',')
-    data, features = load_mat(ref)
+    data = load_mat(ref)
     
     for trans in transformations:
         data = trans(data)
     
     res = {
         'x': th.from_numpy(data[None, :]),
-        'features': th.from_numpy(data[None, :]),
+        #'features': th.from_numpy(data[None, :]),
         'y': tokens.find(label),
         'len': len(data)}
     return res
@@ -102,19 +102,21 @@ class Crop:
         self.crop_len = crop_len
     
     def __call__(self, data):
+        crop_len = self.crop_len
         if len(data) > crop_len:
             start_idx = np.random.randint(len(data) - crop_len)
             data = data[start_idx: start_idx + crop_len]
         return data
 
 class Threshold:
-    def __init__(threshold=None, sigma=None):
-        assert bool(threshold is None) != bool(sigma is None)
+    def __init__(self, threshold=None, sigma=None):
+        assert bool(threshold is None) != bool(sigma is None),\
+            (bool(threshold is None), bool(sigma is None))
         self.thr = threshold
         self.sigma = sigma
         
     
-    def __call__(data):
+    def __call__(self, data):
         if self.sigma is None:
             data[np.abs(data) > self.thr] = self.thr
         else:
@@ -123,7 +125,7 @@ class Threshold:
     
 class RandomMultiplier:
     def __init__(self, multiplier=-1.):
-        self.multiplier
+        self.multiplier = multiplier
     def __call__(self, data):
         multiplier = self.multiplier if random.random() < .5 else 1.
         return data * multiplier
@@ -258,14 +260,14 @@ def batchify(batch):
         x_batch[idx, :, :batch[idx]['len']] = batch[idx]['x']
 
     y_batch = th.LongTensor([s['y'] for s in batch])
-    feature_batch = th.cat([s['features'] for s in batch], dim=0)
+    #feature_batch = th.cat([s['features'] for s in batch], dim=0)
     len_batch = Float([s['len'] for s in batch])
     
 
     res = {'x': Variable(x_batch),
            'y': Variable(y_batch),
            'len': Variable(len_batch),
-           'features': Variable(feature_batch)
+           #'features': Variable(feature_batch)
           }
     return res
 
