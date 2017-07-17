@@ -68,7 +68,8 @@ class Trainer:
         self.test_highscore = 0
         self.highscore_epoch = -1
 
-    def train(self, net, train_producer, test_producer, epochs=100, gpu_id=0, log2file=True):
+    def train(self, net, train_producer, test_producer, epochs=100, 
+              gpu_id=0, useAdam=True, log2file=True):
         log = None
         if log2file:
             log = open(self.path + '/log', 'w')
@@ -76,11 +77,18 @@ class Trainer:
         net.cuda(gpu_id)
         criterion = nn.CrossEntropyLoss()
         epoch_t_sum = 0
-        learning_rate = 1e-4
+        if useAdam:
+            learning_rate = 1e-4
+        else:
+            learning_rate = 1e-2
         for epoch in range(1, epochs+1):
             if epoch % (epochs // 3) == 0:
                 learning_rate /= 10.
-            optimizer = optim.Adam( net.parameters(), learning_rate, weight_decay=0.0005)
+            if useAdam:
+                optimizer = optim.Adam(net.parameters(), learning_rate, weight_decay=0.0005)
+            else:
+                optimizer = optim.SGD(net.parameters(), learning_rate, 
+                                      weight_decay=0.0005, momentum=.9)
             acc_sum = 0
             net.train()
             epoch_start = time.time()
