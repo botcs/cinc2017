@@ -2,7 +2,7 @@
 % clear all;
 % close all;
 
-train=0;
+train=1;
 
 if train==1
     folder='..\..\..\Challenge_2017\training2017\';
@@ -21,7 +21,7 @@ features=[];
 
 s=rng('shuffle');
 r = randi(length(textData),1,600);
-for ii=1:numrec%length(textData)%length(r)
+for ii=1:length(textData)%length(r)
     jj=ii;%r(ii);
     record_name=strjoin(strcat(folder,textData(jj,1),'.mat'));
     data=load(record_name);
@@ -57,16 +57,16 @@ for ii=1:numrec%length(textData)%length(r)
 end
 %%
 if train==1
-    training_features_v04=features;
-    output_file='training_features_v04.mat';
-    output_filename='training_features_v04';
+    training_features_v05=features;
+    output_file='training_features_v05.mat';
+    output_filename='training_features_v05';
 elseif train ==0
-    validation_features_v04=features;
-    output_file='validation_features_v04.mat';
-    output_filename='validation_features_v04';
+    validation_features_v05=features;
+    output_file='validation_features_v05.mat';
+    output_filename='validation_features_v05';
 end
 
-save(output_file,output_filename);
+save(['features/',output_file],output_filename);
 
 %%
 
