@@ -1,0 +1,76 @@
+[   1,   1] loss: 1.0987	sample/sec: 979.5
+[   1,   2] loss: 1.0986	sample/sec: 8215.7
+[   1,   3] loss: 1.0986	sample/sec: 8572.0
+[   1,   4] loss: 1.0987	sample/sec: 8460.3
+[   1,   5] loss: 1.0986	sample/sec: 8417.2
+[   1,   6] loss: 1.0985	sample/sec: 8222.3
+[   1,   7] loss: 1.0986	sample/sec: 8424.6
+[   1,   8] loss: 1.0985	sample/sec: 8527.7
+[   1,   9] loss: 1.0985	sample/sec: 8436.8
+[   1,  10] loss: 1.0986	sample/sec: 9133.9
+[   1,  11] loss: 1.0985	sample/sec: 9349.1
+[   1,  12] loss: 1.0986	sample/sec: 8702.8
+[   1,  13] loss: 1.0987	sample/sec: 9566.5
+[   1,  14] loss: 1.0987	sample/sec: 9404.7
+[   1,  15] loss: 1.0988	sample/sec: 9379.9
+Train acc:
+ N: 0.0015  A: 0.4818  O: 0.1088  mean: 0.1974
+<<<< NEW HIGHSCORE: 0.1939 >>>>
+Test acc:
+ N: 0.0000  A: 0.5818  O: 0.0000  mean: 0.1939
+
+epoch time:       0.06 min
+     total:       0.06 min
+ est. left:       0.12 min
+----------------------------------------
+[   2,   1] loss: 1.0986	sample/sec: 8084.1
+[   2,   2] loss: 1.0987	sample/sec: 8669.9
+[   2,   3] loss: 1.0985	sample/sec: 8850.6
+[   2,   4] loss: 1.0986	sample/sec: 8456.0
+[   2,   5] loss: 1.0984	sample/sec: 8699.0
+[   2,   6] loss: 1.0987	sample/sec: 8705.5
+[   2,   7] loss: 1.0987	sample/sec: 8824.7
+[   2,   8] loss: 1.0985	sample/sec: 8912.0
+[   2,   9] loss: 1.0985	sample/sec: 9235.9
+[   2,  10] loss: 1.0984	sample/sec: 9322.0
+[   2,  11] loss: 1.0983	sample/sec: 9133.7
+[   2,  12] loss: 1.0985	sample/sec: 9409.9
+[   2,  13] loss: 1.0985	sample/sec: 9435.1
+[   2,  14] loss: 1.0985	sample/sec: 9396.7
+[   2,  15] loss: 1.0988	sample/sec: 9376.0
+Train acc:
+ N: 0.0031  A: 0.4899  O: 0.0817  mean: 0.1915
+Test acc:
+ N: 0.0000  A: 0.5681  O: 0.0000  mean: 0.1894
+
+epoch time:       0.06 min
+     total:       0.11 min
+ est. left:       0.06 min
+----------------------------------------
+[   3,   1] loss: 1.0986	sample/sec: 8956.1
+[   3,   2] loss: 1.0986	sample/sec: 9043.9
+[   3,   3] loss: 1.0984	sample/sec: 9207.3
+[   3,   4] loss: 1.0985	sample/sec: 9391.3
+[   3,   5] loss: 1.0985	sample/sec: 9110.8
+[   3,   6] loss: 1.0985	sample/sec: 9623.5
+[   3,   7] loss: 1.0986	sample/sec: 9470.7
+[   3,   8] loss: 1.0987	sample/sec: 8925.2
+[   3,   9] loss: 1.0987	sample/sec: 8702.3
+[   3,  10] loss: 1.0986	sample/sec: 8719.6
+[   3,  11] loss: 1.0986	sample/sec: 8768.6
+[   3,  12] loss: 1.0984	sample/sec: 9230.7
+[   3,  13] loss: 1.0984	sample/sec: 9434.8
+[   3,  14] loss: 1.0986	sample/sec: 9481.5
+[   3,  15] loss: 1.0987	sample/sec: 9320.9
+Train acc:
+ N: 0.0030  A: 0.4912  O: 0.0897  mean: 0.1946
+Test acc:
+ N: 0.0000  A: 0.5662  O: 0.0000  mean: 0.1887
+
+epoch time:       0.05 min
+     total:       0.16 min
+ est. left:       0.00 min
+----------------------------------------
+Finished training!
+  Total time:       0.16
+  Highscore 0.1939 @ 00001 epoch

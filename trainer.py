@@ -50,12 +50,12 @@ def evaluate(net, test_producer, gpu_id):
     return acc
 
 
-class trainer:
+class Trainer:
     def __init__(self, save_path):
         trial = 0
         while True:
             trial += 1
-            path = save_path + '/' + ('%04d' % trial)
+            path = save_path + ('/%04d' % trial)
             if not os.path.exists(path):
                 break
                 
@@ -66,9 +66,13 @@ class trainer:
         self.train_F1 = []
         self.test_F1 = []
         self.test_highscore = 0
+        self.highscore_epoch = -1
 
-    def train(self, net, train_producer, test_producer, epochs=100, gpu_id=0):
-        #net.ema_parameters = net.
+    def train(self, net, train_producer, test_producer, epochs=100, gpu_id=0, log2file=True):
+        log = None
+        if log2file:
+            log = open(self.path + '/log', 'w')
+            
         net.cuda(gpu_id)
         criterion = nn.CrossEntropyLoss()
         epoch_t_sum = 0
@@ -100,7 +104,7 @@ class trainer:
                 acc_sum += self.train_F1[-1]
                 if i % (len(train_producer) // 10) == 0:
                     stat = epoch, i, self.losses[-1], outputs.size()[0]/update_t
-                    print('[%4d, %3d] loss: %5.4f\tsample/sec: %4.1f' % stat)
+                    print('[%4d, %3d] loss: %5.4f\tsample/sec: %4.1f' % stat, file=log)
 
             
             if self.path and epoch % (epochs // 2) == 0:
@@ -110,25 +114,33 @@ class trainer:
             
             print('Train acc:\n', 
                   'N: %.4f  A: %.4f  O: %.4f  mean: %.4f'%
-                  tuple((acc_sum/i).tolist()[0]))
+                  tuple((acc_sum/i).tolist()[0]), file=log)
             test_acc = evaluate(net, test_producer, gpu_id)
             if test_acc.tolist()[0][-1] > self.test_highscore:
-                print('<<<< NEW HIGHSCORE: %.4f >>>>' % test_acc.tolist()[0][-1])
-                self.high_score = test_acc.tolist()[0][-1]
+                print('<<<< NEW HIGHSCORE: %.4f >>>>' % test_acc.tolist()[0][-1], file=log)
+                self.test_highscore = test_acc.tolist()[0][-1]
+                self.highscore_epoch = epoch
                 th.save(net.state_dict(), self.path+'/state_dict_highscore')
             
             print('Test acc:\n', 
                   'N: %.4f  A: %.4f  O: %.4f  mean: %.4f'%
-                  tuple(test_acc.tolist()[0]))
+                  tuple(test_acc.tolist()[0]), file=log)
             self.test_F1.append(test_acc)
             
             epoch_t_sum += time.time() - epoch_start
             epoch_time = epoch_t_sum / 60 / epoch
             ETL = (epochs - epoch) * epoch_time
-            print('\nepoch time: %10.2f min' % epoch_time)
-            print('     total: %10.2f min' % (epoch_t_sum/60))
-            print(' est. left: %10.2f min' % ETL)
-            print('-' * 40)
+            print('\nepoch time: %10.2f min' % epoch_time, file=log)
+            print('     total: %10.2f min' % (epoch_t_sum/60), file=log)
+            print(' est. left: %10.2f min' % ETL, file=log)
+            print('-' * 40, file=log)
+        
+        print('Finished training!\n  Total time: %10.2f'%(epoch_t_sum/60), file=log)
+        print('  Highscore %.4f @ %05d epoch' % (self.test_highscore, self.highscore_epoch), file=log)
+        if log2file:
+            print('Finished training!\n  Total time: %10.2f'%(epoch_t_sum/60))
+            print('  Highscore: %.4f @ %05d epoch' % (self.test_highscore, self.highscore_epoch))
+            log.close()
         return self.losses, self.train_F1, self.test_F1
 
     def plot(self, ema_loss=.1, ema_train_f1=.1, ema_test_f1=.8, filename=None):
