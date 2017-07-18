@@ -68,7 +68,7 @@ class Trainer:
         self.test_highscore = 0
         self.highscore_epoch = -1
 
-    def train(self, net, train_producer, test_producer, epochs=100, 
+    def train(self, net, train_producer, test_producer, epochs=400, 
               gpu_id=0, useAdam=True, log2file=True):
         log = None
         if log2file:
@@ -82,7 +82,7 @@ class Trainer:
         else:
             learning_rate = 1e-2
         for epoch in range(1, epochs+1):
-            if epoch % (epochs // 3) == 0:
+            if epoch % (epochs // 4) == 0:
                 learning_rate /= 10.
             if useAdam:
                 optimizer = optim.Adam(net.parameters(), learning_rate, weight_decay=0.0005)
