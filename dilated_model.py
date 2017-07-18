@@ -9,6 +9,14 @@ import torchvision
 
 
 
+class SELU(nn.Module):
+    def __init__(self):
+        super(SELU, self).__init__()
+        self.alpha = 1.6732632423543772848170429916717
+        self.scale = 1.0507009873554804934193349852946
+        
+    def forward(self, x):
+        return self.scale * F.elu(x, self.alpha)
 
 class MultiKernelBlock(nn.Module):
     # Mentioned here: https://arxiv.org/pdf/1611.06455.pdf
@@ -228,10 +236,12 @@ class VGG16(nn.Module):
         return out
 
 class VGG16NoDense(nn.Module):
-    def __init__(self, in_channels, channels, dilations, num_classes=3):
+    def __init__(self, in_channels, channels, use_selu, num_classes=3,
+                 dilations=[1, 2,  1, 2,  1, 2, 4,  1, 2, 4,  1, 2, 4]):
         super(VGG16NoDense, self).__init__()
         self.num_classes = num_classes
         self.pool = nn.MaxPool1d(2)
+        self.activation = SELU() if use_selu else nn.ReLU()
         
         self.conv1 = nn.Conv1d(in_channels, channels[0], 17, padding=8,
                                dilation=dilations[0], bias=False)
@@ -292,25 +302,80 @@ class VGG16NoDense(nn.Module):
     def forward(self, x, lens=None):
         if lens is None:
             lens = x.size()[1]
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = F.relu(self.bn2(self.conv2(out)))
+        out = self.activation(self.bn1(self.conv1(x)))
+        out = self.activation(self.bn2(self.conv2(out)))
         out = self.pool(out)
-        out = F.relu(self.bn3(self.conv3(out)))
-        out = F.relu(self.bn4(self.conv4(out)))
+        out = self.activation(self.bn3(self.conv3(out)))
+        out = self.activation(self.bn4(self.conv4(out)))
         out = self.pool(out)
-        out = F.relu(self.bn5(self.conv5(out)))
-        out = F.relu(self.bn6(self.conv6(out)))
-        out = F.relu(self.bn7(self.conv7(out)))
+        out = self.activation(self.bn5(self.conv5(out)))
+        out = self.activation(self.bn6(self.conv6(out)))
+        out = self.activation(self.bn7(self.conv7(out)))
         out = self.pool(out)
-        out = F.relu(self.bn8(self.conv8(out)))
-        out = F.relu(self.bn9(self.conv9(out)))
-        out = F.relu(self.bn10(self.conv10(out)))
+        out = self.activation(self.bn8(self.conv8(out)))
+        out = self.activation(self.bn9(self.conv9(out)))
+        out = self.activation(self.bn10(self.conv10(out)))
         out = self.pool(out)
-        out = F.relu(self.bn11(self.conv11(out)))
-        out = F.relu(self.bn12(self.conv12(out)))
-        out = F.relu(self.bn13(self.conv13(out)))
+        out = self.activation(self.bn11(self.conv11(out)))
+        out = self.activation(self.bn12(self.conv12(out)))
+        out = self.activation(self.bn13(self.conv13(out)))
         out = self.drop1(out)
         
+        # Avg POOLing
+        lens = lens[:, None].expand(len(x), self.num_classes)
+        out = self.logit(out)
+        out = th.sum(out, dim=-1).squeeze() / lens
+        return out   
+
+             
+        
+class VGG19NoDense(nn.Module):
+    def __init__(self, in_channels, channels, use_selu, num_classes=3,
+                 dilations=[1, 2,  1, 2,  1, 2, 4, 8,  1, 2, 4, 8,  1, 2, 4, 8]):
+        super(VGG19NoDense, self).__init__()
+        self.num_classes = num_classes
+        self.pool = nn.MaxPool1d(2)
+        
+        self.conv1 = nn.Conv1d(in_channels, channels[0], 17, padding=8,
+                               dilation=dilations[0], bias=False)
+        self.bn1 = nn.BatchNorm1d(channels[0])
+        self.use_selu = use_selu
+        # this part is repeating heavily
+        for i in range(15):
+            if i in set([0, 2, 6, 10, 14]):
+                layer_list.append(nn.Sequential(*[
+                    nn.Conv1d(channels[i], channels[i+1], 9, padding=4,
+                          dilation=dilations[i+1], bias=False),
+                    nn.BatchNorm1d(channels[i+1]),
+                    SELU() if use_selu else nn.ReLU,
+                    nn.MaxPool1d(2)])
+                )
+            else:
+                layer_list.append(nn.Sequential(*[
+                    nn.Conv1d(channels[i], channels[i+1], 9, padding=4,
+                          dilation=dilations[i+1], bias=False),
+                    nn.BatchNorm1d(channels[i+1])],
+                    SELU() if use_selu else nn.ReLU)
+                )
+                
+        self.hidden = nn.Sequential(*layer_list)
+        
+        self.drop1 = nn.Dropout(inplace=True)
+        
+        self.logit = nn.Conv1d(channels[15], num_classes, 1)
+        
+    def forward(self, x, lens=None):
+        if lens is None:
+            lens = x.size()[1]
+            
+        if self.use_selu:
+            out = SELU()(self.bn1(self.conv1(x)))
+        else:
+            out = F.relu(self.bn1(self.conv1(x)))
+        
+        out = self.hidden(out)
+        
+        out = self.drop1(out)
         
         # Avg POOLing
         lens = lens[:, None].expand(len(x), self.num_classes)

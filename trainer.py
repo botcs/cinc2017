@@ -68,7 +68,7 @@ class Trainer:
         self.test_highscore = 0
         self.highscore_epoch = -1
 
-    def train(self, net, train_producer, test_producer, epochs=400, 
+    def train(self, net, train_producer, test_producer, epochs=420, 
               gpu_id=0, useAdam=True, log2file=True):
         log = None
         if log2file:

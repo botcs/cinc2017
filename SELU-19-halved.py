@@ -2,7 +2,6 @@
 import data_handler
 import dilated_model as DM
 import trainer as T
-
 import numpy as np
 import torch as th
 from torch.autograd import Variable
@@ -26,15 +25,15 @@ dataset = data_handler.DataSet(
     remove_noise=True, tokens='NAO')
 train_set, eval_set = dataset.disjunct_split(.9)
 
-net = DM.VGG16NoDense(1, 
-    channels=[64, 64,  128, 128,  256, 256, 256,  256, 256, 256,  512, 512, 512], 
-    dilations=[1, 2,  1, 2,  1, 2, 4,  1, 2, 4,  1, 2, 4])
+net = DM.VGG19NoDense(1, 
+    channels=[32,32, 64,64, 128,128,128,128, 256,256,256,256, 256,256,256,256],
+    use_selu=True)
 
 train_producer = th.utils.data.DataLoader(
-        dataset=train_set, batch_size=256, shuffle=True,
+        dataset=train_set, batch_size=128, shuffle=True,
         num_workers=4, collate_fn=data_handler.batchify)
 test_producer = th.utils.data.DataLoader(
-        dataset=eval_set, batch_size=128, shuffle=True,
+        dataset=eval_set, batch_size=64, shuffle=True,
         num_workers=4, collate_fn=data_handler.batchify)
 trainer = T.Trainer('saved/'+name)
-trainer(net, train_producer, test_producer, epochs=1000, gpu_id=0, useAdam=False)
+trainer(net, train_producer, test_producer, gpu_id=0, useAdam=False)
