@@ -331,7 +331,7 @@ class VGG16NoDense(nn.Module):
         
 class VGG19NoDense(nn.Module):
     def __init__(self, in_channels, channels, use_selu, num_classes=3,
-                 dilations=[1, 2,  1, 2,  1, 2, 4, 8,  1, 2, 4, 8,  1, 2, 4, 8]):
+                 dilations=[1, 2,  1, 2,  1, 2, 4, 4,  1, 2, 4, 4,  1, 2, 4, 4]):
         super(VGG19NoDense, self).__init__()
         self.num_classes = num_classes
         self.pool = nn.MaxPool1d(2)
@@ -341,13 +341,14 @@ class VGG19NoDense(nn.Module):
         self.bn1 = nn.BatchNorm1d(channels[0])
         self.use_selu = use_selu
         # this part is repeating heavily
+        layer_list = []
         for i in range(15):
             if i in set([0, 2, 6, 10, 14]):
                 layer_list.append(nn.Sequential(*[
                     nn.Conv1d(channels[i], channels[i+1], 9, padding=4,
                           dilation=dilations[i+1], bias=False),
                     nn.BatchNorm1d(channels[i+1]),
-                    SELU() if use_selu else nn.ReLU,
+                    SELU() if use_selu else nn.ReLU(),
                     nn.MaxPool1d(2)])
                 )
             else:
@@ -355,7 +356,7 @@ class VGG19NoDense(nn.Module):
                     nn.Conv1d(channels[i], channels[i+1], 9, padding=4,
                           dilation=dilations[i+1], bias=False),
                     nn.BatchNorm1d(channels[i+1])],
-                    SELU() if use_selu else nn.ReLU)
+                    SELU() if use_selu else nn.ReLU())
                 )
                 
         self.hidden = nn.Sequential(*layer_list)
@@ -367,6 +368,7 @@ class VGG19NoDense(nn.Module):
     def forward(self, x, lens=None):
         if lens is None:
             lens = x.size()[1]
+            
             
         if self.use_selu:
             out = SELU()(self.bn1(self.conv1(x)))
