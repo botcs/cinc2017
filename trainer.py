@@ -49,19 +49,30 @@ def evaluate(net, test_producer, gpu_id):
     acc = acc_sum / i
     return acc
 
+def make_dir(save_path):
+    trial = 0
+    while True:
+        trial += 1
+        path = save_path + ('/%04d' % trial)
+        if not os.path.exists(path):
+            break
+    os.makedirs(path)
+    print('Created empty directory at:', os.path.abspath(path))
+    return path
 
+def load_latest(save_path):
+    trial = 1
+    while os.path.exists(save_path + ('/%04d' % (trial+1))):
+        trial += 1
+    path = save_path + ('/%04d' % trial)
+    print('Using latest training at:', os.path.abspath(path))
+    return path
+            
 class Trainer:
-    def __init__(self, save_path):
-        trial = 0
-        while True:
-            trial += 1
-            path = save_path + ('/%04d' % trial)
-            if not os.path.exists(path):
-                break
-                
-        os.makedirs(path)
-        print('Created empty directory at:', os.path.abspath(path))
-        self.path = path
+    def __init__(self, path, restore=False):
+        self.restore = restore
+        self.path = load_latest(path) if restore else make_dir(path)
+        assert os.path.exists(self.path)
         self.losses = []
         self.train_F1 = []
         self.test_F1 = []
@@ -70,6 +81,7 @@ class Trainer:
 
     def train(self, net, train_producer, test_producer, epochs=420, 
               gpu_id=0, useAdam=True, log2file=True):
+        
         log = None
         if log2file:
             log = open(self.path + '/log', 'w')
@@ -81,7 +93,12 @@ class Trainer:
             learning_rate = 1e-4
         else:
             learning_rate = 1e-2
-        for epoch in range(1, epochs+1):
+        
+        if self.restore:
+            net.load_state_dict(th.load(self.path+'/state_dict_highscore'))
+        
+        self.restore = True
+        for epoch in range(len(self.test_F1)+1, epochs+1):
             if epoch % (epochs // 4) == 0:
                 learning_rate /= 10.
             if useAdam:
@@ -125,9 +142,10 @@ class Trainer:
                   tuple((acc_sum/i).tolist()[0]), file=log)
             test_acc = evaluate(net, test_producer, gpu_id)
             if test_acc.tolist()[0][-1] > self.test_highscore:
-                print('<<<< NEW HIGHSCORE: %.4f >>>>' % test_acc.tolist()[0][-1], file=log)
                 self.test_highscore = test_acc.tolist()[0][-1]
                 self.highscore_epoch = epoch
+                print('<<<< %.4f @ %05d epoch >>>>' % (
+                    self.test_highscore, self.highscore_epoch), file=log)
                 th.save(net.state_dict(), self.path+'/state_dict_highscore')
             
             print('Test acc:\n', 
