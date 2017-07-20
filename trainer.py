@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch import optim
 import os
 import time
-
+from datetime import datetime
 
 def accuracy(logit, target):
     y_oh = th.zeros(logit.size())
@@ -77,15 +77,18 @@ class Trainer:
         self.train_F1 = []
         self.test_F1 = []
         self.test_highscore = 0
-        self.highscore_epoch = -1
+        self.highscore_epoch = 1
 
     def train(self, net, train_producer, test_producer, epochs=420, 
-              gpu_id=0, useAdam=True, log2file=True):
+              lr_decrease_factor=10., gpu_id=0, useAdam=True, log2file=True):
         
         log = None
         if log2file:
-            log = open(self.path + '/log', 'w')
-            
+            if restore:
+                log = open(self.path + '/log', 'a')  
+            else:
+                log = open(self.path + '/log', 'w')
+        
         net.cuda(gpu_id)
         criterion = nn.CrossEntropyLoss()
         epoch_t_sum = 0
@@ -96,13 +99,22 @@ class Trainer:
         
         if self.restore:
             net.load_state_dict(th.load(self.path+'/state_dict_highscore'))
+            highscore_str = '%.4f @ %05d epoch' % (self.test_highscore, self.highscore_epoch)
+            print('RESTORED: ', datetime.now(), 
+                  'from last highscore:', highscore_str, file=log)
+            print('RESTORED: ', datetime.now(), 
+                  'from last highscore:', highscore_str)
         
         self.restore = True
-        for epoch in range(len(self.test_F1)+1, epochs+1):
-            if epoch % (epochs // 4) == 0:
-                learning_rate /= 10.
+        for epoch in range(self.highscore_epoch, epochs+1):
+            #if epoch % (epochs // 2) == 0:
+            #    learning_rate /= 10.
+            if (epoch - self.highscore_epoch) > epochs / 4:
+                learning_rate /= lr_decrease_factor
+                lr_decrease_factor *= 10
             if useAdam:
-                optimizer = optim.Adam(net.parameters(), learning_rate, weight_decay=0.0005)
+                optimizer = optim.Adam(net.parameters(), learning_rate, 
+                                       weight_decay=0.0005)
             else:
                 optimizer = optim.SGD(net.parameters(), learning_rate, 
                                       weight_decay=0.0005, momentum=.9)
