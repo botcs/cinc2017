@@ -14,9 +14,11 @@ class SELU(nn.Module):
         super(SELU, self).__init__()
         self.alpha = 1.6732632423543772848170429916717
         self.scale = 1.0507009873554804934193349852946
-        
+    
     def forward(self, x):
         return self.scale * F.elu(x, self.alpha)
+    
+    
 
 class MultiKernelBlock(nn.Module):
     # Mentioned here: https://arxiv.org/pdf/1611.06455.pdf
@@ -388,28 +390,31 @@ class VGG19NoDense(nn.Module):
 class DilatedBlock(nn.Module):
     # Stg. like:
     # [(3, 3), 16*k]
-    def __init__(self, in_channels=8, out_channels=8, kernel_size=7, dilation=2, nonlin=F.relu):
+    def __init__(self, in_channels=8, out_channels=8, kernel_size=9, dilation=2, nonlin=nn.ReLU):
         super(DilatedBlock, self).__init__()
         self.nonlin = nonlin
         self.identity = lambda x: x
         if in_channels != out_channels:
             self.identity = nn.Conv1d(in_channels, out_channels, 1)
-
-        self.bn1 = nn.BatchNorm1d(in_channels)
-        self.conv1 = nn.Conv1d(
-            in_channels, out_channels, kernel_size,
-            padding=kernel_size//2, bias=False)
-        self.bn2 = nn.BatchNorm1d(out_channels)
-        self.dropout = nn.Dropout(inplace=True)
-        self.conv2 = nn.Conv1d(
-            out_channels, out_channels, kernel_size,
-            padding=kernel_size//2*dilation, bias=False,
-            dilation=dilation)
-
+        
+        self.block = nn.Sequential(*[
+            nn.BatchNorm1d(in_channels),
+            nn.Conv1d(
+                in_channels, out_channels, kernel_size,
+                padding=kernel_size//2, bias=False),
+            self.nonlin,
+            nn.BatchNorm1d(out_channels),
+            nn.Dropout(inplace=True),
+            nn.Conv1d(
+                out_channels, out_channels, kernel_size,
+                padding=kernel_size//2*dilation, bias=False,
+                dilation=dilation),
+            self.nonlin
+        ])
+        
     def forward(self, x):
-        h = self.conv1(self.nonlin(self.bn1(x)))
-        h = self.conv2(self.dropout(self.nonlin(self.bn2(h))))
-        out = self.identity(x) + h
+        out = self.block(x)
+        out = self.identity(x) + out
         return out
 
 class ConvModule(nn.Module):
@@ -417,7 +422,7 @@ class ConvModule(nn.Module):
     # [(3, 3), 16*k]
     # [(3, 3), 16*k]
     # [(3, 3), 16*k]
-    def __init__(self, in_channel, channel=8, block=DilatedBlock, N=32, nonlin=F.relu):
+    def __init__(self, in_channel, channel=8, block=DilatedBlock, N=3, nonlin=nn.ReLU):
         super(ConvModule, self).__init__()
         residuals = []
         residuals.append(DilatedBlock(in_channel, channel, 17, nonlin=nonlin))
@@ -432,25 +437,24 @@ class ConvModule(nn.Module):
 class ResNet(nn.Module):
     def __init__(self, K_blocks, N_res_in_block, 
                  channel, use_selu, 
-                 in_channel=1, kernel_size=32, 
-                 init_dilation=1, num_classes=3,
+                 in_channel=1, init_kernel_size=17, 
+                 num_classes=3,
                  pool_after_M_blocks=1):
         super(ResNet, self).__init__()
+        self.K_blocks = K_blocks
+        self.channel = channel
+        self.pool_after_M_blocks = pool_after_M_blocks
+        self.conv_init = nn.Conv1d(
+            in_channel, channel, init_kernel_size,
+            padding=init_kernel_size//2, bias=False)
+        self.bn_init = nn.BatchNorm1d(channel)
+        
         if use_selu:
             self.nonlin = SELU()
         else:
-            self.nonlin = F.relu
-        self.N_blocks = N_blocks
-        self.channel = channel
-        self.pool_after_M_blocks = pool_after_M_blocks
-        self.init_dilation = init_dilation
-        self.kernels_size = kernel_size
-        self.conv_init = nn.Conv1d(
-            in_channel, channel, kernel_size,
-            padding=kernel_size//2, bias=False)
-        self.bn_init = nn.BatchNorm1d(channel)
-        
-        blocks = [ConvModule(channel, channel)]
+            self.nonlin = nn.ReLU()
+            
+        blocks = [ConvModule(channel, channel, nonlin=self.nonlin, N=N_res_in_block)]
         for K in range(K_blocks):
             blocks.append(ConvModule(
                 channel*2**K, channel*2**(K+1), 
@@ -458,13 +462,19 @@ class ResNet(nn.Module):
             
             if K % pool_after_M_blocks == 0:           
                 blocks.append(nn.MaxPool1d(2))
-                
+        blocks += [
+            nn.Conv1d(channel * 2 ** K_blocks, channel * 2 ** K_blocks, 9, dilation=2),
+            nn.BatchNorm1d(channel * 2 ** K_blocks),
+            self.nonlin
+        ]
         self.net = nn.Sequential(*blocks)
         self.bn_end = nn.BatchNorm1d(channel * 2 ** K_blocks)
         self.logit = nn.Conv1d(channel * 2 ** K_blocks, num_classes, 1, bias=True)
-        print(self)
+        print(self.forward)
 
-    def forward(self, x, lens):
+    def forward(self, x, lens=None):
+        if lens is None:
+            lens = x.size()[1]
         out = self.forward_features(x)
         
         lens = lens[:, None].expand(len(x), self.num_classes)
