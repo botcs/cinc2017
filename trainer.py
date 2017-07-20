@@ -84,7 +84,7 @@ class Trainer:
         
         log = None
         if log2file:
-            if restore:
+            if self.restore:
                 log = open(self.path + '/log', 'a')  
             else:
                 log = open(self.path + '/log', 'w')
