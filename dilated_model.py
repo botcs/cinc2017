@@ -388,9 +388,9 @@ class VGG19NoDense(nn.Module):
 class DilatedBlock(nn.Module):
     # Stg. like:
     # [(3, 3), 16*k]
-    def __init__(self, in_channels=8, out_channels=8, kernel_size=7, dilation=2):
+    def __init__(self, in_channels=8, out_channels=8, kernel_size=7, dilation=2, nonlin=F.relu):
         super(DilatedBlock, self).__init__()
-
+        self.nonlin = nonlin
         self.identity = lambda x: x
         if in_channels != out_channels:
             self.identity = nn.Conv1d(in_channels, out_channels, 1)
@@ -407,8 +407,8 @@ class DilatedBlock(nn.Module):
             dilation=dilation)
 
     def forward(self, x):
-        h = self.conv1(F.relu(self.bn1(x)))
-        h = self.conv2(self.dropout(F.relu(self.bn2(h))))
+        h = self.conv1(self.nonlin(self.bn1(x)))
+        h = self.conv2(self.dropout(self.nonlin(self.bn2(h))))
         out = self.identity(x) + h
         return out
 
@@ -417,12 +417,12 @@ class ConvModule(nn.Module):
     # [(3, 3), 16*k]
     # [(3, 3), 16*k]
     # [(3, 3), 16*k]
-    def __init__(self, in_channel, channel=8, block=DilatedBlock, N=32):
+    def __init__(self, in_channel, channel=8, block=DilatedBlock, N=32, nonlin=F.relu):
         super(ConvModule, self).__init__()
         residuals = []
-        residuals.append(DilatedBlock(in_channel, channel, 17))
+        residuals.append(DilatedBlock(in_channel, channel, 17, nonlin=nonlin))
         for n in range(1, N):
-            residuals.append(DilatedBlock(channel, channel, 17))
+            residuals.append(DilatedBlock(channel, channel, 17, nonlin=nonlin))
 
         self.residuals = nn.Sequential(*residuals)
 
@@ -430,11 +430,16 @@ class ConvModule(nn.Module):
         return self.residuals(x)
                        
 class ResNet(nn.Module):
-    def __init__(self, N_blocks, 
-                 channel, in_channel=1, kernel_size=32, 
-                 init_dilation=2, num_classes=3, num_ext_features=222,
+    def __init__(self, K_blocks, N_res_in_block, 
+                 channel, use_selu, 
+                 in_channel=1, kernel_size=32, 
+                 init_dilation=1, num_classes=3,
                  pool_after_M_blocks=1):
         super(ResNet, self).__init__()
+        if use_selu:
+            self.nonlin = SELU()
+        else:
+            self.nonlin = F.relu
         self.N_blocks = N_blocks
         self.channel = channel
         self.pool_after_M_blocks = pool_after_M_blocks
@@ -442,35 +447,33 @@ class ResNet(nn.Module):
         self.kernels_size = kernel_size
         self.conv_init = nn.Conv1d(
             in_channel, channel, kernel_size,
-            padding=kernel_size//2*init_dilation, 
-            dilation=init_dilation, bias=False)
+            padding=kernel_size//2, bias=False)
         self.bn_init = nn.BatchNorm1d(channel)
-        blocks = [ConvModule(channel, channel)]
-        for N in range(1, N_blocks):
-            print('generating block:', N)
-            blocks.append(ConvModule(channel*N, channel*(N+1), N=4))
-            #print(blocks[-1])
-            if N % pool_after_M_blocks == 0:           
-                blocks.append(nn.MaxPool1d(2))
-        self.net = nn.Sequential(*blocks)
-        self.bn_end = nn.BatchNorm1d(channel * N_blocks)
-        self.logit = nn.Conv1d(channel * N_blocks + num_ext_features, 
-                               num_classes, 1, bias=True)
         
+        blocks = [ConvModule(channel, channel)]
+        for K in range(K_blocks):
+            blocks.append(ConvModule(
+                channel*2**K, channel*2**(K+1), 
+                N=N_res_in_block, nonlin=self.nonlin))
+            
+            if K % pool_after_M_blocks == 0:           
+                blocks.append(nn.MaxPool1d(2))
+                
+        self.net = nn.Sequential(*blocks)
+        self.bn_end = nn.BatchNorm1d(channel * 2 ** K_blocks)
+        self.logit = nn.Conv1d(channel * 2 ** K_blocks, num_classes, 1, bias=True)
+        print(self)
 
-    def forward(self, x, lens, mat_features):
-        out = F.relu(self.bn_init(self.conv_init(x)))
-        out = self.net(out)
-        num_features = self.N_blocks * self.channel
-        lens = lens[:, None].expand(len(x), num_features)
-        net_features = th.sum(out, dim=-1).squeeze() / lens
-        features = th.cat([mat_features, net_features], dim=1)
-        out = self.logit(features[:, :, None]).squeeze()
-
-        return out
+    def forward(self, x, lens):
+        out = self.forward_features(x)
+        
+        lens = lens[:, None].expand(len(x), self.num_classes)
+        out = self.logit(out)
+        out = th.sum(out, dim=-1).squeeze() / lens
+        return out 
     
     def forward_features(self, x):
-        out = F.relu(self.bn_init(self.conv_init(x)))
+        out = self.nonlin(self.bn_init(self.conv_init(x)))
         out = self.net(out)
 
         return out
