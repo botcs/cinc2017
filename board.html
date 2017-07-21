@@ -1,0 +1,278 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>pyTorch Board</title>
+  <meta name="description" content="Visualization tool for pyTorch trains">
+  <meta name="author" content="Hakkel Tamás">
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!-- Latest compiled JavaScript -->
+    <script async defer src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script async defer src="https://cdnjs.cloudflare.com/ajax/libs/async/2.5.0/async.js" integrity="sha256-ixfdv6k+dGan9mMKiQkjPpCzDHiHpHDGpsgd5m7Ejl0=" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <style>
+    #loader {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      z-index: 1;
+      width: 150px;
+      height: 150px;
+      margin: -75px 0 0 -75px;
+      border: 16px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 16px solid #3498db;
+      width: 120px;
+      height: 120px;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    </style>
+
+  <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+  <![endif]-->
+</head>
+
+<body>
+<div id="loader"></div>
+<div class="container-fluid">
+   <div class="row" style="padding-top:30px">
+      <div class="col-md-3">
+        <div class="well" style="padding:20px 30px">
+            <form class="form-horizontal">
+            <fieldset>
+
+            <!-- Graph type input -->
+            <div class="form-group">
+              <label class="control-label" for="graph-checkboxes">Graphs to show</label>
+              <div id="graph-checkboxes">
+                  <div class="checkbox">
+                    <label for="graphs-0">
+                      <input type="checkbox" name="graph-checkboxes" id="graphs-0" value="losses">
+                      Losses
+                    </label>
+                    </div>
+                  <div class="checkbox">
+                    <label for="graphs-1">
+                      <input type="checkbox" name="graph-checkboxes" id="graphs-1" value="train_F1">
+                      Train_F1
+                    </label>
+                    </div>
+                  <div class="checkbox">
+                    <label for="graphs-2">
+                      <input type="checkbox" name="graph-checkboxes" id="graphs-2" value="test_F1">
+                      Test_F1
+                    </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trainer selector -->
+            <div class="form-group">
+              <label class="control-label" for="paths">Available trainers</label>
+                <div id="path-checkboxes">
+                  <div class="checkbox">
+                    <label for="paths-0">
+                      <input type="checkbox" name="paths" id="paths-0" value="0">
+                      Option one
+                    </label>
+                  </div>
+                </div>
+            </div>
+                
+            <!-- Number of data points-->
+            <div class="form-group">
+              <label class="control-label" for="numberinput">Number of data points</label>  
+              <div>
+              <input name="numberinput" type="number" id="num_of_points" min="0" value="100" data-bind="value:replyNumber" class="form-control input-md" />
+              <span class="help-block">Default value: 100</span>  
+              </div>
+            </div>
+                
+            <!-- Trainer refresh time-->
+            <div class="form-group">
+              <label class="control-label" for="numberinput">Refresh rate of available trainers' list</label> 
+              <div>
+              <input name="numberinput" type="number" id="path_refresh" min="0" value="10" data-bind="value:replyNumber" class="form-control input-md" />
+              <span class="help-block">Default value: 10 sec</span>  
+              </div>
+            </div>
+                
+            <!-- Graph refresh time-->
+            <div class="form-group">
+              <label class="control-label" for="numberinput3">Refresh rate of graphs</label>  
+              <div>
+              <input name="numberinput3" type="number" id="graph_refresh" min="0" value="5" data-bind="value:replyNumber" class="form-control input-md" />
+              <span class="help-block">Default value: 5 sec</span>  
+              </div>
+            </div>
+
+            </fieldset>
+            </form>
+          </div>
+      </div>
+      <div class="col-md-9" id="graphs">
+         
+      </div>
+   </div>
+</div>
+    
+<script>
+google.charts.load('current', {packages: ['corechart', 'line']});
+google.charts.setOnLoadCallback(drawChart);
+function setCookie(cname, cvalue, exdays=180) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    var expires = "expires="+d.toUTCString();
+    document.cookie = cname + "=" + JSON.stringify(cvalue) + ";" + expires + ";path=/";
+}
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ')
+            c = c.substring(1);
+        if (c.indexOf(name) == 0) {
+            value = c.substring(name.length, c.length);
+            return value.length > 0 ? JSON.parse(value) : "";
+        }
+    }
+    return "";
+}
+function loadPaths(callback=function(){}) {
+    $.get("trainers", function(data, status){
+        if (status != "success") {console.log(data, status); return; }
+        var items = getCookie("path_items");
+        $("#path-checkboxes").empty();
+        var i = 0;
+        async.each(JSON.parse(data),function(item, callback) {
+            $("#path-checkboxes").append(' \
+             <div class="checkbox"> \
+                <label for="paths-' + i + '"> \
+                  <input type="checkbox" name="paths" id="paths-' + i++ + '" value="' + item + '" ' 
+                    + (items.indexOf(item) > -1 ? 'checked' : '') + '> \
+                  ' + item + ' \
+                </label> \
+             </div> \
+            ');
+            callback();
+        }, callback);
+        $(":checkbox").change(loadGraphs);
+    });
+}
+function loadGraphs() {
+    function getItems(id) {
+        return $(id + ' :checkbox').filter(':checked').map(function(){
+                    return $(this).attr("value")
+                }).get();
+    }
+    var path_items = getItems("#path-checkboxes");
+    var graph_items = getItems("#graph-checkboxes");
+    var num_of_points = $('#num_of_points').val();
+    setCookie("path_items", path_items);
+    setCookie("graph_items", graph_items);
+    setCookie("num_of_points", num_of_points)
+    if (path_items.length == 0 || graph_items.length == 0 ||
+        (path_items == getCookie('path_items') && graph_items == getCookie('graph_items')))
+            { document.getElementById("loader").style.display = "none"; return; };
+    var URL = "plot/?graphs=" + JSON.stringify(graph_items) + 
+        "&paths=" + JSON.stringify(path_items) +
+        "&num_of_points=" + num_of_points;
+    $.get(URL, function(data, status){
+        if (status != "success") {console.log(data, status); return; }
+        drawGraphs(JSON.parse(data));
+    });
+}
+function drawGraphs(data) {
+    $("#graphs").empty();
+    for (key in data) {
+        $("#graphs").append("<div id='" + key + "'></div>");
+        drawChart(key, data[key]);
+    }
+}
+function drawChart(title, data) {
+    if (!title) return;
+    var table = new google.visualization.DataTable();
+    table.addColumn('number', 'iteration');
+    var max_length = 0;
+    for (key in data) {
+        table.addColumn('number', key);
+        if (data[key].length > max_length)
+            max_length = data[key].length;
+    }
+    table.addRows(max_length);
+    for (i = 0; i < max_length; i++)
+        table.setValue(i, 0, i);
+    var j = 1;
+    for (key in data) {
+        for (i = 0; i < data[key].length; i++)
+            table.setValue(i, j, data[key][i]);
+        j++;
+    }
+
+    var options = {
+        title: title,
+        height: 300,
+        chartArea: { left: "10%", width: "50%", height: "70%" },
+        explorer: {
+            maxZoomIn: 0.125,
+            maxZoomOut: 2,
+            keepInBounds: true,
+            actions: ['dragToZoom', 'rightClickToReset']
+        }
+
+    };
+    var chart = new google.visualization.LineChart(document.getElementById(title));
+    chart.draw(table, options);
+    document.getElementById("loader").style.display = "none";
+}
+var id = {};
+$( document ).ready(function() {
+    loadPaths(function() {
+        async.each(getCookie("graph_items"), function(item, callback) {
+            $('#graph-checkboxes :input').filter(function(){return this.value==item;}).prop('checked', true); callback();
+        }, loadGraphs)
+    });
+    function initFromCookies(name) {
+        var value = getCookie(name);
+        console.log((value || value.length > 0))
+        if (value == "") return;
+        $("#" + name).val(name == "num_of_points" ? value : value / 1000);
+    }
+    initFromCookies("num_of_points");
+    initFromCookies("path_refresh");
+    initFromCookies("graph_refresh");
+    function refresh(what, func) {
+        var refresh_time = $('#' + what).val()*1000;
+        setCookie("path_refresh", refresh_time);
+        clearInterval(id[what])
+        path_refresh_id = setInterval(func, refresh_time);
+    }
+    refresh("path_refresh", loadPaths);
+    refresh("graph_refresh", loadGraphs);
+    $("#path_refresh").change(function() { refresh("path_refresh", loadPaths); });
+    $("#graph_refresh").change(function() { refresh("graph_refresh", loadGraphs); });
+    $("#num_of_points").change(loadGraphs);
+});
+</script>
+</body>
+</html>
