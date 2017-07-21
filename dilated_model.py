@@ -443,6 +443,7 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
         self.K_blocks = K_blocks
         self.channel = channel
+        self.num_classes = num_classes
         self.pool_after_M_blocks = pool_after_M_blocks
         self.conv_init = nn.Conv1d(
             in_channel, channel, init_kernel_size,
