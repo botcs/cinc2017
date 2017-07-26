@@ -397,7 +397,7 @@ class DilatedBlock(nn.Module):
         if in_channels != out_channels:
             self.identity = nn.Conv1d(in_channels, out_channels, 1)
         
-        self.block = nn.Sequential(*[
+        self.block = nn.Sequential(
             nn.BatchNorm1d(in_channels),
             nn.Conv1d(
                 in_channels, out_channels, kernel_size,
@@ -410,7 +410,7 @@ class DilatedBlock(nn.Module):
                 padding=kernel_size//2*dilation, bias=False,
                 dilation=dilation),
             self.nonlin
-        ])
+        )
         
     def forward(self, x):
         out = self.block(x)
@@ -422,12 +422,12 @@ class ConvModule(nn.Module):
     # [(3, 3), 16*k]
     # [(3, 3), 16*k]
     # [(3, 3), 16*k]
-    def __init__(self, in_channel, channel=8, block=DilatedBlock, N=3, nonlin=nn.ReLU):
+    def __init__(self, in_channel, channel=8, block=DilatedBlock, N=3, nonlin=nn.ReLU, kernel_size=17):
         super(ConvModule, self).__init__()
         residuals = []
-        residuals.append(DilatedBlock(in_channel, channel, 17, nonlin=nonlin))
+        residuals.append(DilatedBlock(in_channel, channel, kernel_size, nonlin=nonlin))
         for n in range(1, N):
-            residuals.append(DilatedBlock(channel, channel, 17, nonlin=nonlin))
+            residuals.append(DilatedBlock(channel, channel, kernel_size, nonlin=nonlin))
 
         self.residuals = nn.Sequential(*residuals)
 
@@ -471,7 +471,7 @@ class ResNet(nn.Module):
         self.net = nn.Sequential(*blocks)
         self.bn_end = nn.BatchNorm1d(channel * 2 ** K_blocks)
         self.logit = nn.Conv1d(channel * 2 ** K_blocks, num_classes, 1, bias=True)
-        print(self.forward)
+        print(self)
 
     def forward(self, x, lens=None):
         if lens is None:
@@ -525,3 +525,63 @@ class WideResNet(nn.Module):
         out = self.conv4(out)
 
         return self.logit(out)
+
+class EncodeWideResNet(nn.Module):
+    def __init__(self, in_channel, init_channel, num_enc_layer, N_res_in_block, use_selu=True, num_classes=3):
+        
+        super(EncodeWideResNet, self).__init__()
+        init_depth = init_channel
+        
+        if use_selu:
+            self.nonlin = SELU()
+        else:
+            self.nonlin = nn.ReLU()
+            
+        encoder = [
+            nn.Conv1d(in_channel, init_depth, 7, padding=3),
+            nn.BatchNorm1d(init_depth),
+            self.nonlin,
+            nn.MaxPool1d(2)
+        ]
+        for l in range(0, num_enc_layer-1):
+            encoder += [
+                nn.Conv1d(init_depth*2**l, init_depth*2**(l + 1), 7, padding=3),
+                nn.BatchNorm1d(init_depth*2**(l + 1)),
+                self.nonlin,
+                nn.MaxPool1d(2)
+            ]
+        self.encoder = nn.Sequential(*encoder)
+        res_init_depth = init_depth*2**(l + 1)
+        N = N_res_in_block
+        self.resnet = nn.Sequential(
+            ConvModule(res_init_depth, 2*res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
+            ConvModule(2*res_init_depth, 2*res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
+            ConvModule(2*res_init_depth, 4*res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
+        )
+
+        self.logit = nn.Conv1d(4*init_depth, num_classes, 1, bias=False)
+        self.num_classes = 3
+        
+        print(self)
+
+    def forward(self, x, lens=None):
+        if lens is None:
+            lens = x.size()[1]
+        out = self.forward_features(x)
+        
+        lens = lens[:, None].expand(len(x), self.num_classes)
+        out = self.logit(out)
+        out = th.sum(out, dim=-1).squeeze() / lens
+        return out 
+    
+    def forward_encoder(self, x):
+        return self.encoder(x)
+    
+    def forward_resnet(self, x):
+        return self.resnet(x)
+    
+    def forward_features(self, x):
+        out = self.encoder(x)
+        out = self.resnet(out)
+
+        return out
