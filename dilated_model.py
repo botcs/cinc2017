@@ -329,7 +329,108 @@ class VGG16NoDense(nn.Module):
         out = th.sum(out, dim=-1).squeeze() / lens
         return out   
 
-             
+
+    
+class SkipFCN(nn.Module):
+    def __init__(self, in_channels, channels, use_selu=True, num_classes=3,
+                 dilations=[1, 2,  1, 2,  1, 2, 4,  1, 2, 4,  1, 2, 4]):
+        super(SkipFCN, self).__init__()
+        self.num_classes = num_classes
+        self.pool = nn.MaxPool1d(2)
+        self.activation = SELU() if use_selu else nn.ReLU()
+        
+        self.conv1 = nn.Conv1d(in_channels, channels[0], 17, padding=8,
+                               dilation=dilations[0], bias=False)
+        self.bn1 = nn.BatchNorm1d(channels[0])
+        
+        self.conv2 = nn.Conv1d(channels[0], channels[1], 9, padding=4,
+                               dilation=dilations[1], bias=False)
+        self.bn2 = nn.BatchNorm1d(channels[1])
+        ########## POOL ##########
+        self.conv3 = nn.Conv1d(channels[1]*2, channels[2], 9, padding=4,
+                               dilation=dilations[2], bias=False)
+        self.bn3 = nn.BatchNorm1d(channels[2])
+        
+        self.conv4 = nn.Conv1d(channels[2], channels[3], 9, padding=4,
+                               dilation=dilations[3], bias=False)
+        self.bn4 = nn.BatchNorm1d(channels[3])
+        ########## POOL ##########
+        self.conv5 = nn.Conv1d(channels[3]*2, channels[4], 9, padding=4,
+                               dilation=dilations[4], bias=False)
+        self.bn5 = nn.BatchNorm1d(channels[4])
+        
+        self.conv6 = nn.Conv1d(channels[4], channels[5], 9, padding=4,
+                               dilation=dilations[5], bias=False)
+        self.bn6 = nn.BatchNorm1d(channels[5])
+        
+        self.conv7 = nn.Conv1d(channels[5], channels[6], 9, padding=4,
+                               dilation=dilations[6], bias=False)
+        self.bn7 = nn.BatchNorm1d(channels[6])
+        ########## POOL ##########
+        self.conv8 = nn.Conv1d(channels[6]*2, channels[7], 9, padding=4,
+                               dilation=dilations[7], bias=False)
+        self.bn8 = nn.BatchNorm1d(channels[7])
+        
+        self.conv9 = nn.Conv1d(channels[7], channels[8], 9, padding=4,
+                               dilation=dilations[8], bias=False)
+        self.bn9 = nn.BatchNorm1d(channels[8])
+        
+        self.conv10 = nn.Conv1d(channels[8], channels[9], 9, padding=4,
+                               dilation=dilations[9], bias=False)
+        self.bn10 = nn.BatchNorm1d(channels[9])
+        ########## POOL ##########
+        self.conv11 = nn.Conv1d(channels[9]*2, channels[10], 9, padding=4,
+                               dilation=dilations[10], bias=False)
+        self.bn11 = nn.BatchNorm1d(channels[10])
+        
+        self.conv12 = nn.Conv1d(channels[10], channels[11], 9, padding=4,
+                               dilation=dilations[11], bias=False)
+        self.bn12 = nn.BatchNorm1d(channels[11])
+        
+        self.conv13 = nn.Conv1d(channels[11], channels[12], 9, padding=4,
+                               dilation=dilations[12], bias=False)
+        self.bn13 = nn.BatchNorm1d(channels[12])
+        
+        self.drop1 = nn.Dropout(inplace=True)
+        
+        self.logit = nn.Conv1d(channels[12], num_classes, 1)
+        
+    def forward(self, x, lens=None):
+        if lens is None:
+            lens = x.size()[1]
+        out = self.activation(self.bn1(self.conv1(x)))
+        out = self.activation(self.bn2(self.conv2(out)))
+        out = self.pool(out)
+        x = self.pool(x)
+        out = th.cat([x, out], dim=1)
+        out = self.activation(self.bn3(self.conv3(out)))
+        out = self.activation(self.bn4(self.conv4(out)))
+        out = self.pool(out)
+        x = self.pool(x)
+        out = th.cat([x, out], dim=1)
+        out = self.activation(self.bn5(self.conv5(out)))
+        out = self.activation(self.bn6(self.conv6(out)))
+        out = self.activation(self.bn7(self.conv7(out)))
+        out = self.pool(out)
+        x = self.pool(x)
+        out = th.cat([x, out], dim=1)
+        out = self.activation(self.bn8(self.conv8(out)))
+        out = self.activation(self.bn9(self.conv9(out)))
+        out = self.activation(self.bn10(self.conv10(out)))
+        out = self.pool(out)
+        x = self.pool(x)
+        out = th.cat([x, out], dim=1)
+        out = self.activation(self.bn11(self.conv11(out)))
+        out = self.activation(self.bn12(self.conv12(out)))
+        out = self.activation(self.bn13(self.conv13(out)))
+        out = self.drop1(out)
+        
+        # Avg POOLing
+        lens = lens[:, None].expand(len(x), self.num_classes)
+        out = self.logit(out)
+        out = th.sum(out, dim=-1).squeeze() / lens
+        return out       
+    
         
 class VGG19NoDense(nn.Module):
     def __init__(self, in_channels, channels, use_selu, num_classes=3,
@@ -386,6 +487,10 @@ class VGG19NoDense(nn.Module):
         out = self.logit(out)
         out = th.sum(out, dim=-1).squeeze() / lens
         return out    
+
+    
+
+    
     
 class DilatedBlock(nn.Module):
     # Stg. like:
@@ -489,43 +594,6 @@ class ResNet(nn.Module):
 
         return out
 
-
-class WideResNet(nn.Module):
-    def __init__(self, in_channels=32, k=2, N=3, num_classes=3):
-        super(WideResNet, self).__init__()
-        init_depth = 8
-        self.conv1 = nn.Sequential(
-            nn.Conv1d(in_channels, init_depth*k, 7, padding=3),
-            nn.BatchNorm1d(init_depth*k),
-            F.relu(inplace=True)
-        )
-
-        self.conv2 = ConvModule(init_depth*k, 2*init_depth*k, N)
-        self.conv3 = ConvModule(2*init_depth*k, 4*init_depth*k, N)
-        self.conv4 = ConvModule(4*init_depth*k, 8*init_depth*k, N)
-
-        self.logit = nn.Conv1d(8*init_depth*k, num_classes, 1, bias=False)
-
-    def forward(self, x, lens):
-        out = self.conv1(x)
-        out = self.conv2(out)
-        out = self.conv3(out)
-        out = self.conv4(out)
-
-        num_features = out.size()[1]
-        lens = lens[:, None].expand(len(x), num_features)
-        out = th.sum(out, dim=-1).squeeze() / lens
-
-        return self.logit(out[:, :, None]).squeeze()
-
-    def forward_conv(self, x):
-        out = self.conv1(x)
-        out = self.conv2(out)
-        out = self.conv3(out)
-        out = self.conv4(out)
-
-        return self.logit(out)
-
 class EncodeWideResNet(nn.Module):
     def __init__(self, in_channel, init_channel, num_enc_layer, N_res_in_block, use_selu=True, num_classes=3):
         
@@ -554,12 +622,12 @@ class EncodeWideResNet(nn.Module):
         res_init_depth = init_depth*2**(l + 1)
         N = N_res_in_block
         self.resnet = nn.Sequential(
-            ConvModule(res_init_depth, 2*res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
-            ConvModule(2*res_init_depth, 2*res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
-            ConvModule(2*res_init_depth, 4*res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
+            ConvModule(res_init_depth, res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
+            ConvModule(res_init_depth, res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
+            ConvModule(res_init_depth, res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
         )
 
-        self.logit = nn.Conv1d(4*init_depth, num_classes, 1, bias=False)
+        self.logit = nn.Conv1d(init_depth, num_classes, 1, bias=False)
         self.num_classes = 3
         
         print(self)
@@ -585,3 +653,136 @@ class EncodeWideResNet(nn.Module):
         out = self.resnet(out)
 
         return out
+
+class SkipResNet(nn.Module):
+    def __init__(self, in_channel, init_channel, num_enc_layer, N_res_in_block, use_selu=True, num_classes=3):
+        
+        super(EncodeWideResNet, self).__init__()
+        init_depth = init_channel
+        
+        if use_selu:
+            self.nonlin = SELU()
+        else:
+            self.nonlin = nn.ReLU()
+            
+        encoder = [
+            nn.Conv1d(in_channel, init_depth, 7, padding=3),
+            nn.BatchNorm1d(init_depth),
+            self.nonlin,
+            nn.MaxPool1d(2)
+        ]
+        for l in range(0, num_enc_layer-1):
+            encoder += [
+                nn.Conv1d(init_depth*2**l, init_depth*2**(l + 1), 7, padding=3),
+                nn.BatchNorm1d(init_depth*2**(l + 1)),
+                self.nonlin,
+                nn.MaxPool1d(2)
+            ]
+        self.encoder = nn.Sequential(*encoder)
+        res_init_depth = init_depth*2**(l + 1)
+        N = N_res_in_block
+        
+        self.res1 = ConvModule(res_init_depth, res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
+        self.res2 = ConvModule(res_init_depth*2, res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
+        self.res3 = ConvModule(res_init_depth*2, res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
+        
+
+        self.logit = nn.Conv1d(init_depth, num_classes, 1, bias=False)
+        self.num_classes = 3
+        
+        print(self)
+
+    def forward(self, x, lens=None):
+        if lens is None:
+            lens = x.size()[1]
+        out = self.forward_features(x)
+        
+        lens = lens[:, None].expand(len(x), self.num_classes)
+        out = self.logit(out)
+        out = th.sum(out, dim=-1).squeeze() / lens
+        return out 
+    
+    def forward_encoder(self, x):
+        return self.encoder(x)
+    
+    def forward_resnet(self, x):
+        out = self.res1(x)
+        out = self.res2(th.cat([x, out], dim=1))
+        out = self.res3(th.cat([x, out], dim=1))
+        return out
+    
+    def forward_features(self, x):
+        out = self.encoder(x)
+        out = self.resnet(out)
+
+        return out
+    
+    
+class WideResNet(nn.Module):
+    def __init__(self, in_channel, init_channel, channel_exponential, 
+                 num_enc_layer, N_res_in_block, use_selu=True, num_classes=3):
+        
+        super(EncodeWideResNet, self).__init__()
+        init_depth = init_channel
+        
+        if use_selu:
+            self.nonlin = SELU()
+        else:
+            self.nonlin = nn.ReLU()
+            
+        encoder = [
+            nn.Conv1d(in_channel, init_depth, 7, padding=3),
+            nn.BatchNorm1d(init_depth),
+            self.nonlin,
+            nn.MaxPool1d(2)
+        ]
+        for l in range(0, num_enc_layer-1):
+            encoder += [
+                nn.Conv1d(init_depth*2**l, init_depth*2**(l + 1), 7, padding=3),
+                nn.BatchNorm1d(init_depth*2**(l + 1)),
+                self.nonlin,
+                nn.MaxPool1d(2)
+            ]
+        self.encoder = nn.Sequential(*encoder)
+        res_init_depth = init_depth*2**(l + 1)
+        N = N_res_in_block
+        if channel_exponential:
+            self.resnet = nn.Sequential(
+                ConvModule(res_init_depth, 2*res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
+                ConvModule(2*res_init_depth, 2*res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
+                ConvModule(4*res_init_depth, 8*res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
+            )
+        else:
+            self.resnet = nn.Sequential(
+                ConvModule(res_init_depth, 2*res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
+                ConvModule(2*res_init_depth, 3*res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
+                ConvModule(3*res_init_depth, 4*res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
+            )
+
+        self.logit = nn.Conv1d(8*init_depth, num_classes, 1, bias=False)
+        self.num_classes = 3
+        
+        print(self)
+
+    def forward(self, x, lens=None):
+        if lens is None:
+            lens = x.size()[1]
+        out = self.forward_features(x)
+        
+        lens = lens[:, None].expand(len(x), self.num_classes)
+        out = self.logit(out)
+        out = th.sum(out, dim=-1).squeeze() / lens
+        return out 
+    
+    def forward_encoder(self, x):
+        return self.encoder(x)
+    
+    def forward_resnet(self, x):
+        return self.resnet(x)
+    
+    def forward_features(self, x):
+        out = self.encoder(x)
+        out = self.resnet(out)
+
+        return out
+    
