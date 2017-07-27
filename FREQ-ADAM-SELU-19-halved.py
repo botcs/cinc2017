@@ -18,7 +18,7 @@ name = splitext(basename(sys.argv[0]))[0]
 
 transformations = [
     data_handler.RandomMultiplier(-1),
-    data_handler.Spectogram(30),
+    data_handler.Spectogram(15),
     data_handler.Logarithm()
 ]
 dataset = data_handler.DataSet(
@@ -34,7 +34,7 @@ test_producer = th.utils.data.DataLoader(
         dataset=eval_set, batch_size=256, shuffle=True,
         num_workers=4, collate_fn=data_handler.batchify)
 
-net = DM.VGG19NoDense(in_channels=16, use_selu=True,
+net = DM.VGG19NoDense(in_channels=8, use_selu=True,
     channels=[32,32, 64,64, 128,128,128,128, 256,256,256,256, 256,256,256,256])
 
 print(net(next(iter(train_producer))['x']).size())
