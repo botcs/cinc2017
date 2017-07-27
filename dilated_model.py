@@ -396,8 +396,12 @@ class SkipFCN(nn.Module):
         self.logit = nn.Conv1d(channels[12], num_classes, 1)
 
     def forward(self, x, lens=None):
+
         if lens is None:
-            lens = x.size()[1]
+            lens = x.size(-1)
+        else:
+            lens = lens[:, None].expand(len(x), self.num_classes)
+            
         out = self.activation(self.bn1(self.conv1(x)))
         out = self.activation(self.bn2(self.conv2(out)))
         out = self.pool(out)
@@ -425,7 +429,6 @@ class SkipFCN(nn.Module):
         out = self.drop1(out)
 
         # Avg POOLing
-        lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.logit(out)
         out = th.sum(out, dim=-1).squeeze() / lens
         return out
@@ -579,7 +582,7 @@ class ResNet(nn.Module):
 
     def forward(self, x, lens=None):
         if lens is None:
-            lens = x.size()[1]
+            lens = x.size(-1)
         out = self.forward_features(x)
 
         lens = lens[:, None].expand(len(x), self.num_classes)
@@ -693,13 +696,11 @@ class SkipResNet(nn.Module):
 
     def forward(self, x, lens=None):
         if lens is None:
-            lens = th.IntTensor([x.size(-1)]).expand(len(x), self.num_classes)
-            lens = Variable(lens)
+            lens = x.size(-1)
         else:
             lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.forward_features(x)
 
-        lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.logit(out)
         out = th.sum(out, dim=-1).squeeze() / lens
         return out
@@ -769,7 +770,7 @@ class WideResNet(nn.Module):
 
     def forward(self, x, lens=None):
         if lens is None:
-            lens = x.size()[1]
+            lens = x.size(-1)
         out = self.forward_features(x)
 
         lens = lens[:, None].expand(len(x), self.num_classes)
