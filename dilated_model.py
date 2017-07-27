@@ -594,7 +594,7 @@ class ResNet(nn.Module):
         return out
 
 class EncodeWideResNet(nn.Module):
-    def __init__(self, in_channel, init_channel, num_enc_layer, N_res_in_block, use_selu=True, num_classes=3):
+    def __init__(self, in_channel, init_channel, num_enc_layer, N_res_in_block, use_selu=True, bias=False, num_classes=3):
         
         super(EncodeWideResNet, self).__init__()
         init_depth = init_channel
@@ -626,7 +626,7 @@ class EncodeWideResNet(nn.Module):
             ConvModule(res_init_depth, res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
         )
 
-        self.logit = nn.Conv1d(res_init_depth, num_classes, 1, bias=False)
+        self.logit = nn.Conv1d(res_init_depth, num_classes, 1, bias=bias)
         self.num_classes = 3
         
         print(self)

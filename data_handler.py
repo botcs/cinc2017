@@ -71,7 +71,7 @@ class DataSet(th.utils.data.Dataset):
 
 def load_mat(ref, normalize=True):
     mat = loadmat(ref)
-    data = mat['val'].squeeze()
+    data = mat['val'].squeeze()[None]
     #features = mat['features'][0, -5:]
     #features = np.concatenate(features, axis=1).squeeze().astype(np.float32)
     if normalize:
@@ -85,7 +85,7 @@ def load_mat(ref, normalize=True):
 def load_composed(line, tokens=def_tokens, transformations=[], **kwargs):
     ref, label = line.split(',')
     data = load_mat(ref)
-
+    data_len = len(data[0])
     for trans in transformations:
         data = trans(data)
 
@@ -93,7 +93,7 @@ def load_composed(line, tokens=def_tokens, transformations=[], **kwargs):
         'x': th.from_numpy(data[None, :]),
         #'features': th.from_numpy(data[None, :]),
         'y': tokens.find(label),
-        'len': len(data)}
+        'len': data_len}
     return res
 
 
@@ -103,9 +103,9 @@ class Crop:
 
     def __call__(self, data):
         crop_len = self.crop_len
-        if len(data) > crop_len:
-            start_idx = np.random.randint(len(data) - crop_len)
-            data = data[start_idx: start_idx + crop_len]
+        if len(data[0]) > crop_len:
+            start_idx = np.random.randint(len(data[0]) - crop_len)
+            data = data[:, start_idx: start_idx + crop_len]
         return data
 
 class Threshold:
@@ -138,12 +138,14 @@ class Spectogram:
         if overlap is None:
             self.overlap = NFFT / 2
     def __call__(self, data):
+        data = data.squeeze()
+        assert len(data.shape) == 1
         Sx = specgram(
             x=data,
             NFFT=self.NFFT,
             Fs=300,
             noverlap=self.NFFT/2,
-            window=np.hamming(self.NFFT))[0]    
+            window=np.hamming(self.NFFT))[0]
         return Sx
 
 def load_raw(line, tokens=def_tokens, **kwargs):
@@ -253,11 +255,12 @@ def load_norm(line, crop=True, crop_len=1000, tokens=def_tokens, **kwargs):
 
 
 def batchify(batch):
-    max_len = max(s['len'] for s in batch)
-    num_channels = len(batch[0]['x'])
+    max_len = max(s['x'].size(-1) for s in batch)
+    num_channels = len(batch[0]['x'][0])
     x_batch = th.zeros(len(batch), num_channels, max_len)
     for idx in range(len(batch)):
-        x_batch[idx, :, :batch[idx]['len']] = batch[idx]['x']
+        #print(x_batch.size(), batch[idx]['x'].size())
+        x_batch[idx, :, :batch[idx]['x'].size(-1)] = batch[idx]['x']
 
     y_batch = th.LongTensor([s['y'] for s in batch])
     #feature_batch = th.cat([s['features'] for s in batch], dim=0)
