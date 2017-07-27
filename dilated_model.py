@@ -14,11 +14,11 @@ class SELU(nn.Module):
         super(SELU, self).__init__()
         self.alpha = 1.6732632423543772848170429916717
         self.scale = 1.0507009873554804934193349852946
-    
+
     def forward(self, x):
         return self.scale * F.elu(x, self.alpha)
-    
-    
+
+
 
 class MultiKernelBlock(nn.Module):
     # Mentioned here: https://arxiv.org/pdf/1611.06455.pdf
@@ -86,30 +86,30 @@ class FCN(nn.Module):
         self.num_ext_features = num_ext_features
         self.num_classes = num_classes
         self.pool = nn.MaxPool1d(2)
-        
+
         self.conv1 = nn.Conv1d(in_channels, channels[0], 17, padding=8,
                                dilation=dilations[0])
         self.bn1 = nn.BatchNorm1d(channels[0])
         self.conv2 = nn.Conv1d(channels[0], channels[1], 9, padding=4,
                                dilation=dilations[1])
         self.bn2 = nn.BatchNorm1d(channels[1])
-        
-        
+
+
         self.conv3 = nn.Conv1d(channels[1], channels[2], 9, padding=4,
                                dilation=dilations[2])
         self.bn3 = nn.BatchNorm1d(channels[2])
         self.conv4 = nn.Conv1d(channels[2], channels[3], 9, padding=4,
                                dilation=dilations[3])
         self.bn4 = nn.BatchNorm1d(channels[3])
-        
-        
+
+
         self.conv5 = nn.Conv1d(channels[3], channels[4], 9, padding=4,
                                dilation=dilations[4])
         self.bn5 = nn.BatchNorm1d(channels[4])
         self.conv6 = nn.Conv1d(channels[4], channels[5], 9, padding=4,
                                dilation=dilations[5])
         self.bn6 = nn.BatchNorm1d(channels[5])
-        
+
         self.logit = nn.Conv1d(channels[5] + num_ext_features, num_classes, 1)
 
     def forward(self, x, lens=None, mat_features=None):
@@ -134,7 +134,7 @@ class FCN(nn.Module):
             lens = lens[:, None].expand(len(x), self.num_classes)
             out = self.logit(out)
             out = th.sum(out, dim=-1).squeeze() / lens
-            
+
         return out
 
 
@@ -143,59 +143,59 @@ class VGG16(nn.Module):
         super(VGG16, self).__init__()
         self.num_classes = num_classes
         self.pool = nn.MaxPool1d(2)
-        
+
         self.conv1 = nn.Conv1d(in_channels, channels[0], 17, padding=8,
                                dilation=dilations[0])
         self.bn1 = nn.BatchNorm1d(channels[0])
-        
+
         self.conv2 = nn.Conv1d(channels[0], channels[1], 9, padding=4,
                                dilation=dilations[1])
         self.bn2 = nn.BatchNorm1d(channels[1])
-        
+
         self.conv3 = nn.Conv1d(channels[1], channels[2], 9, padding=4,
                                dilation=dilations[2])
         self.bn3 = nn.BatchNorm1d(channels[2])
-        
+
         self.conv4 = nn.Conv1d(channels[2], channels[3], 9, padding=4,
                                dilation=dilations[3])
         self.bn4 = nn.BatchNorm1d(channels[3])
-        
+
         self.conv5 = nn.Conv1d(channels[3], channels[4], 9, padding=4,
                                dilation=dilations[4])
         self.bn5 = nn.BatchNorm1d(channels[4])
-        
+
         self.conv6 = nn.Conv1d(channels[4], channels[5], 9, padding=4,
                                dilation=dilations[5])
         self.bn6 = nn.BatchNorm1d(channels[5])
-        
+
         self.conv7 = nn.Conv1d(channels[5], channels[6], 9, padding=4,
                                dilation=dilations[6])
         self.bn7 = nn.BatchNorm1d(channels[6])
-        
+
         self.conv8 = nn.Conv1d(channels[6], channels[7], 9, padding=4,
                                dilation=dilations[7])
         self.bn8 = nn.BatchNorm1d(channels[7])
-        
+
         self.conv9 = nn.Conv1d(channels[7], channels[8], 9, padding=4,
                                dilation=dilations[8])
         self.bn9 = nn.BatchNorm1d(channels[8])
-        
+
         self.conv10 = nn.Conv1d(channels[8], channels[9], 9, padding=4,
                                dilation=dilations[9])
         self.bn10 = nn.BatchNorm1d(channels[9])
-        
+
         self.conv11 = nn.Conv1d(channels[9], channels[10], 9, padding=4,
                                dilation=dilations[10])
         self.bn11 = nn.BatchNorm1d(channels[10])
-        
+
         self.conv12 = nn.Conv1d(channels[10], channels[11], 9, padding=4,
                                dilation=dilations[11])
         self.bn12 = nn.BatchNorm1d(channels[11])
-        
+
         self.conv13 = nn.Conv1d(channels[11], channels[12], 9, padding=4,
                                dilation=dilations[12])
         self.bn13 = nn.BatchNorm1d(channels[12])
-        
+
         self.dense1 = nn.Conv1d(channels[12], channels[13], 1)
         self.bn14 = nn.BatchNorm1d(channels[13])
         self.drop1 = nn.Dropout(inplace=True)
@@ -229,8 +229,8 @@ class VGG16(nn.Module):
         out = self.drop1(out)
         out = F.relu(self.bn14(self.dense2(out)))
         out = self.drop2(out)
-        
-        
+
+
         # Avg POOLing
         lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.logit(out)
@@ -244,63 +244,63 @@ class VGG16NoDense(nn.Module):
         self.num_classes = num_classes
         self.pool = nn.MaxPool1d(2)
         self.activation = SELU() if use_selu else nn.ReLU()
-        
+
         self.conv1 = nn.Conv1d(in_channels, channels[0], 17, padding=8,
                                dilation=dilations[0], bias=False)
         self.bn1 = nn.BatchNorm1d(channels[0])
-        
+
         self.conv2 = nn.Conv1d(channels[0], channels[1], 9, padding=4,
                                dilation=dilations[1], bias=False)
         self.bn2 = nn.BatchNorm1d(channels[1])
-        
+
         self.conv3 = nn.Conv1d(channels[1], channels[2], 9, padding=4,
                                dilation=dilations[2], bias=False)
         self.bn3 = nn.BatchNorm1d(channels[2])
-        
+
         self.conv4 = nn.Conv1d(channels[2], channels[3], 9, padding=4,
                                dilation=dilations[3], bias=False)
         self.bn4 = nn.BatchNorm1d(channels[3])
-        
+
         self.conv5 = nn.Conv1d(channels[3], channels[4], 9, padding=4,
                                dilation=dilations[4], bias=False)
         self.bn5 = nn.BatchNorm1d(channels[4])
-        
+
         self.conv6 = nn.Conv1d(channels[4], channels[5], 9, padding=4,
                                dilation=dilations[5], bias=False)
         self.bn6 = nn.BatchNorm1d(channels[5])
-        
+
         self.conv7 = nn.Conv1d(channels[5], channels[6], 9, padding=4,
                                dilation=dilations[6], bias=False)
         self.bn7 = nn.BatchNorm1d(channels[6])
-        
+
         self.conv8 = nn.Conv1d(channels[6], channels[7], 9, padding=4,
                                dilation=dilations[7], bias=False)
         self.bn8 = nn.BatchNorm1d(channels[7])
-        
+
         self.conv9 = nn.Conv1d(channels[7], channels[8], 9, padding=4,
                                dilation=dilations[8], bias=False)
         self.bn9 = nn.BatchNorm1d(channels[8])
-        
+
         self.conv10 = nn.Conv1d(channels[8], channels[9], 9, padding=4,
                                dilation=dilations[9], bias=False)
         self.bn10 = nn.BatchNorm1d(channels[9])
-        
+
         self.conv11 = nn.Conv1d(channels[9], channels[10], 9, padding=4,
                                dilation=dilations[10], bias=False)
         self.bn11 = nn.BatchNorm1d(channels[10])
-        
+
         self.conv12 = nn.Conv1d(channels[10], channels[11], 9, padding=4,
                                dilation=dilations[11], bias=False)
         self.bn12 = nn.BatchNorm1d(channels[11])
-        
+
         self.conv13 = nn.Conv1d(channels[11], channels[12], 9, padding=4,
                                dilation=dilations[12], bias=False)
         self.bn13 = nn.BatchNorm1d(channels[12])
-        
+
         self.drop1 = nn.Dropout(inplace=True)
-        
+
         self.logit = nn.Conv1d(channels[12], num_classes, 1)
-        
+
     def forward(self, x, lens=None):
         if lens is None:
             lens = x.size()[1]
@@ -322,15 +322,15 @@ class VGG16NoDense(nn.Module):
         out = self.activation(self.bn12(self.conv12(out)))
         out = self.activation(self.bn13(self.conv13(out)))
         out = self.drop1(out)
-        
+
         # Avg POOLing
         lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.logit(out)
         out = th.sum(out, dim=-1).squeeze() / lens
-        return out   
+        return out
 
 
-    
+
 class SkipFCN(nn.Module):
     def __init__(self, in_channel, channels, use_selu=True, num_classes=3,
                  dilations=[1, 2,  1, 2,  1, 2, 4,  1, 2, 4,  1, 2, 2]):
@@ -338,11 +338,11 @@ class SkipFCN(nn.Module):
         self.num_classes = num_classes
         self.pool = nn.MaxPool1d(2)
         self.activation = SELU() if use_selu else nn.ReLU()
-        
+
         self.conv1 = nn.Conv1d(in_channel, channels[0], 17, padding=8,
                                dilation=dilations[0], bias=False)
         self.bn1 = nn.BatchNorm1d(channels[0])
-        
+
         self.conv2 = nn.Conv1d(channels[0], channels[1], 9, padding=4*dilations[1],
                                dilation=dilations[1], bias=False)
         self.bn2 = nn.BatchNorm1d(channels[1])
@@ -350,7 +350,7 @@ class SkipFCN(nn.Module):
         self.conv3 = nn.Conv1d(channels[1], channels[2], 9, padding=4*dilations[2],
                                dilation=dilations[2], bias=False)
         self.bn3 = nn.BatchNorm1d(channels[2])
-        
+
         self.conv4 = nn.Conv1d(channels[2], channels[3], 9, padding=4*dilations[3],
                                dilation=dilations[3], bias=False)
         self.bn4 = nn.BatchNorm1d(channels[3])
@@ -358,11 +358,11 @@ class SkipFCN(nn.Module):
         self.conv5 = nn.Conv1d(channels[3] + channels[1], channels[4], 9, padding=4*dilations[4],
                                dilation=dilations[4], bias=False)
         self.bn5 = nn.BatchNorm1d(channels[4])
-        
+
         self.conv6 = nn.Conv1d(channels[4], channels[5], 9, padding=4*dilations[5],
                                dilation=dilations[5], bias=False)
         self.bn6 = nn.BatchNorm1d(channels[5])
-        
+
         self.conv7 = nn.Conv1d(channels[5], channels[6], 9, padding=4*dilations[6],
                                dilation=dilations[6], bias=False)
         self.bn7 = nn.BatchNorm1d(channels[6])
@@ -370,11 +370,11 @@ class SkipFCN(nn.Module):
         self.conv8 = nn.Conv1d(channels[6] + channels[1], channels[7], 9, padding=4*dilations[7],
                                dilation=dilations[7], bias=False)
         self.bn8 = nn.BatchNorm1d(channels[7])
-        
+
         self.conv9 = nn.Conv1d(channels[7], channels[8], 9, padding=4*dilations[8],
                                dilation=dilations[8], bias=False)
         self.bn9 = nn.BatchNorm1d(channels[8])
-        
+
         self.conv10 = nn.Conv1d(channels[8], channels[9], 9, padding=4*dilations[9],
                                dilation=dilations[9], bias=False)
         self.bn10 = nn.BatchNorm1d(channels[9])
@@ -382,19 +382,19 @@ class SkipFCN(nn.Module):
         self.conv11 = nn.Conv1d(channels[9] + channels[1], channels[10], 9, padding=4*dilations[10],
                                dilation=dilations[10], bias=False)
         self.bn11 = nn.BatchNorm1d(channels[10])
-        
+
         self.conv12 = nn.Conv1d(channels[10], channels[11], 9, padding=4*dilations[11],
                                dilation=dilations[11], bias=False)
         self.bn12 = nn.BatchNorm1d(channels[11])
-        
+
         self.conv13 = nn.Conv1d(channels[11], channels[12], 9, padding=4*dilations[12],
                                dilation=dilations[12], bias=False)
         self.bn13 = nn.BatchNorm1d(channels[12])
-        
+
         self.drop1 = nn.Dropout(inplace=True)
-        
+
         self.logit = nn.Conv1d(channels[12], num_classes, 1)
-        
+
     def forward(self, x, lens=None):
         if lens is None:
             lens = x.size()[1]
@@ -423,21 +423,21 @@ class SkipFCN(nn.Module):
         out = self.activation(self.bn12(self.conv12(out)))
         out = self.activation(self.bn13(self.conv13(out)))
         out = self.drop1(out)
-        
+
         # Avg POOLing
         lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.logit(out)
         out = th.sum(out, dim=-1).squeeze() / lens
-        return out       
-    
-        
+        return out
+
+
 class VGG19NoDense(nn.Module):
     def __init__(self, in_channels, channels, use_selu, num_classes=3,
                  dilations=[1, 2,  1, 2,  1, 2, 4, 4,  1, 2, 4, 4,  1, 2, 4, 4]):
         super(VGG19NoDense, self).__init__()
         self.num_classes = num_classes
         self.pool = nn.MaxPool1d(2)
-        
+
         self.conv1 = nn.Conv1d(in_channels, channels[0], 17, padding=8,
                                dilation=dilations[0], bias=False)
         self.bn1 = nn.BatchNorm1d(channels[0])
@@ -460,37 +460,37 @@ class VGG19NoDense(nn.Module):
                     nn.BatchNorm1d(channels[i+1])],
                     SELU() if use_selu else nn.ReLU())
                 )
-                
+
         self.hidden = nn.Sequential(*layer_list)
-        
+
         self.drop1 = nn.Dropout(inplace=True)
-        
+
         self.logit = nn.Conv1d(channels[15], num_classes, 1)
-        
+
     def forward(self, x, lens=None):
         if lens is None:
             lens = x.size()[1]
-            
-            
+
+
         if self.use_selu:
             out = SELU()(self.bn1(self.conv1(x)))
         else:
             out = F.relu(self.bn1(self.conv1(x)))
-        
+
         out = self.hidden(out)
-        
+
         out = self.drop1(out)
-        
+
         # Avg POOLing
         lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.logit(out)
         out = th.sum(out, dim=-1).squeeze() / lens
-        return out    
+        return out
 
-    
 
-    
-    
+
+
+
 class DilatedBlock(nn.Module):
     # Stg. like:
     # [(3, 3), 16*k]
@@ -500,7 +500,7 @@ class DilatedBlock(nn.Module):
         self.identity = lambda x: x
         if in_channels != out_channels:
             self.identity = nn.Conv1d(in_channels, out_channels, 1)
-        
+
         self.block = nn.Sequential(
             nn.BatchNorm1d(in_channels),
             nn.Conv1d(
@@ -515,7 +515,7 @@ class DilatedBlock(nn.Module):
                 dilation=dilation),
             self.nonlin
         )
-        
+
     def forward(self, x):
         out = self.block(x)
         out = self.identity(x) + out
@@ -537,11 +537,11 @@ class ConvModule(nn.Module):
 
     def forward(self, x):
         return self.residuals(x)
-                       
+
 class ResNet(nn.Module):
-    def __init__(self, K_blocks, N_res_in_block, 
-                 channel, use_selu, 
-                 in_channel=1, init_kernel_size=17, 
+    def __init__(self, K_blocks, N_res_in_block,
+                 channel, use_selu,
+                 in_channel=1, init_kernel_size=17,
                  num_classes=3,
                  pool_after_M_blocks=1):
         super(ResNet, self).__init__()
@@ -553,19 +553,19 @@ class ResNet(nn.Module):
             in_channel, channel, init_kernel_size,
             padding=init_kernel_size//2, bias=False)
         self.bn_init = nn.BatchNorm1d(channel)
-        
+
         if use_selu:
             self.nonlin = SELU()
         else:
             self.nonlin = nn.ReLU()
-            
+
         blocks = [ConvModule(channel, channel, nonlin=self.nonlin, N=N_res_in_block)]
         for K in range(K_blocks):
             blocks.append(ConvModule(
-                channel*2**K, channel*2**(K+1), 
+                channel*2**K, channel*2**(K+1),
                 N=N_res_in_block, nonlin=self.nonlin))
-            
-            if K % pool_after_M_blocks == 0:           
+
+            if K % pool_after_M_blocks == 0:
                 blocks.append(nn.MaxPool1d(2))
         blocks += [
             nn.Conv1d(channel * 2 ** K_blocks, channel * 2 ** K_blocks, 9, dilation=2),
@@ -581,12 +581,12 @@ class ResNet(nn.Module):
         if lens is None:
             lens = x.size()[1]
         out = self.forward_features(x)
-        
+
         lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.logit(out)
         out = th.sum(out, dim=-1).squeeze() / lens
-        return out 
-    
+        return out
+
     def forward_features(self, x):
         out = self.nonlin(self.bn_init(self.conv_init(x)))
         out = self.net(out)
@@ -595,15 +595,15 @@ class ResNet(nn.Module):
 
 class EncodeWideResNet(nn.Module):
     def __init__(self, in_channel, init_channel, num_enc_layer, N_res_in_block, use_selu=True, bias=False, num_classes=3):
-        
+
         super(EncodeWideResNet, self).__init__()
         init_depth = init_channel
-        
+
         if use_selu:
             self.nonlin = SELU()
         else:
             self.nonlin = nn.ReLU()
-            
+
         encoder = [
             nn.Conv1d(in_channel, init_depth, 7, padding=3),
             nn.BatchNorm1d(init_depth),
@@ -628,14 +628,14 @@ class EncodeWideResNet(nn.Module):
 
         self.logit = nn.Conv1d(res_init_depth, num_classes, 1, bias=bias)
         self.num_classes = 3
-        
+
         print(self)
     def forward_encoder(self, x):
         return self.encoder(x)
-    
+
     def forward_resnet(self, x):
         return self.resnet(x)
-    
+
     def forward_features(self, x):
         out = self.encoder(x)
         out = self.resnet(out)
@@ -643,26 +643,27 @@ class EncodeWideResNet(nn.Module):
         return out
 
     def forward(self, x, lens=None):
+
         if lens is None:
-            lens = x.size()[1]
+            lens = x.size(-1)
+        else:
+            lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.forward_features(x)
-        
-        lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.logit(out)
         out = th.sum(out, dim=-1).squeeze() / lens
         return out
-    
+
 class SkipResNet(nn.Module):
     def __init__(self, in_channel, init_channel, num_enc_layer, N_res_in_block, use_selu=True, num_classes=3):
-        
+
         super(SkipResNet, self).__init__()
         init_depth = init_channel
-        
+
         if use_selu:
             self.nonlin = SELU()
         else:
             self.nonlin = nn.ReLU()
-            
+
         encoder = [
             nn.Conv1d(in_channel, init_depth, 7, padding=3),
             nn.BatchNorm1d(init_depth),
@@ -679,56 +680,59 @@ class SkipResNet(nn.Module):
         self.encoder = nn.Sequential(*encoder)
         res_init_depth = init_depth*2**(l + 1)
         N = N_res_in_block
-        
+
         self.res1 = ConvModule(res_init_depth, res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
         self.res2 = ConvModule(res_init_depth*2, res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
         self.res3 = ConvModule(res_init_depth*2, res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
-        
+
 
         self.logit = nn.Conv1d(res_init_depth*2, num_classes, 1, bias=False)
         self.num_classes = 3
-        
+
         print(self)
 
     def forward(self, x, lens=None):
         if lens is None:
-            lens = x.size()[1]
+            lens = th.IntTensor([x.size(-1)]).expand(len(x), self.num_classes)
+            lens = Variable(lens)
+        else:
+            lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.forward_features(x)
-        
+
         lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.logit(out)
         out = th.sum(out, dim=-1).squeeze() / lens
-        return out 
-    
+        return out
+
     def forward_encoder(self, x):
         return self.encoder(x)
-    
+
     def forward_resnet(self, x):
         out = self.res1(x)
         out = self.res2(th.cat([x, out], dim=1))
         out = self.res3(th.cat([x, out], dim=1))
         out = th.cat([x, out], dim=1)
         return out
-    
+
     def forward_features(self, x):
         out = self.encoder(x)
         out = self.forward_resnet(out)
 
         return out
-    
-    
+
+
 class WideResNet(nn.Module):
-    def __init__(self, in_channel, init_channel, channel_exponential, 
+    def __init__(self, in_channel, init_channel, channel_exponential,
                  num_enc_layer, N_res_in_block, use_selu=True, num_classes=3):
-        
+
         super(WideResNet, self).__init__()
         init_depth = init_channel
-        
+
         if use_selu:
             self.nonlin = SELU()
         else:
             self.nonlin = nn.ReLU()
-            
+
         encoder = [
             nn.Conv1d(in_channel, init_depth, 7, padding=3),
             nn.BatchNorm1d(init_depth),
@@ -760,28 +764,27 @@ class WideResNet(nn.Module):
 
         self.logit = nn.Conv1d(8*init_depth, num_classes, 1, bias=False)
         self.num_classes = 3
-        
+
         print(self)
 
     def forward(self, x, lens=None):
         if lens is None:
             lens = x.size()[1]
         out = self.forward_features(x)
-        
+
         lens = lens[:, None].expand(len(x), self.num_classes)
         out = self.logit(out)
         out = th.sum(out, dim=-1).squeeze() / lens
-        return out 
-    
+        return out
+
     def forward_encoder(self, x):
         return self.encoder(x)
-    
+
     def forward_resnet(self, x):
         return self.resnet(x)
-    
+
     def forward_features(self, x):
         out = self.encoder(x)
         out = self.resnet(out)
 
         return out
-    

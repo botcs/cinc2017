@@ -130,6 +130,9 @@ class RandomMultiplier:
         multiplier = self.multiplier if random.random() < .5 else 1.
         return data * multiplier
 
+class Logarithm:
+    def __call__(self, data):
+        return np.log(data)
 
 class Spectogram:
     def __init__(self, NFFT, overlap=None):

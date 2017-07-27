@@ -114,7 +114,7 @@ class Trainer:
         for epoch in range(self.highscore_epoch, epochs+1):
             #if epoch % (epochs // 2) == 0:
             #    learning_rate /= 10.
-            if (epoch - self.highscore_epoch) > epochs / 4:
+            if (epoch - self.highscore_epoch) > epochs / 4 and learning_rate > 1e-8:
                 learning_rate /= lr_decrease_factor
                 lr_decrease_factor *= 10
             if useAdam:
@@ -144,7 +144,7 @@ class Trainer:
                 self.train_F1.append(
                     accuracy(outputs.data, data['y'].data))
                 acc_sum += self.train_F1[-1]
-                if i % (len(train_producer) // 10) == 0:
+                if i % (len(train_producer) // 5) == 0:
                     stat = epoch, i, self.losses[-1], outputs.size()[0]/update_t
                     print('[%4d, %3d] loss: %5.4f\tsample/sec: %4.1f' % stat, file=log)
 
