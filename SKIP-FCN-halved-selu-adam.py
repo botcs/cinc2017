@@ -35,7 +35,7 @@ test_producer = th.utils.data.DataLoader(
         num_workers=4, collate_fn=data_handler.batchify)
 
 net = DM.SkipFCN(in_channel=1, use_selu=True, 
-                 channels=[16,16,  32,32,  64,64,64  128,128,128,  128,128,128])
+                 channels=[16,16,  32,32,  64,64,64,  128,128,128,  128,128,128])
 
 trainer = T.Trainer('saved/'+name, restore=RESTORE, dryrun=DRYRUN)
 trainer(net, train_producer, test_producer, gpu_id=0, useAdam=True)

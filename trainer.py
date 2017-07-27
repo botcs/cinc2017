@@ -70,7 +70,7 @@ def load_latest(save_path):
             
 class Trainer:
     def __init__(self, path, restore=False, dryrun=False):
-        assert restore != dryrun
+        
         self.restore = restore
         self.dryrun = dryrun
         

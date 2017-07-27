@@ -404,12 +404,9 @@ class SkipFCN(nn.Module):
         x = out
         out = self.activation(self.bn3(self.conv3(out)))
         out = self.activation(self.bn4(self.conv4(out)))
-        print(x.size(), out.size())
         out = self.pool(out)
         x = self.pool(x)
-        print(x.size(), out.size())
         out = th.cat([x, out], dim=1)
-        print(x.size(), out.size())
         out = self.activation(self.bn5(self.conv5(out)))
         out = self.activation(self.bn6(self.conv6(out)))
         out = self.activation(self.bn7(self.conv7(out)))
