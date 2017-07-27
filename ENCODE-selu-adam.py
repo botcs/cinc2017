@@ -1,3 +1,4 @@
+#! /usr/bin/python3.5
 import data_handler
 import dilated_model as DM
 import trainer as T
