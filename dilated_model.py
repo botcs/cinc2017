@@ -332,62 +332,62 @@ class VGG16NoDense(nn.Module):
 
     
 class SkipFCN(nn.Module):
-    def __init__(self, in_channels, channels, use_selu=True, num_classes=3,
-                 dilations=[1, 2,  1, 2,  1, 2, 4,  1, 2, 4,  1, 2, 4]):
+    def __init__(self, in_channel, channels, use_selu=True, num_classes=3,
+                 dilations=[1, 2,  1, 2,  1, 2, 4,  1, 2, 4,  1, 2, 2]):
         super(SkipFCN, self).__init__()
         self.num_classes = num_classes
         self.pool = nn.MaxPool1d(2)
         self.activation = SELU() if use_selu else nn.ReLU()
         
-        self.conv1 = nn.Conv1d(in_channels, channels[0], 17, padding=8,
+        self.conv1 = nn.Conv1d(in_channel, channels[0], 17, padding=8,
                                dilation=dilations[0], bias=False)
         self.bn1 = nn.BatchNorm1d(channels[0])
         
-        self.conv2 = nn.Conv1d(channels[0], channels[1], 9, padding=4,
+        self.conv2 = nn.Conv1d(channels[0], channels[1], 9, padding=4*dilations[1],
                                dilation=dilations[1], bias=False)
         self.bn2 = nn.BatchNorm1d(channels[1])
         ########## POOL ##########
-        self.conv3 = nn.Conv1d(channels[1]*2, channels[2], 9, padding=4,
+        self.conv3 = nn.Conv1d(channels[1], channels[2], 9, padding=4*dilations[2],
                                dilation=dilations[2], bias=False)
         self.bn3 = nn.BatchNorm1d(channels[2])
         
-        self.conv4 = nn.Conv1d(channels[2], channels[3], 9, padding=4,
+        self.conv4 = nn.Conv1d(channels[2], channels[3], 9, padding=4*dilations[3],
                                dilation=dilations[3], bias=False)
         self.bn4 = nn.BatchNorm1d(channels[3])
         ########## POOL ##########
-        self.conv5 = nn.Conv1d(channels[3]*2, channels[4], 9, padding=4,
+        self.conv5 = nn.Conv1d(channels[3] + channels[1], channels[4], 9, padding=4*dilations[4],
                                dilation=dilations[4], bias=False)
         self.bn5 = nn.BatchNorm1d(channels[4])
         
-        self.conv6 = nn.Conv1d(channels[4], channels[5], 9, padding=4,
+        self.conv6 = nn.Conv1d(channels[4], channels[5], 9, padding=4*dilations[5],
                                dilation=dilations[5], bias=False)
         self.bn6 = nn.BatchNorm1d(channels[5])
         
-        self.conv7 = nn.Conv1d(channels[5], channels[6], 9, padding=4,
+        self.conv7 = nn.Conv1d(channels[5], channels[6], 9, padding=4*dilations[6],
                                dilation=dilations[6], bias=False)
         self.bn7 = nn.BatchNorm1d(channels[6])
         ########## POOL ##########
-        self.conv8 = nn.Conv1d(channels[6]*2, channels[7], 9, padding=4,
+        self.conv8 = nn.Conv1d(channels[6] + channels[1], channels[7], 9, padding=4*dilations[7],
                                dilation=dilations[7], bias=False)
         self.bn8 = nn.BatchNorm1d(channels[7])
         
-        self.conv9 = nn.Conv1d(channels[7], channels[8], 9, padding=4,
+        self.conv9 = nn.Conv1d(channels[7], channels[8], 9, padding=4*dilations[8],
                                dilation=dilations[8], bias=False)
         self.bn9 = nn.BatchNorm1d(channels[8])
         
-        self.conv10 = nn.Conv1d(channels[8], channels[9], 9, padding=4,
+        self.conv10 = nn.Conv1d(channels[8], channels[9], 9, padding=4*dilations[9],
                                dilation=dilations[9], bias=False)
         self.bn10 = nn.BatchNorm1d(channels[9])
         ########## POOL ##########
-        self.conv11 = nn.Conv1d(channels[9]*2, channels[10], 9, padding=4,
+        self.conv11 = nn.Conv1d(channels[9] + channels[1], channels[10], 9, padding=4*dilations[10],
                                dilation=dilations[10], bias=False)
         self.bn11 = nn.BatchNorm1d(channels[10])
         
-        self.conv12 = nn.Conv1d(channels[10], channels[11], 9, padding=4,
+        self.conv12 = nn.Conv1d(channels[10], channels[11], 9, padding=4*dilations[11],
                                dilation=dilations[11], bias=False)
         self.bn12 = nn.BatchNorm1d(channels[11])
         
-        self.conv13 = nn.Conv1d(channels[11], channels[12], 9, padding=4,
+        self.conv13 = nn.Conv1d(channels[11], channels[12], 9, padding=4*dilations[12],
                                dilation=dilations[12], bias=False)
         self.bn13 = nn.BatchNorm1d(channels[12])
         
@@ -401,13 +401,15 @@ class SkipFCN(nn.Module):
         out = self.activation(self.bn1(self.conv1(x)))
         out = self.activation(self.bn2(self.conv2(out)))
         out = self.pool(out)
-        x = self.pool(x)
-        out = th.cat([x, out], dim=1)
+        x = out
         out = self.activation(self.bn3(self.conv3(out)))
         out = self.activation(self.bn4(self.conv4(out)))
+        print(x.size(), out.size())
         out = self.pool(out)
         x = self.pool(x)
+        print(x.size(), out.size())
         out = th.cat([x, out], dim=1)
+        print(x.size(), out.size())
         out = self.activation(self.bn5(self.conv5(out)))
         out = self.activation(self.bn6(self.conv6(out)))
         out = self.activation(self.bn7(self.conv7(out)))
@@ -627,21 +629,10 @@ class EncodeWideResNet(nn.Module):
             ConvModule(res_init_depth, res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
         )
 
-        self.logit = nn.Conv1d(init_depth, num_classes, 1, bias=False)
+        self.logit = nn.Conv1d(res_init_depth, num_classes, 1, bias=False)
         self.num_classes = 3
         
         print(self)
-
-    def forward(self, x, lens=None):
-        if lens is None:
-            lens = x.size()[1]
-        out = self.forward_features(x)
-        
-        lens = lens[:, None].expand(len(x), self.num_classes)
-        out = self.logit(out)
-        out = th.sum(out, dim=-1).squeeze() / lens
-        return out 
-    
     def forward_encoder(self, x):
         return self.encoder(x)
     
@@ -654,10 +645,20 @@ class EncodeWideResNet(nn.Module):
 
         return out
 
+    def forward(self, x, lens=None):
+        if lens is None:
+            lens = x.size()[1]
+        out = self.forward_features(x)
+        
+        lens = lens[:, None].expand(len(x), self.num_classes)
+        out = self.logit(out)
+        out = th.sum(out, dim=-1).squeeze() / lens
+        return out
+    
 class SkipResNet(nn.Module):
     def __init__(self, in_channel, init_channel, num_enc_layer, N_res_in_block, use_selu=True, num_classes=3):
         
-        super(EncodeWideResNet, self).__init__()
+        super(SkipResNet, self).__init__()
         init_depth = init_channel
         
         if use_selu:
@@ -682,12 +683,12 @@ class SkipResNet(nn.Module):
         res_init_depth = init_depth*2**(l + 1)
         N = N_res_in_block
         
-        self.res1 = ConvModule(res_init_depth, res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
-        self.res2 = ConvModule(res_init_depth*2, res_init_depth, N, nonlin=self.nonlin, kernel_size=9),
+        self.res1 = ConvModule(res_init_depth, res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
+        self.res2 = ConvModule(res_init_depth*2, res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
         self.res3 = ConvModule(res_init_depth*2, res_init_depth, N, nonlin=self.nonlin, kernel_size=9)
         
 
-        self.logit = nn.Conv1d(init_depth, num_classes, 1, bias=False)
+        self.logit = nn.Conv1d(res_init_depth*2, num_classes, 1, bias=False)
         self.num_classes = 3
         
         print(self)
@@ -709,11 +710,12 @@ class SkipResNet(nn.Module):
         out = self.res1(x)
         out = self.res2(th.cat([x, out], dim=1))
         out = self.res3(th.cat([x, out], dim=1))
+        out = th.cat([x, out], dim=1)
         return out
     
     def forward_features(self, x):
         out = self.encoder(x)
-        out = self.resnet(out)
+        out = self.forward_resnet(out)
 
         return out
     
@@ -722,7 +724,7 @@ class WideResNet(nn.Module):
     def __init__(self, in_channel, init_channel, channel_exponential, 
                  num_enc_layer, N_res_in_block, use_selu=True, num_classes=3):
         
-        super(EncodeWideResNet, self).__init__()
+        super(WideResNet, self).__init__()
         init_depth = init_channel
         
         if use_selu:

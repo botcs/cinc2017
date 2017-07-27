@@ -69,8 +69,13 @@ def load_latest(save_path):
     return path
             
 class Trainer:
-    def __init__(self, path, restore=False):
+    def __init__(self, path, restore=False, dryrun=False):
+        assert restore != dryrun
         self.restore = restore
+        self.dryrun = dryrun
+        
+        if dryrun:
+            path = 'dry/' + path
         self.path = load_latest(path) if restore else make_dir(path)
         assert os.path.exists(self.path)
         self.losses = []
@@ -83,7 +88,7 @@ class Trainer:
               lr_decrease_factor=10., gpu_id=0, useAdam=True, log2file=True):
         
         log = None
-        if log2file:
+        if not self.dryrun and log2file:
             if self.restore:
                 log = open(self.path + '/log', 'a')  
             else:
