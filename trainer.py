@@ -18,7 +18,7 @@ def accuracy(logit, target):
     conf_mat = y_oh.t_().mm(l_oh)
     ref_sum = conf_mat.sum(0).squeeze()
     pred_sum = conf_mat.sum(1).squeeze()
-    
+
     F1 = conf_mat.diag() * 2 / (ref_sum + pred_sum + 1e-9)
     F1 = th.cat([F1[None, :], F1[None, :].mean(dim=1)], dim=1)
     return F1
@@ -36,15 +36,13 @@ def ema(series, alpha=0.001):
 
 def evaluate(net, test_producer, gpu_id):
     net.eval()
-    T = 0
     for i, data in enumerate(test_producer, 1):
-        t = time.time()
         outputs = net(data['x'].cuda(gpu_id), data['len'].cuda(gpu_id))
-        T += time.time() - t
         if i == 1:
             acc_sum = accuracy(outputs.data, data['y'].data)
+        else:
+            acc_sum += accuracy(outputs.data, data['y'].data)
 
-        acc_sum += accuracy(outputs.data, data['y'].data)
         #print('\r%4d, sample/sec: %3.2f' % (i, len(data) / T * i), end='')
     acc = acc_sum / i
     return acc
@@ -67,13 +65,13 @@ def load_latest(save_path):
     path = save_path + ('/%04d' % trial)
     print('Using latest training at:', os.path.abspath(path))
     return path
-            
+
 class Trainer:
     def __init__(self, path, restore=False, dryrun=False):
-        
+
         self.restore = restore
         self.dryrun = dryrun
-        
+
         if dryrun:
             path = 'dry/' + path
         self.path = load_latest(path) if restore else make_dir(path)
@@ -84,16 +82,16 @@ class Trainer:
         self.test_highscore = 0
         self.highscore_epoch = 1
 
-    def train(self, net, train_producer, test_producer, epochs=420, 
+    def train(self, net, train_producer, test_producer, epochs=420,
               lr_decrease_factor=10., gpu_id=0, useAdam=True, log2file=True):
-        
+
         log = None
         if not self.dryrun and log2file:
             if self.restore:
-                log = open(self.path + '/log', 'a')  
+                log = open(self.path + '/log', 'a')
             else:
                 log = open(self.path + '/log', 'w')
-        
+
         net.cuda(gpu_id)
         criterion = nn.CrossEntropyLoss()
         epoch_t_sum = 0
@@ -101,15 +99,15 @@ class Trainer:
             learning_rate = 1e-4
         else:
             learning_rate = 1e-2
-        
+
         if self.restore:
             net.load_state_dict(th.load(self.path+'/state_dict_highscore'))
             highscore_str = '%.4f @ %05d epoch' % (self.test_highscore, self.highscore_epoch)
-            print('RESTORED: ', datetime.now(), 
+            print('RESTORED: ', datetime.now(),
                   'from last highscore:', highscore_str, file=log)
-            print('RESTORED: ', datetime.now(), 
+            print('RESTORED: ', datetime.now(),
                   'from last highscore:', highscore_str)
-        
+
         self.restore = True
         last_update_epoch = 0
         for epoch in range(self.highscore_epoch, epochs+1):
@@ -121,10 +119,10 @@ class Trainer:
                     learning_rate /= lr_decrease_factor
                     print('#### NEW LEARNING RATE %e ####' % learning_rate)
             if useAdam:
-                optimizer = optim.Adam(net.parameters(), learning_rate, 
+                optimizer = optim.Adam(net.parameters(), learning_rate,
                                        weight_decay=0.0005)
             else:
-                optimizer = optim.SGD(net.parameters(), learning_rate, 
+                optimizer = optim.SGD(net.parameters(), learning_rate,
                                       weight_decay=0.0005, momentum=.9)
             acc_sum = 0
             net.train()
@@ -151,13 +149,13 @@ class Trainer:
                     stat = epoch, i, self.losses[-1], outputs.size()[0]/update_t
                     print('[%4d, %3d] loss: %5.4f\tsample/sec: %4.1f' % stat, file=log)
 
-            
+
             if self.path and epoch % (epochs // 2) == 0:
                 th.save(net.state_dict(), self.path+'/state_dict')
-            
+
             th.save(self, self.path + '/' +'trainer')
-            
-            print('Train acc:\n', 
+
+            print('Train acc:\n',
                   'N: %.4f  A: %.4f  O: %.4f  mean: %.4f'%
                   tuple((acc_sum/i).tolist()[0]), file=log)
             test_acc = evaluate(net, test_producer, gpu_id)
@@ -167,12 +165,12 @@ class Trainer:
                 print('<<<< %.4f @ %05d epoch >>>>' % (
                     self.test_highscore, self.highscore_epoch), file=log)
                 th.save(net.state_dict(), self.path+'/state_dict_highscore')
-            
-            print('Test acc:\n', 
+
+            print('Test acc:\n',
                   'N: %.4f  A: %.4f  O: %.4f  mean: %.4f'%
                   tuple(test_acc.tolist()[0]), file=log)
             self.test_F1.append(test_acc)
-            
+
             epoch_t_sum += time.time() - epoch_start
             epoch_time = epoch_t_sum / 60 / epoch
             ETL = (epochs - epoch) * epoch_time
@@ -180,7 +178,7 @@ class Trainer:
             print('     total: %10.2f min' % (epoch_t_sum/60), file=log)
             print(' est. left: %10.2f min' % ETL, file=log)
             print('-' * 40, file=log)
-        
+
         print('Finished training!\n  Total time: %10.2f'%(epoch_t_sum/60), file=log)
         print('  Highscore %.4f @ %05d epoch' % (self.test_highscore, self.highscore_epoch), file=log)
         if log2file:
@@ -191,7 +189,7 @@ class Trainer:
 
     def plot(self, ema_loss=.1, ema_train_f1=.1, ema_test_f1=.8, filename=None):
         import matplotlib.pyplot as plt
-        
+
         losses = self.losses
         F1 = self.train_F1
         test_F1 = self.test_F1
@@ -199,7 +197,7 @@ class Trainer:
         #plt.subplot(3, 1, 1)
         plt.plot(ema(losses, ema_loss))
         plt.title('Train Loss')
-        
+
         #plt.subplot(3, 1, 2)
         fig2 = plt.figure()
         alpha = ema_train_f1
@@ -209,7 +207,7 @@ class Trainer:
         plt.plot(ema(th.cat(F1)[:, 3], alpha), label='Mean')
         plt.title('Train Accuracy')
         plt.legend(loc='lower right')
-        
+
         #plt.subplot(3, 1, 3)
         fig3 = plt.figure()
         alpha = ema_test_f1
