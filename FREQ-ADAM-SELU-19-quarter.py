@@ -35,8 +35,9 @@ test_producer = th.utils.data.DataLoader(
         dataset=eval_set, batch_size=256, shuffle=True,
         num_workers=4, collate_fn=data_handler.batchify)
 
-net = DM.EncodeWideResNet(in_channel=8, init_channel=32,
-    num_enc_layer=4, N_res_in_block=1, use_selu=True, bias=True)
+net = DM.VGG19NoDense(in_channels=8, use_selu=True,
+    channels=[16,16, 32,32, 64,64,64,64, 128,128,128,128, 128,128,128,128],
+    dilations=[1, 2,  1, 2,  1, 2, 2, 4,  1, 2, 2, 2,  1, 2, 2, 2])
 
 print(net(next(iter(train_producer))['x']).size())
 

@@ -17,9 +17,8 @@ th.multiprocessing.set_sharing_strategy('file_system')
 name = splitext(basename(sys.argv[0]))[0]
 
 transformations = [
-    data_handler.Crop(8000),
     data_handler.RandomMultiplier(-1),
-    data_handler.Spectogram(15),
+    data_handler.Spectogram(30),
     data_handler.Logarithm()
 ]
 dataset = data_handler.DataSet(
@@ -35,7 +34,7 @@ test_producer = th.utils.data.DataLoader(
         dataset=eval_set, batch_size=256, shuffle=True,
         num_workers=4, collate_fn=data_handler.batchify)
 
-net = DM.EncodeWideResNet(in_channel=8, init_channel=32,
+net = DM.EncodeWideResNet(in_channel=16, init_channel=16,
     num_enc_layer=4, N_res_in_block=1, use_selu=True, bias=True)
 
 print(net(next(iter(train_producer))['x']).size())

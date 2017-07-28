@@ -35,8 +35,8 @@ test_producer = th.utils.data.DataLoader(
         dataset=eval_set, batch_size=256, shuffle=True,
         num_workers=4, collate_fn=data_handler.batchify)
 
-net = DM.EncodeWideResNet(in_channel=8, init_channel=32,
-    num_enc_layer=4, N_res_in_block=1, use_selu=True, bias=True)
+net = DM.SkipFCN(in_channel=8, use_selu=True,
+    channels=[8,8,  16,16,  32,32,32,  32,32,32,  64,64,64])
 
 print(net(next(iter(train_producer))['x']).size())
 
