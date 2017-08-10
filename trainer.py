@@ -41,7 +41,7 @@ def evaluate(net, test_producer, gpu_id):
         if i == 1:
             acc_sum = accuracy(outputs.data, data['y'].data)
         else:
-            acc_sum += accuracy(outputs.data, data['y'].data)
+             acc_sum += accuracy(outputs.data, data['y'].data)
 
         #print('\r%4d, sample/sec: %3.2f' % (i, len(data) / T * i), end='')
     acc = acc_sum / i
@@ -132,7 +132,7 @@ class Trainer:
 
                 optimizer.zero_grad()
                 input = data['x'].cuda(gpu_id)
-                outputs = net.forward(input, data['len'].cuda(gpu_id))
+                outputs = net.forward(input)
 
                 inference_t = time.time() - start_t
                 loss = criterion(outputs, data['y'].cuda(gpu_id))
