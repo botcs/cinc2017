@@ -632,9 +632,9 @@ class EncodeWideResNet(nn.Module):
         )
 
         self.logit = nn.Conv1d(res_init_depth, num_classes, 1, bias=bias)
-        self.num_classes = 3
+        self.num_classes = num_classes
 
-        print(self)
+        # print(self)
     def forward_encoder(self, x):
         return self.encoder(x)
 
