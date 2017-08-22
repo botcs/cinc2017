@@ -16,7 +16,6 @@ class DataSet(th.utils.data.Dataset):
     def __init__(self, elems, load, path=None,
                  remove_noise=True, tokens=def_tokens, **kwargs):
         num_classes = len(tokens)
-
         super(DataSet, self).__init__()
 
         if isinstance(elems, str):
@@ -51,9 +50,9 @@ class DataSet(th.utils.data.Dataset):
         ref = self.class_lists[class_idx][idx]
 
         if self.path is not None:
-            return self.load("%s/%s" % (self.path, ref), **self.loadargs)
+            return self.load("%s/%s" % (self.path, ref), tokens=self.tokens, **self.loadargs)
 
-        return self.load(self.list[idx], **self.loadargs)
+        return self.load(self.list[idx], tokens=self.tokens, **self.loadargs)
 
     def disjunct_split(self, ratio=.8):
         # Split keeps the ratio of classes
