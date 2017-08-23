@@ -161,7 +161,7 @@ class Trainer:
             th.save(self, self.path + '/' +'trainer')
 
             print('Train acc:\n',
-                  'N: %.4f  A: %.4f  O: %.4f  ~: %.4f  mean: %.4f'%
+                  'N: %.4f  A: %.4f  O: %.4f  mean: %.4f'%
                   tuple((acc_sum/i).tolist()[0]), file=log)
             test_acc = evaluate(net, test_producer, gpu_id)
             if test_acc.tolist()[0][-1] > self.test_highscore:
@@ -172,7 +172,7 @@ class Trainer:
                 th.save(net.state_dict(), self.path+'/state_dict_highscore')
 
             print('Test acc:\n',
-                  'N: %.4f  A: %.4f  O: %.4f  ~: %.4f  mean: %.4f'%
+                  'N: %.4f  A: %.4f  O: %.4f  mean: %.4f'%
                   tuple(test_acc.tolist()[0]), file=log)
             self.test_F1.append(test_acc)
 
@@ -209,8 +209,8 @@ class Trainer:
         plt.plot(ema(th.cat(F1)[:, 0], alpha), label='N')
         plt.plot(ema(th.cat(F1)[:, 1], alpha), label='A')
         plt.plot(ema(th.cat(F1)[:, 2], alpha), label='O')
-        plt.plot(ema(th.cat(F1)[:, 3], alpha), label='~')
-        plt.plot(ema(th.cat(F1)[:, 4], alpha), label='Mean')
+        #plt.plot(ema(th.cat(F1)[:, 3], alpha), label='~')
+        plt.plot(ema(th.cat(F1)[:, -1], alpha), label='Mean')
         plt.title('Train Accuracy')
         plt.legend(loc='lower right')
 
@@ -220,8 +220,8 @@ class Trainer:
         plt.plot(ema(th.cat(test_F1)[:, 0], alpha), label='N')
         plt.plot(ema(th.cat(test_F1)[:, 1], alpha), label='A')
         plt.plot(ema(th.cat(test_F1)[:, 2], alpha), label='O')
-        plt.plot(ema(th.cat(test_F1)[:, 3], alpha), label='~')
-        plt.plot(ema(th.cat(test_F1)[:, 4], alpha), label='Mean')
+        #plt.plot(ema(th.cat(test_F1)[:, 3], alpha), label='~')
+        plt.plot(ema(th.cat(test_F1)[:, -1], alpha), label='Mean')
         plt.title('Test Accuracy')
         plt.legend(loc='lower right')
         if filename is not None:

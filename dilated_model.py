@@ -530,7 +530,7 @@ class ConvModule(nn.Module):
     # [(3, 3), 16*k]
     # [(3, 3), 16*k]
     # [(3, 3), 16*k]
-    def __init__(self, in_channel, channel=8, block=DilatedBlock, N=3, nonlin=nn.ReLU, kernel_size=17):
+    def __init__(self, in_channel, channel=8, DUMMY_BUG=1, N=3, nonlin=nn.ReLU, kernel_size=17):
         super(ConvModule, self).__init__()
         residuals = []
         residuals.append(DilatedBlock(in_channel, channel, kernel_size, nonlin=nonlin))
@@ -646,6 +646,70 @@ class EncodeWideResNet(nn.Module):
         out = self.resnet(out)
 
         return out
+    
+    def forward_logit(self, x):
+        out = self.forward_features(x)
+        out = self.logit(out)
+        return out
+
+
+    def forward(self, x, lens=None):
+        out = self.forward_features(x)
+        out = self.logit(out)
+        #out = th.sum(out, dim=-1).squeeze() / lens
+        out = th.mean(out, dim=-1)
+        return out
+
+
+
+class EncodeWideResNetFIXED(nn.Module):
+    def __init__(self, in_channel, init_channel, num_enc_layer, N_res_in_block, use_selu=True, bias=False, num_classes=3):
+
+        super(EncodeWideResNetFIXED, self).__init__()
+        init_depth = init_channel
+
+        if use_selu:
+            self.nonlin = SELU()
+        else:
+            self.nonlin = nn.ReLU()
+
+        encoder = [
+            nn.Conv1d(in_channel, init_depth, 7, padding=3),
+            nn.BatchNorm1d(init_depth),
+            self.nonlin,
+            nn.MaxPool1d(2)
+        ]
+        for l in range(0, num_enc_layer-1):
+            encoder += [
+                nn.Conv1d(init_depth*2**l, init_depth*2**(l + 1), 7, padding=3),
+                nn.BatchNorm1d(init_depth*2**(l + 1)),
+                self.nonlin,
+                nn.MaxPool1d(2)
+            ]
+        self.encoder = nn.Sequential(*encoder)
+        res_init_depth = init_depth*2**(l + 1)
+        N = N_res_in_block
+        self.resnet = nn.Sequential(
+            ConvModule(res_init_depth, res_init_depth, N=N, nonlin=self.nonlin, kernel_size=9),
+            ConvModule(res_init_depth, res_init_depth, N=N, nonlin=self.nonlin, kernel_size=9),
+            ConvModule(res_init_depth, res_init_depth, N=N, nonlin=self.nonlin, kernel_size=9)
+        )
+
+        self.logit = nn.Conv1d(res_init_depth, num_classes, 1, bias=bias)
+        self.num_classes = num_classes
+
+        # print(self)
+    def forward_encoder(self, x):
+        return self.encoder(x)
+
+    def forward_resnet(self, x):
+        return self.resnet(x)
+
+    def forward_features(self, x):
+        out = self.encoder(x)
+        out = self.resnet(out)
+
+        return out
 
     def forward(self, x, lens=None):
 
@@ -657,6 +721,9 @@ class EncodeWideResNet(nn.Module):
         out = self.logit(out)
         out = th.sum(out, dim=-1).squeeze() / lens
         return out
+
+
+
 
 class SkipResNet(nn.Module):
     def __init__(self, in_channel, init_channel, num_enc_layer, N_res_in_block, use_selu=True, num_classes=3):
