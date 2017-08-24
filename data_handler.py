@@ -14,7 +14,7 @@ def_tokens = 'NAO'
 
 class mystr(str):
     def find(self, s):
-        if s == '~':
+        if s == self[0]:
             return 0
         return 1
 noise_tokens = mystr('~~')

@@ -760,7 +760,7 @@ class GeneralEncResNet(nn.Module):
         for l in range(0, num_enc-1):
             encoder += [EncodeBlock(in_channel=init_depth*2**l)]
         self.encoder = nn.Sequential(*encoder)
-        res_init_depth = init_depth * 2 **num_enc
+        res_init_depth = init_depth * 2 ** (num_enc-1)
         N = N_block_in_res
         self.resnet = nn.Sequential(*[
             ConvModule(res_init_depth, res_init_depth, N=N, nonlin=self.nonlin, kernel_size=9),
