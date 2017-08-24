@@ -12,9 +12,16 @@ Float = th.FloatTensor
 def_tokens = 'NAO'
 
 
+class mystr(str):
+    def find(self, s):
+        if s == '~':
+            return 0
+        return 1
+noise_tokens = mystr('~~')
+
 class DataSet(th.utils.data.Dataset):
     def __init__(self, elems, load, path=None,
-                 remove_noise=True, tokens=def_tokens, **kwargs):
+                 remove_unlisted=False, tokens=def_tokens, **kwargs):
         num_classes = len(tokens)
         super(DataSet, self).__init__()
 
@@ -25,8 +32,11 @@ class DataSet(th.utils.data.Dataset):
             # just assume iterable
             self.list = set(elems)
 
-        if remove_noise:
+        if kwargs.get('remove_noise'):
             self.list = [elem for elem in self.list if elem.find('~') == -1]
+
+        if remove_unlisted:
+            self.list = [elem for elem in self.list if tokens.find(elem[-1]) != -1]
 
         self.class_lists = [[] for _ in range(num_classes)]
 
@@ -34,9 +44,10 @@ class DataSet(th.utils.data.Dataset):
             label = elem.split(',')[1]
             self.class_lists[tokens.find(label)].append(elem)
 
+
+        self.remove_unlisted = remove_unlisted
         self.load = load
         self.path = path
-        self.remove_noise = remove_noise
         self.tokens = tokens
         self.loadargs = kwargs
 
@@ -61,9 +72,9 @@ class DataSet(th.utils.data.Dataset):
             A.update(random.sample(cl, int(len(cl) * ratio)))
         B = set(self.list) - A
 
-        A = DataSet(A, self.load, self.path, self.remove_noise,
+        A = DataSet(A, self.load, self.path, self.remove_unlisted,
                     self.tokens, **self.loadargs)
-        B = DataSet(B, self.load, self.path, self.remove_noise,
+        B = DataSet(B, self.load, self.path, self.remove_unlisted,
                     self.tokens, **self.loadargs)
         return A, B
 
