@@ -159,10 +159,20 @@ class Trainer:
                 th.save(net.state_dict(), self.path+'/state_dict')
 
             th.save(self, self.path + '/' +'trainer')
+            if len(self.class_weight) == 3:
+                print('Train acc:\n',
+                      'N: %.4f  A: %.4f  O: %.4f  mean: %.4f'%
+                      tuple((acc_sum/i).tolist()[0]), file=log)
+            elif len(self.class_weight) == 4:
+                print('Train acc:\n',
+                      'N: %.4f  A: %.4f  O: %.4f ~: %.4f  mean: %.4f'%
+                      tuple((acc_sum/i).tolist()[0]), file=log)
+            elif len(self.class_weight) == 2:
+                 print('Train acc:\n',
+                      'Class1: %.4f  Class2: %.4f  mean: %.4f'%
+                      tuple((acc_sum/i).tolist()[0]), file=log)
+               
 
-            print('Train acc:\n',
-                  'N: %.4f  A: %.4f  O: %.4f  mean: %.4f'%
-                  tuple((acc_sum/i).tolist()[0]), file=log)
             test_acc = evaluate(net, test_producer, gpu_id)
             if test_acc.tolist()[0][-1] > self.test_highscore:
                 self.test_highscore = test_acc.tolist()[0][-1]
@@ -171,9 +181,19 @@ class Trainer:
                     self.test_highscore, self.highscore_epoch), file=log)
                 th.save(net.state_dict(), self.path+'/state_dict_highscore')
 
-            print('Test acc:\n',
-                  'N: %.4f  A: %.4f  O: %.4f  mean: %.4f'%
-                  tuple(test_acc.tolist()[0]), file=log)
+            if len(self.class_weight) == 3:
+                print('Test acc:\n',
+                      'N: %.4f  A: %.4f  O: %.4f  mean: %.4f'%
+                      tuple(test_acc.tolist()[0]), file=log)
+            elif len(self.class_weight) == 4:
+                print('Test acc:\n',
+                      'N: %.4f  A: %.4f  O: %.4f ~: %.4f  mean: %.4f'%
+                      tuple(test_acc.tolist()[0]), file=log)
+            elif len(self.class_weight) == 2:
+                print('Test acc:\n',
+                      'Class1: %.4f  Class2: %.4f  mean: %.4f'%
+                      tuple(test_acc.tolist()[0]), file=log)
+ 
             self.test_F1.append(test_acc)
 
             epoch_t_sum += time.time() - epoch_start
@@ -206,10 +226,14 @@ class Trainer:
         #plt.subplot(3, 1, 2)
         fig2 = plt.figure()
         alpha = ema_train_f1
-        plt.plot(ema(th.cat(F1)[:, 0], alpha), label='N')
-        plt.plot(ema(th.cat(F1)[:, 1], alpha), label='A')
-        plt.plot(ema(th.cat(F1)[:, 2], alpha), label='O')
+        if len(self.class_weight) == 3:
+            plt.plot(ema(th.cat(F1)[:, 0], alpha), label='N')
+            plt.plot(ema(th.cat(F1)[:, 1], alpha), label='A')
+            plt.plot(ema(th.cat(F1)[:, 2], alpha), label='O')
         #plt.plot(ema(th.cat(F1)[:, 3], alpha), label='~')
+        elif len(self.class_weight) == 2:
+            plt.plot(ema(th.cat(F1)[:, 0], alpha), label='Class1')
+            plt.plot(ema(th.cat(F1)[:, 1], alpha), label='Class2')
         plt.plot(ema(th.cat(F1)[:, -1], alpha), label='Mean')
         plt.title('Train Accuracy')
         plt.legend(loc='lower right')
@@ -217,11 +241,16 @@ class Trainer:
         #plt.subplot(3, 1, 3)
         fig3 = plt.figure()
         alpha = ema_test_f1
-        plt.plot(ema(th.cat(test_F1)[:, 0], alpha), label='N')
-        plt.plot(ema(th.cat(test_F1)[:, 1], alpha), label='A')
-        plt.plot(ema(th.cat(test_F1)[:, 2], alpha), label='O')
-        #plt.plot(ema(th.cat(test_F1)[:, 3], alpha), label='~')
-        plt.plot(ema(th.cat(test_F1)[:, -1], alpha), label='Mean')
+
+        if len(self.class_weight) == 3:
+            plt.plot(ema(th.cat(test_F1)[:, 0], alpha), label='N')
+            plt.plot(ema(th.cat(test_F1)[:, 1], alpha), label='A')
+            plt.plot(ema(th.cat(test_F1)[:, 2], alpha), label='O')
+        #plt.plot(ema(th.cat(F1)[:, 3], alpha), label='~')
+        elif len(self.class_weight) == 2:
+            plt.plot(ema(th.cat(test_F1)[:, 0], alpha), label='Class1')
+            plt.plot(ema(th.cat(test_F1)[:, 1], alpha), label='Class2')
+ 
         plt.title('Test Accuracy')
         plt.legend(loc='lower right')
         if filename is not None:

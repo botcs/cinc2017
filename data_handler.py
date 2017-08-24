@@ -18,6 +18,9 @@ class mystr(str):
             return 0
         return 1
 noise_tokens = mystr('~~')
+atrif_tokens = mystr('AA')
+other_tokens = mystr('OO')
+
 
 class DataSet(th.utils.data.Dataset):
     def __init__(self, elems, load, path=None,

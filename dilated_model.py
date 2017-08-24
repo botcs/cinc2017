@@ -18,6 +18,9 @@ class SELU(nn.Module):
     def forward(self, x):
         return self.scale * F.elu(x, self.alpha)
 
+class Identity(nn.Module):
+    def forward(self, x):
+        return x
 
 
 class MultiKernelBlock(nn.Module):
@@ -695,6 +698,75 @@ class EncodeWideResNetFIXED(nn.Module):
             ConvModule(res_init_depth, res_init_depth, N=N, nonlin=self.nonlin, kernel_size=9)
         )
 
+        self.logit = nn.Conv1d(res_init_depth, num_classes, 1, bias=bias)
+        self.num_classes = num_classes
+
+        # print(self)
+    def forward_encoder(self, x):
+        return self.encoder(x)
+
+    def forward_resnet(self, x):
+        return self.resnet(x)
+
+    def forward_features(self, x):
+        out = self.encoder(x)
+        out = self.resnet(out)
+
+        return out
+
+    def forward(self, x, lens=None):
+
+        if lens is None:
+            lens = x.size(-1)
+        else:
+            lens = lens[:, None].expand(len(x), self.num_classes)
+        out = self.forward_features(x)
+        out = self.logit(out)
+        out = th.sum(out, dim=-1).squeeze() / lens
+        return out
+
+
+class EncodeBlock(nn.Module):
+    def __init__(self, in_channel, out_channel=None, kernel_size=7):
+        super(EncodeBlock, self).__init__()
+        if out_channel is None:
+            out_channel = in_channel*2
+        self.conv = nn.Conv1d(in_channel, out_channel, kernel_size,
+                              padding=kernel_size//2, bias=False)
+        self.bn = nn.BatchNorm1d(out_channel)
+        self.nonlin = SELU()
+        self.mp = nn.MaxPool1d(2)
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.bn(x)
+        x = self.nonlin(x)
+        x = self.mp(x)
+        return x
+
+
+
+class GeneralEncResNet(nn.Module):
+    def __init__(self, in_channel, init_depth, num_enc, num_res,
+                 N_block_in_res=3, enc_bw_res=False, use_selu=True, bias=False, num_classes=3):
+
+        super(GeneralEncResNet, self).__init__()
+
+        if use_selu:
+            self.nonlin = SELU()
+        else:
+            self.nonlin = nn.ReLU()
+        encoder = [EncodeBlock(in_channel=in_channel, out_channel=init_depth)]
+        for l in range(0, num_enc-1):
+            encoder += [EncodeBlock(in_channel=init_depth*2**l)]
+        self.encoder = nn.Sequential(*encoder)
+        res_init_depth = init_depth * 2 **num_enc
+        N = N_block_in_res
+        self.resnet = nn.Sequential(*[
+            ConvModule(res_init_depth, res_init_depth, N=N, nonlin=self.nonlin, kernel_size=9),
+            Identity() if not enc_bw_res else EncodeBlock(res_init_depth, res_init_depth)
+        ]*num_res)
+     
         self.logit = nn.Conv1d(res_init_depth, num_classes, 1, bias=bias)
         self.num_classes = num_classes
 
