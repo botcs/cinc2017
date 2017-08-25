@@ -26,9 +26,9 @@ dataset = data_handler.DataSet(
     transformations=transformations,
     path='data/raw/training2017/',
     #remove_noise=False, tokens='NAO~')
-    #remove_noise=True, tokens='NAO')
+    remove_noise=True, tokens='NAO')
     #remove_noise=False, tokens=data_handler.noise_tokens)
-    remove_noise=True, remove_unlist=False, tokens=data_handler.atrif_tokens)
+    #remove_noise=True, remove_unlist=False, tokens=data_handler.atrif_tokens)
 train_set, eval_set = dataset.disjunct_split(.95)
 train_producer = th.utils.data.DataLoader(
         dataset=train_set, batch_size=32, shuffle=True,
@@ -38,7 +38,7 @@ test_producer = th.utils.data.DataLoader(
         num_workers=4, collate_fn=data_handler.batchify)
 
 net = DM.GeneralEncResNet(in_channel=1, init_depth=32, 
-    num_enc=4, num_res=3, N_block_in_res=2, num_classes=2)
+    num_enc=4, num_res=3, N_block_in_res=2, num_classes=3)
 
 testdata = next(iter(train_producer))['x'][:2]
 testlogit = net(testdata)
@@ -46,5 +46,5 @@ testloss = th.sum((testlogit-1)**2)
 testloss.backward()
 print('CPU forward-backward check complete!')
 
-trainer = T.Trainer('saved/'+name, class_weight=[1,1], restore=RESTORE, dryrun=DRYRUN)
+trainer = T.Trainer('saved/'+name, class_weight=[1,1,1], restore=RESTORE, dryrun=DRYRUN)
 trainer(net, train_producer, test_producer, gpu_id=0, useAdam=True)
