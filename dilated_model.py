@@ -720,6 +720,7 @@ class EncodeWideResNetFIXED(nn.Module):
             lens = x.size(-1)
         else:
             lens = lens[:, None].expand(len(x), self.num_classes)
+        
         out = self.forward_features(x)
         out = self.logit(out)
         out = th.sum(out, dim=-1).squeeze() / lens
