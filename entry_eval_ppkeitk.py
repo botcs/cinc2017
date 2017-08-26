@@ -21,26 +21,27 @@ def process_logits(logits):
     return('O')
 
 
-def write_answer(fname, logits):
-    labels = ['N', 'A', 'O', '~']
+def write_answer(fname, answer):
     with open('answers.txt', 'a') as f:
-         f.write(fname + ',' + labels[int(np.argmax(logits))] + '\n')
+         f.write(fname + ',' + str(answer) + '\n')
 
 def main(argv):
-    noise_model_path = 'noise.pt'
-    atrif_model_path = 'atrif.pt'
-    other_model_path = 'other.pt'
+    print('-'*80)
+    print('*'*80)
+    print('-'*80)
+    noise_model_path = 'noise.pkl'
+    atrif_model_path = 'atrif.pkl'
+    other_model_path = 'other.pkl'
 
     tf.reset_default_graph()
     pprint('Building computational graph... ')
-    pprint('-'*80)
+
     with tf.device('cpu'):
         input_op = tf.placeholder(1, [1, None, 1], name='INPUT')
         noise_model = tw.get_logits(input_op, 3, noise_model_path)[0]
         atrif_model = tw.get_logits(input_op, 3, atrif_model_path)[0]
         other_model = tw.get_logits(input_op, 3, other_model_path)[0]
         logits = [noise_model, atrif_model, other_model]
-    pprint('-'*80)
     pprint('Computational graph building done!')
     pprint('Loading data')
     transformations = [
@@ -49,7 +50,7 @@ def main(argv):
         #data_handler.RandomMultiplier(-1),
     ]
     data = data_handler.load_composed(
-        sys.argv[1], transformations=transformations, only_data=True)[:, :, None]
+        sys.argv[1], transformations=transformations)[:, :, None]
     print(data.shape)
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
@@ -58,6 +59,7 @@ def main(argv):
         print('Atrif:', logits_val[1])
         print('Other:', logits_val[2])
     print(process_logits(logits_val))
+    write_answer(argv[1], process_logits(logits_val))
     return
 
     with tf.Session() as sess:

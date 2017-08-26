@@ -1,16 +1,14 @@
 import tensorflow as tf
 import numpy as np
-import torch as th
 from tensorflow.python.framework import ops
+import pickle 
 
-def get_logits(input, num_classes, pytorch_statedict_path, res_blocks=3):
-    sd = th.load(pytorch_statedict_path)
+def get_logits(input, num_classes, param_path, res_blocks=3):
+    #sd = th.load(pytorch_statedict_path)
     #for k, v in sd.items():
     #    print(k, v.size())
-    def gener():
-        for p in sd.values():
-            yield p.cpu().transpose(0, -1).numpy()    
-    paramgen = gener()
+    params = pickle.load(open(param_path, 'rb'))
+    paramgen = iter(params)
     def init(*args, do_assert=True):
         p = next(paramgen)
         if do_assert:
