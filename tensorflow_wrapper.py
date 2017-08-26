@@ -87,12 +87,13 @@ def get_logits(input, num_classes, pytorch_statedict_path, res_blocks=3):
         x = ResNet(x, init_channel*8)
         return x
 
-    def NET(input, init_channel=32, num_classes=num_classes):
+    def NET(input, init_channel=32, num_classes=3):
         x = Features(input, init_channel)
+        lens = tf.shape(input, 'lens')[1]
+        lens = tf.cast(lens, tf.float32)
         with tf.variable_scope('Logit'):
-            logit = Conv1d(x, init_channel*8, num_classes, 1)
-            logit = tf.reduce_mean(logit, 1)
-            #print('MEGTÖRTÉNT')
-            
+	        logit = Conv1d(x, init_channel*8, num_classes, 1)
+	        logit = tf.reduce_sum(logit, 1) / lens
+	
         return logit
     return NET(input, init_channel=32)
