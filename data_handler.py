@@ -1,6 +1,6 @@
 from scipy.io import loadmat
 import numpy as np
-from matplotlib.mlab import specgram
+#from matplotlib.mlab import specgram
 import random
 
 def load_mat(ref, normalize=True):
@@ -60,7 +60,7 @@ class RandomMultiplier:
 class Logarithm:
     def __call__(self, data):
         return np.log(data)
-
+'''
 class Spectogram:
     def __init__(self, NFFT, overlap=None):
         self.NFFT = NFFT
@@ -77,4 +77,4 @@ class Spectogram:
             noverlap=self.NFFT/2,
             window=np.hamming(self.NFFT))[0]
         return Sx
-
+'''
