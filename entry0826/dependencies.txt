@@ -1,0 +1,18 @@
+# file: dependencies.txt
+#
+# This file lists additional Debian packages that must be installed
+# prior to running your entry's 'setup.sh' and 'next.sh' scripts.
+# Each package must be on a separate line.
+
+ipython3
+
+# Installing tensorflow according to the following thread in physionet-challenges forum: https://groups.google.com/forum/#!topic/physionet-challenges/H9wR3it7T5k
+python3-tensorflow = 1.0.0-0~pn1 
+python3-numpy      = 1:1.12.0-2~pn0 
+python3-protobuf   = 3.2.0-0~pn1 
+libprotobuf10      = 3.2.0-0~pn1 
+python3-wheel      = 0.29.0-2 
+python3-six        = 1.10.0-3 
+libatlas3-base 
+
+python3-scipy

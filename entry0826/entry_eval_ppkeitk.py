@@ -16,7 +16,7 @@ def process_logits(logits):
         return('~')
     if atrif.argmax() == 1:
         return('A')
-    if atrif.argmax() == 0:
+    if other.argmax() == 0:
         return('N')
     return('O')
 
