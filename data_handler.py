@@ -1,6 +1,7 @@
 from scipy.io import loadmat
 import numpy as np
-from matplotlib.mlab import specgram
+#from matplotlib.mlab import specgram
+from scipy import signal
 import torch as th
 import random
 
@@ -92,22 +93,16 @@ def load_mat(ref, normalize=True):
         #features = (features - features.mean()) / features.std()
         #features = (features - features.min()) / features.max()
 
-    return data #, features
+    return data #, features Crop:
+    def __init__(self, crop_len):
+        self.crop_len = crop_len
 
-
-def load_composed(line, tokens=def_tokens, transformations=[], **kwargs):
-    ref, label = line.split(',')
-    data = load_mat(ref)
-    data_len = len(data[0])
-    for trans in transformations:
-        data = trans(data)
-
-    res = {
-        'x': th.from_numpy(data[None, :]),
-        #'features': th.from_numpy(data[None, :]),
-        'y': tokens.find(label),
-        'len': data_len}
-    return res
+    def __call__(self, data):
+        crop_len = self.crop_len
+        if len(data[0]) > crop_len:
+            start_idx = np.random.randint(len(data[0]) - crop_len)
+            data = data[:, start_idx: start_idx + crop_len]
+        return data
 
 
 class Crop:
@@ -136,6 +131,7 @@ class Threshold:
             data[np.abs(data) > data.std()*self.sigma] = data.std()*self.sigma
         return data
 
+
 class RandomMultiplier:
     def __init__(self, multiplier=-1.):
         self.multiplier = multiplier
@@ -147,132 +143,42 @@ class Logarithm:
     def __call__(self, data):
         return np.log(data)
 
+
 class Spectogram:
-    def __init__(self, NFFT, overlap=None):
+    def __init__(self, NFFT=None, overlap=None):
         self.NFFT = NFFT
         self.overlap = overlap
         if overlap is None:
-            self.overlap = NFFT / 2
+            self.overlap = NFFT - 1
     def __call__(self, data):
         data = data.squeeze()
         assert len(data.shape) == 1
-        Sx = specgram(
+        Sx = signal.spectrogram(
             x=data,
-            NFFT=self.NFFT,
-            Fs=300,
-            noverlap=self.NFFT/2,
-            window=np.hamming(self.NFFT))[0]
+            nperseg=self.NFFT,
+            noverlap=self.overlap)[-1]
         return Sx
 
-def load_raw(line, tokens=def_tokens, **kwargs):
-    # gets a line from REFERENCE.csv
-    # i.e. A000001,N
-    ref, label = line.split(',')
-    data, features = load_mat(ref)
-    res = {
-        'x': th.from_numpy(data[None, :]),
-        'features': th.from_numpy(data[None, :]),
-        'y': tokens.find(label),
-        'len': len(data)}
-    return res
 
-
-def load_crop(line, crop_len=2100, tokens=def_tokens, **kwargs):
-    # Samples are recorded with 300 Hz
-
+def load_composed(line, tokens=def_tokens, transformations=[], **kwargs):
     ref, label = line.split(',')
     data = load_mat(ref)
-    if len(data) > crop_len:
-        start_idx = np.random.randint(len(data) - crop_len)
-        data = data[start_idx: start_idx + crop_len]
+    data_len = len(data[0])
+    for trans in transformations:
+        data = trans(data)
 
     res = {
-        'x': th.from_numpy(data[None, :]),
+        'x': th.from_numpy(np.float32(data[None, :])),
+        #'features': th.from_numpy(data[None, :]),
         'y': tokens.find(label),
-        'len': len(data)}
-    return res
-
-def load_crop_thresholded(line, crop_len=2100, sigma=3, random_invert=True, tokens=def_tokens, **kwargs):
-    # Samples are recorded with 300 Hz
-
-    ref, label = line.split(',')
-    data, features = load_mat(ref)
-    if len(data) > crop_len:
-        start_idx = np.random.randint(len(data) - crop_len)
-        data = data[start_idx: start_idx + crop_len]
-
-    multiplier = random.randint(0, 1) * 2 - 1
-    if random_invert:
-        data *= multiplier
-
-    data[np.abs(data) > data.std()*sigma] = data.std()*sigma
-    res = {
-        'x': th.from_numpy(data[None, :]),
-        'features': th.from_numpy(features[None, :]),
-        'y': tokens.find(label),
-        'len': len(data)}
-    return res
-
-def load_freq(line, NFFT=100, tokens=def_tokens, **kwargs):
-
-    ref, label = line.split(',')
-    data = load_mat(ref)
-    Sx = specgram(
-        x=data,
-        NFFT=NFFT,
-        Fs=300,
-        noverlap=NFFT/2,
-        window=np.hamming(NFFT))[0]
-    res = {
-        'x': th.from_numpy(Sx),
-        'y': tokens.find(label),
-        'len': Sx.shape[1]}
-    return res
-
-
-def load_freq_crop(line, NFFT=100, crop_len=900, tokens=def_tokens, **kwargs):
-
-    ref, label = line.split(',')
-    data = load_mat(ref)
-
-    start_idx = np.random.randint(len(data) - crop_len)
-    data = data[start_idx: start_idx + crop_len]
-
-    Sx = specgram(
-        x=data,
-        NFFT=NFFT,
-        Fs=300,
-        noverlap=NFFT/1.5,
-        window=np.hamming(NFFT))[0]
-
-    res = {
-        'x': th.from_numpy(Sx),
-        'y': tokens.find(label),
-        'len': Sx.shape[1]}
-    return res
-
-
-def load_norm(line, crop=True, crop_len=1000, tokens=def_tokens, **kwargs):
-    ref, label = line.split(',')
-    data = load_mat(ref)
-    peaks = detect_beats(data, 300, lowfreq=3., highfreq=12.5)
-    BPM = len(peaks) / (len(data)/300) * 60
-    data = scipy.ndimage.zoom(data, BPM / avg_BPM, order=1)
-
-    if crop:
-        start_idx = np.random.randint(len(data) - crop_len)
-        data = data[start_idx: start_idx + crop_len]
-
-    res = {
-        'x': th.from_numpy(data[None, :]),
-        'y': self.tokens.find(label),
-        'len': len(data)}
+        'len': data_len}
     return res
 
 
 def batchify(batch):
+    
     max_len = max(s['x'].size(-1) for s in batch)
-    num_channels = len(batch[0]['x'][0])
+    num_channels = batch[0]['x'].size(0)
     x_batch = th.zeros(len(batch), num_channels, max_len)
     for idx in range(len(batch)):
         #print(x_batch.size(), batch[idx]['x'].size())
@@ -280,15 +186,39 @@ def batchify(batch):
 
     y_batch = th.LongTensor([s['y'] for s in batch])
     #feature_batch = th.cat([s['features'] for s in batch], dim=0)
-    len_batch = Float([s['len'] for s in batch])
 
 
     res = {'x': Variable(x_batch),
-           'y': Variable(y_batch),
-           'len': Variable(len_batch),
-           #'features': Variable(feature_batch)
+           'y': Variable(y_batch)
           }
     return res
+
+
+def load_forked(line, fork_transforms, tokens=def_tokens, **kwargs):
+    ref, label = line.split(',')
+    in_data = load_mat(ref)
+    forks = {}
+    for forkname, transforms in fork_transforms.items():
+        print(forkname)
+        data = in_data.copy()
+        for trans in transforms:
+            data = trans(data)
+        assert len(data.shape) < 3, data.shape
+        if len(data.shape) == 1:
+            data = data[None, :]
+        forks[forkname] = {
+            'x': th.from_numpy(np.float32(data)), 
+            'y': tokens.find(label)}
+    return forks
+    
+
+def batchify_forked(batch):
+    forked_res = {}
+    for key in batch[0].keys():
+        print(key)
+        forked_res[key] = batchify(list(sample[key] for sample in batch))
+        
+    return forked_res
 
 
 if __name__ == '__main__':
