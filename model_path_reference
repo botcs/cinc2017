@@ -1,2 +1,2 @@
 saved/fixed-noise/0001/state_dict_highscore noise.pt
-saved/FREQ-ENCODE-quarter-selu-adam/0001/state_dict_highscore freq-params.pt
+saved/ENCODE-selu-adam/0001/state_dict_highscore class.pt
