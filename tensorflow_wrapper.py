@@ -3,7 +3,7 @@ import numpy as np
 from tensorflow.python.framework import ops
 import pickle 
 
-def get_logits(input, num_classes, param_path, res_blocks=3):
+def get_logits(input, num_classes, param_path, res_blocks=3, init_channel=32):
     #sd = th.load(pytorch_statedict_path)
     #for k, v in sd.items():
     #    print(k, v.size())
@@ -85,7 +85,7 @@ def get_logits(input, num_classes, param_path, res_blocks=3):
         x = ResNet(x, init_channel*8)
         return x
 
-    def NET(input, init_channel=32, num_classes=3):
+    def NET(input, init_channel=init_channel, num_classes=num_classes):
         x = Features(input, init_channel)
         lens = tf.shape(input, 'lens')[1]
         lens = tf.cast(lens, tf.float32)
@@ -94,4 +94,4 @@ def get_logits(input, num_classes, param_path, res_blocks=3):
 	        logit = tf.reduce_sum(logit, 1) / lens
 	
         return logit
-    return NET(input, init_channel=32)
+    return NET(input, init_channel=init_channel)
