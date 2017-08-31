@@ -21,6 +21,7 @@ class mystr(str):
 noise_tokens = mystr('~~')
 atrif_tokens = mystr('AA')
 other_tokens = mystr('OO')
+normal_tokens = mystr('NN')
 
 
 class DataSet(th.utils.data.Dataset):
@@ -176,7 +177,6 @@ def load_composed(line, tokens=def_tokens, transformations=[], **kwargs):
 
 
 def batchify(batch):
-    
     max_len = max(s['x'].size(-1) for s in batch)
     num_channels = batch[0]['x'].size(0)
     x_batch = th.zeros(len(batch), num_channels, max_len)
@@ -194,12 +194,13 @@ def batchify(batch):
     return res
 
 
-def load_forked(line, fork_transforms, tokens=def_tokens, **kwargs):
+def load_forked(line, global_transforms, fork_transforms, tokens=def_tokens, **kwargs):
     ref, label = line.split(',')
     in_data = load_mat(ref)
+    for trans in global_transforms:
+        in_data = trans(in_data)
     forks = {}
     for forkname, transforms in fork_transforms.items():
-        print(forkname)
         data = in_data.copy()
         for trans in transforms:
             data = trans(data)
@@ -210,16 +211,19 @@ def load_forked(line, fork_transforms, tokens=def_tokens, **kwargs):
             'x': th.from_numpy(np.float32(data)), 
             'y': tokens.find(label)}
     return forks
-    
 
 def batchify_forked(batch):
     forked_res = {}
     for key in batch[0].keys():
-        print(key)
+        #print(key)
         forked_res[key] = batchify(list(sample[key] for sample in batch))
-        
-    return forked_res
 
+    res = {'x': {}}
+    for key, val in forked_res.items():
+        res['x'][key] = val['x']
+    # Every forks `y` is the same (at least should be) 
+    res['y'] = val['y']
+    return res
 
 if __name__ == '__main__':
     dataset = DataSet(

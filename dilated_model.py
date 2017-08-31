@@ -399,12 +399,7 @@ class SkipFCN(nn.Module):
 
         self.logit = nn.Conv1d(channels[12], num_classes, 1)
 
-    def forward(self, x, lens=None):
-
-        if lens is None:
-            lens = x.size(-1)
-        else:
-            lens = lens[:, None].expand(len(x), self.num_classes)
+    def forward_features(self, x):
 
         out = self.activation(self.bn1(self.conv1(x)))
         out = self.activation(self.bn2(self.conv2(out)))
@@ -431,10 +426,12 @@ class SkipFCN(nn.Module):
         out = self.activation(self.bn12(self.conv12(out)))
         out = self.activation(self.bn13(self.conv13(out)))
         out = self.drop1(out)
+        return out
 
-        # Avg POOLing
+    def forward(self, x):
+        out = self.forward_features(x)
         out = self.logit(out)
-        out = th.sum(out, dim=-1).squeeze() / lens
+        out = out.mean(-1)
         return out
 
 
@@ -834,7 +831,7 @@ class SkipResNet(nn.Module):
         self.logit = nn.Conv1d(res_init_depth*2, num_classes, 1, bias=False)
         self.num_classes = 3
 
-        print(self)
+        #print(self)
 
     def forward(self, x, lens=None):
         if lens is None:
@@ -932,3 +929,39 @@ class WideResNet(nn.Module):
         out = self.resnet(out)
 
         return out
+
+class CombinedTransform(nn.Module):
+    def __init__(self, pretrained, feature_length, classifier, **models):
+        super(CombinedTransform, self).__init__()
+        self.pretrained = pretrained
+        self.length = feature_length
+        self.key2ind = {k:i for i, k in enumerate(models.keys())}
+        self.models = th.nn.ModuleList(list(models.values()))
+        self.classifier = classifier
+        self.device_id = -1
+
+    def forward_fix_len(self, x, key):
+        if self.device_id > -1:
+            x = {x_key:x_val.cuda(self.device_id) for x_key,x_val in x.items()}
+        x = self.models[self.key2ind[key]].forward_features(x[key])
+        datalen = x.size(-1)
+        x = th.nn.MaxPool1d(kernel_size=datalen//self.length)(x)
+
+        return x
+    def forward_features(self, x):
+        res = [self.forward_fix_len(x, key) for key in self.key2ind.keys()]
+        return th.cat(res, 1)
+
+    def forward(self, x):
+        features = self.forward_features(x)
+        if self.pretrained:
+            return self.classifier(features.detach()).mean(-1)
+        return self.classifier(features).mean(-1)
+
+    def cuda(self, device_id=0):
+        super(CombinedTransform, self).cuda(device_id)
+        self.device_id = device_id
+
+    def cpu(self, *args, **kwargs):
+        super(CombinedTransform, self).cpu(*args, **kwargs)
+        self.cuda = -1
