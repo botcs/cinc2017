@@ -11,12 +11,12 @@ def pprint(*text, **kwargs):
     print(*text, flush=True, **kwargs)
 
 def process_logits(logits):
-    noise, classes = logits
+    noise, atrif, other = logits
     if noise.argmax() == 0:
         return('~')
-    if classes.argmax() == 1:
+    if atrif.argmax() == 1:
         return('A')
-    if classes.argmax() == 0:
+    if other.argmax() == 0:
         return('N')
     return('O')
 
@@ -30,7 +30,8 @@ def main(argv):
     print('*'*80)
     print('-'*80)
     noise_model_path = 'noise.pkl'
-    class_model_path = 'class.pkl'
+    atrif_model_path = 'atrif.pkl'
+    other_model_path = 'other.pkl'
 
     tf.reset_default_graph()
     pprint('Building computational graph... ')
@@ -38,8 +39,9 @@ def main(argv):
     with tf.device('cpu'):
         input_op = tf.placeholder(1, [1, None, 1], name='INPUT')
         noise_model = tw.get_logits(input_op, 3, noise_model_path)[0]
-        class_model = tw.get_logits(input_op, 3, class_model_path, res_blocks=9, init_channel=32)[0]
-        logits = [noise_model, class_model]
+        atrif_model = tw.get_logits(input_op, 3, atrif_model_path)[0]
+        other_model = tw.get_logits(input_op, 3, other_model_path)[0]
+        logits = [noise_model, atrif_model, other_model]
     pprint('Computational graph building done!')
     pprint('Loading data')
     transformations = [
@@ -54,7 +56,8 @@ def main(argv):
         tf.global_variables_initializer().run()
         logits_val = sess.run(logits, {input_op: data})
         print('Noise:', logits_val[0])
-        print('Class:', logits_val[1])
+        print('Atrif:', logits_val[1])
+        print('Other:', logits_val[2])
     print(process_logits(logits_val))
     write_answer(argv[1], process_logits(logits_val))
     return
@@ -81,9 +84,6 @@ def main(argv):
         feed = {'is_training:0': False, input_op: sample['val']}
         logits_val = sess.run(logits, feed)
         write_answer(argv[1], logits_val)
-    print('-'*80)
-    print('*'*80)
-    print('-'*80)
- 
+
 if __name__ == '__main__':
     main(sys.argv)

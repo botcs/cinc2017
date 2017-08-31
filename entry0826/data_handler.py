@@ -1,6 +1,5 @@
 from scipy.io import loadmat
 import numpy as np
-from scipy import signal
 #from matplotlib.mlab import specgram
 import random
 
@@ -61,21 +60,6 @@ class RandomMultiplier:
 class Logarithm:
     def __call__(self, data):
         return np.log(data)
-
-class Spectogram:
-    def __init__(self, NFFT=None, overlap=None):
-        self.NFFT = NFFT
-        self.overlap = overlap
-        if overlap is None:
-            self.overlap = NFFT - 1
-    def __call__(self, data):
-        data = data.squeeze()
-        assert len(data.shape) == 1
-        Sx = signal.spectrogram(
-            x=data,
-            nperseg=self.NFFT,
-            noverlap=self.overlap)[-1]
-        return Sx    
 '''
 class Spectogram:
     def __init__(self, NFFT, overlap=None):

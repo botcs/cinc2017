@@ -1,3 +1,2 @@
 saved/fixed-noise/0001/state_dict_highscore noise.pt
-saved/other-normal-fixed/0001/state_dict_highscore other.pt
-saved/fixed-95-train/0001/state_dict_highscore atrif.pt
+saved/ENCODE-selu-adam/0001/state_dict_highscore class.pt
