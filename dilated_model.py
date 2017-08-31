@@ -1,5 +1,5 @@
 import torch as th
-
+from collections import OrderedDict
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -935,6 +935,7 @@ class CombinedTransform(nn.Module):
         super(CombinedTransform, self).__init__()
         self.pretrained = pretrained
         self.length = feature_length
+        models = OrderedDict(sorted(models.items(), key=lambda t: t[0]))
         self.key2ind = {k:i for i, k in enumerate(models.keys())}
         self.models = th.nn.ModuleList(list(models.values()))
         self.classifier = classifier

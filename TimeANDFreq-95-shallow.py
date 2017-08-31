@@ -60,10 +60,10 @@ classifier = th.nn.Sequential(th.nn.BatchNorm1d(256), DM.SELU(), th.nn.Conv1d(25
 net = DM.CombinedTransform(
 #    pretrained=True,
     pretrained=False,
-	feature_length=20, 
-	time=timeNet, 
-	freq=freqNet, 
-	classifier=classifier)
+    feature_length=20, 
+    time=timeNet, 
+    freq=freqNet, 
+    classifier=classifier)
 
 trainer = T.Trainer('saved/'+name, class_weight=[1, 1, 1], restore=RESTORE, dryrun=DRYRUN)
 trainer(net, train_producer, test_producer, gpu_id=0, useAdam=True)

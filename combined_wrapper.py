@@ -3,7 +3,7 @@ import numpy as np
 import torch as th
 from tensorflow.python.framework import ops
 
-def get_logits(input, num_classes, pytorch_statedict_path, res_blocks=3):
+def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=9):
     sd = th.load(pytorch_statedict_path)
     #for k, v in sd.items():
     #    print(k, v.size())
@@ -17,6 +17,11 @@ def get_logits(input, num_classes, pytorch_statedict_path, res_blocks=3):
             assert p.shape == args, (p.shape, args)
         return p
 
+    def SELU(x):
+        with ops.name_scope('elu') as scope:
+            alpha = 1.6732632423543772848170429916717
+            scale = 1.0507009873554804934193349852946
+            return scale*tf.where(x>=0.0, x, alpha*tf.nn.elu(x))
     def selu(x):
         with ops.name_scope('elu') as scope:
             alpha = 1.6732632423543772848170429916717
@@ -93,47 +98,48 @@ def get_logits(input, num_classes, pytorch_statedict_path, res_blocks=3):
 
     def FreqFeatures(input):
         with tf.variable_scope('SkipFCN'):
-            out = SELU(BatchNorm(Conv1d(x, 1, 16, 17, 1)))
-            out = SELU(BatchNorm(Conv1d(x, 16, 16, 9, 2)))
+            out = SELU(BatchNorm(Conv1d(input, 16, 16, 17, 1), 16))
+            out = SELU(BatchNorm(Conv1d(out, 16, 16, 9, 2), 16))
             x = out
 
-            out = SELU(BatchNorm(Conv1d(x, 16, 32, 9, 1)))
-            out = SELU(BatchNorm(Conv1d(x, 32, 32, 9, 2)))
+            out = SELU(BatchNorm(Conv1d(out, 16, 32, 9, 1), 32))
+            out = SELU(BatchNorm(Conv1d(out, 32, 32, 9, 2), 32))
             out = MaxPool1d(out)
             x = MaxPool1d(x)
 
             out = tf.concat([x, out], axis=2)
-            out = SELU(BatchNorm(Conv1d(x, 32, 64, 9, 1)))
-            out = SELU(BatchNorm(Conv1d(x, 64, 64, 9, 2)))
-            out = SELU(BatchNorm(Conv1d(x, 64, 64, 9, 4)))
+            out = SELU(BatchNorm(Conv1d(out, 32+16, 64, 9, 1), 64))
+            out = SELU(BatchNorm(Conv1d(out, 64, 64, 9, 2), 64))
+            out = SELU(BatchNorm(Conv1d(out, 64, 64, 9, 4), 64))
             out = MaxPool1d(out)
             x = MaxPool1d(x)
 
             out = tf.concat([x, out], axis=2)
-            out = SELU(BatchNorm(Conv1d(x, 64, 128, 9, 1)))
-            out = SELU(BatchNorm(Conv1d(x, 128, 128, 9, 2)))
-            out = SELU(BatchNorm(Conv1d(x, 128, 128, 9, 4)))
+            out = SELU(BatchNorm(Conv1d(out, 64+16, 128, 9, 1), 128))
+            out = SELU(BatchNorm(Conv1d(out, 128, 128, 9, 2), 128))
+            out = SELU(BatchNorm(Conv1d(out, 128, 128, 9, 4), 128))
             out = MaxPool1d(out)
             x = MaxPool1d(x)
 
             out = tf.concat([x, out], axis=2)
-            out = SELU(BatchNorm(Conv1d(x, 128, 128, 9, 1)))
-            out = SELU(BatchNorm(Conv1d(x, 128, 128, 9, 2)))
-            out = SELU(BatchNorm(Conv1d(x, 128, 128, 9, 2)))
+            out = SELU(BatchNorm(Conv1d(out, 128+16, 128, 9, 1), 128))
+            out = SELU(BatchNorm(Conv1d(out, 128, 128, 9, 2), 128))
+            out = SELU(BatchNorm(Conv1d(out, 128, 128, 9, 2), 128))
             length = tf.shape(out)[1]
 
-            out = AvgPool(out, length//20)
+            out = AvgPool1d(out, length//20)
 
     def TimeFeatures(input, init_channel):
         x = Encoder(input, init_channel)
         x = ResNet(x, init_channel*8)
         length = tf.shape(out)[1]
-        out = AvgPool(out, length//20)
+        out = AvgPool1d(out, length//20)
         return x
 
     def NET(timeInput, freqInput):
-        TF = TimeFeatures(timeInput, 16)
         FF = FreqFeatures(freqInput)
+        TF = TimeFeatures(timeInput, 16)
+
         with tf.variable_scope('Logit'):
             logit = BatchNorm1d(logit, 256)
             logit = SELU(logit)
