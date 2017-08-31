@@ -3,7 +3,7 @@ import numpy as np
 from tensorflow.python.framework import ops
 import pickle 
 
-def get_logits(input, num_classes, param_path, res_blocks=3, init_channel=32):
+def get_logits(input, num_classes, param_path, res_blocks=3, init_channel=32, in_channel=1):
     #sd = th.load(pytorch_statedict_path)
     #for k, v in sd.items():
     #    print(k, v.size())
@@ -49,7 +49,7 @@ def get_logits(input, num_classes, param_path, res_blocks=3, init_channel=32):
             x = tf.squeeze(x, 1)
         return x
 
-    def Encoder(input, init_channel):
+    def Encoder(input, init_channel, in_channel=in_channel):
         def DownSampleBlock(input, in_channel, out_channel):
             with tf.variable_scope('DownSampleBlock'):
                 x = Conv1d(input, in_channel, out_channel, 7, bias=True)
@@ -58,7 +58,7 @@ def get_logits(input, num_classes, param_path, res_blocks=3, init_channel=32):
                 x = MaxPool1d(x)
             return x    
         with tf.variable_scope('Encoder'):
-            x = DownSampleBlock(input, 1, init_channel)
+            x = DownSampleBlock(input, in_channel, init_channel)
             x = DownSampleBlock(x, init_channel, init_channel*2)
             x = DownSampleBlock(x, init_channel*2, init_channel*4)
             x = DownSampleBlock(x, init_channel*4, init_channel*8)
