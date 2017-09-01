@@ -154,10 +154,12 @@ class Spectogram:
     def __call__(self, data):
         data = data.squeeze()
         assert len(data.shape) == 1
+        length = len(data)
         Sx = signal.spectrogram(
             x=data,
             nperseg=self.NFFT,
             noverlap=self.overlap)[-1]
+        Sx = signal.resample(Sx, length, axis=1)
         return Sx
 
 

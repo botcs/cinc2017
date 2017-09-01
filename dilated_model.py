@@ -945,9 +945,8 @@ class CombinedTransform(nn.Module):
         if self.device_id > -1:
             x = {x_key:x_val.cuda(self.device_id) for x_key,x_val in x.items()}
         x = self.models[self.key2ind[key]].forward_features(x[key])
-        datalen = x.size(-1)
-        x = th.nn.MaxPool1d(kernel_size=datalen//self.length)(x)
-
+        #datalen = x.size(-1)
+        #x = th.nn.MaxPool1d(kernel_size=datalen//self.length)(x)
         return x
     def forward_features(self, x):
         res = [self.forward_fix_len(x, key) for key in self.key2ind.keys()]
