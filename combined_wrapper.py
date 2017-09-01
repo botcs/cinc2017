@@ -135,6 +135,12 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3,
             x = variable_size_window(input, N)    
             x = tf.reduce_mean(x, 2)
             return x
+    
+    def GlobalMax(input, N):
+        with tf.name_scope('GlobalAvg'):
+            x = variable_size_window(input, N)    
+            x = tf.reduce_max(x, 2)
+            return x
             
     def FreqFeatures(input):
         with tf.variable_scope('SkipFCN'):
@@ -167,7 +173,7 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3,
             out = SELU(BatchNorm(Conv1d(out, 128, 128, 9, 2), 128))
             out = SELU(BatchNorm(Conv1d(out, 128, 128, 9, 2), 128))
             if not noGlobalAvg:
-                out = GlobalAvg(out, 20)
+                out = GlobalMax(out, 20)
             # THIS IS ONLY FOR PARAMETER LEFTOVERS
             # models.0.logit.weight [3, 128, 1]
             # models.0.logit.bias [3]
@@ -180,7 +186,7 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3,
         x = Encoder(input, init_channel)
         x = ResNet(x, init_channel*8)
         if not noGlobalAvg:
-            x = GlobalAvg(x, 20)
+            x = GlobalMax(x, 20)
         # THIS IS ONLY FOR PARAMETER LEFTOVERS
         # models.1.logit.weight [3, 128, 1]
         Conv1d(x, 128, 3, 1)
@@ -191,7 +197,7 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3,
         TF = TimeFeatures(timeInput, 16)
         if testfeatures:
             return FF, TF
-        features = tf.concat([TF, FF], axis=2)
+        features = tf.concat([FF, TF], axis=2)
         with tf.variable_scope('Logit'):
             logit = BatchNorm(features, 256)
             logit = SELU(logit)
