@@ -3,7 +3,7 @@ import numpy as np
 import torch as th
 from tensorflow.python.framework import ops
 
-def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=9):
+def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3):
     sd = th.load(pytorch_statedict_path)
     #for k, v in sd.items():
     #    print(k, v.size())
@@ -88,14 +88,53 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=9):
             x = BatchNorm(x, channel)
             x = Conv1d(x, channel, channel, kernel_size, dilation)
             x = selu(x)
-        return x + input    
+        return x + input   
+         
     def ResNet(input, channel, res_blocks=res_blocks):
         with tf.variable_scope('ResNet'):
             x = DilatedBlock(input, channel)
             for _ in range(res_blocks-1):
                 x = DilatedBlock(x, channel)
         return x
+        
+    def variable_size_window(input, N):
+        '''
+        Returns fix number `N` of equal sized windows and slices the variable
+        length input
+        Use `SYMMETRIC` padding if necessary.
 
+        Returns `N` equal slices
+        '''
+        with tf.name_scope('sample_division'):
+            x = input
+            if len(x.get_shape()) == 3:
+                x = x[..., None, :]
+            else:
+                raise ValueError('`input_op` has incorrect number of dimensions. \
+            required shape: [batch_size, sequence_length, num_features]')
+            with tf.name_scope('windowing'):
+                x_shape = tf.shape(x)
+                batch_size, max_seq_len = x_shape[0], x_shape[1]
+                # Make sure sequence can be divided to equal parts
+                padding = [[0, 0], [0, N-max_seq_len % N], [0, 0], [0, 0]]
+                x_pad = tf.pad(x, padding, 'CONSTANT')
+
+                # Don't pad if not necessary, i.e. max_seq_len%N == 0
+                new_x = tf.cond(tf.equal(max_seq_len % N, 0),
+                                lambda: x, lambda: x_pad)
+                max_seq_len = tf.shape(new_x)[1]
+                new_shape = [batch_size, N, max_seq_len//N, x.get_shape()[-1].value]
+                div_x = tf.reshape(new_x, new_shape)
+
+                # Convenience variable
+                return div_x
+    
+    def GlobalAvg(input, N):
+        with tf.name_scope('GlobalAvg'):
+            x = variable_size_window(input, N)    
+            x = tf.reduce_mean(x, 2)
+            return x
+            
     def FreqFeatures(input):
         with tf.variable_scope('SkipFCN'):
             out = SELU(BatchNorm(Conv1d(input, 16, 16, 17, 1), 16))
@@ -125,25 +164,36 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=9):
             out = SELU(BatchNorm(Conv1d(out, 128+16, 128, 9, 1), 128))
             out = SELU(BatchNorm(Conv1d(out, 128, 128, 9, 2), 128))
             out = SELU(BatchNorm(Conv1d(out, 128, 128, 9, 2), 128))
-            length = tf.shape(out)[1]
-
-            out = AvgPool1d(out, length//20)
+            out = GlobalAvg(out, 20)
+            # THIS IS ONLY FOR PARAMETER LEFTOVERS
+            # models.0.logit.weight [3, 128, 1]
+            # models.0.logit.bias [3]
+            Conv1d(out, 128, 3, 1, bias=True)
+            
+            return out
+            
 
     def TimeFeatures(input, init_channel):
         x = Encoder(input, init_channel)
         x = ResNet(x, init_channel*8)
-        length = tf.shape(out)[1]
-        out = AvgPool1d(out, length//20)
+        x = GlobalAvg(x, 20)
+        # THIS IS ONLY FOR PARAMETER LEFTOVERS
+        # models.1.logit.weight [3, 128, 1]
+        Conv1d(x, 128, 3, 1)
         return x
 
-    def NET(timeInput, freqInput):
+    def NET(timeInput, freqInput, testlogit=False, testfeatures=False):
         FF = FreqFeatures(freqInput)
         TF = TimeFeatures(timeInput, 16)
-
+        features = tf.concat([FF, TF], axis=2)
+        if testfeatures:
+            return features
         with tf.variable_scope('Logit'):
-            logit = BatchNorm1d(logit, 256)
+            logit = BatchNorm(features, 256)
             logit = SELU(logit)
-            logit = Conv1d(x, 256, 3, 1)
+            logit = Conv1d(logit, 256, 3, 1, bias=True)
+            if testlogit:
+                return logit
             logit = tf.reduce_mean(logit, 1)
         return logit
     return NET(timeInput, freqInput)
