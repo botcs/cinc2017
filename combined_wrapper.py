@@ -3,7 +3,8 @@ import numpy as np
 import torch as th
 from tensorflow.python.framework import ops
 
-def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3):
+def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3, 
+               testlogit=False, testfeatures=False, noGlobalAvg=False):
     sd = th.load(pytorch_statedict_path)
     #for k, v in sd.items():
     #    print(k, v.size())
@@ -53,7 +54,7 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3):
     def MaxPool1d(input):
         with tf.variable_scope('MaxPool1d'):
             x = tf.expand_dims(input, 1)
-            x = tf.nn.max_pool(x, [1, 1, 2, 1], [1, 1, 2, 1], 'SAME')
+            x = tf.nn.max_pool(x, [1, 1, 2, 1], [1, 1, 2, 1], 'VALID')
             x = tf.squeeze(x, 1)
         return x
 
@@ -139,6 +140,7 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3):
         with tf.variable_scope('SkipFCN'):
             out = SELU(BatchNorm(Conv1d(input, 16, 16, 17, 1), 16))
             out = SELU(BatchNorm(Conv1d(out, 16, 16, 9, 2), 16))
+            out = MaxPool1d(out)
             x = out
 
             out = SELU(BatchNorm(Conv1d(out, 16, 32, 9, 1), 32))
@@ -164,7 +166,8 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3):
             out = SELU(BatchNorm(Conv1d(out, 128+16, 128, 9, 1), 128))
             out = SELU(BatchNorm(Conv1d(out, 128, 128, 9, 2), 128))
             out = SELU(BatchNorm(Conv1d(out, 128, 128, 9, 2), 128))
-            out = GlobalAvg(out, 20)
+            if not noGlobalAvg:
+                out = GlobalAvg(out, 20)
             # THIS IS ONLY FOR PARAMETER LEFTOVERS
             # models.0.logit.weight [3, 128, 1]
             # models.0.logit.bias [3]
@@ -176,18 +179,19 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3):
     def TimeFeatures(input, init_channel):
         x = Encoder(input, init_channel)
         x = ResNet(x, init_channel*8)
-        x = GlobalAvg(x, 20)
+        if not noGlobalAvg:
+            x = GlobalAvg(x, 20)
         # THIS IS ONLY FOR PARAMETER LEFTOVERS
         # models.1.logit.weight [3, 128, 1]
         Conv1d(x, 128, 3, 1)
         return x
 
-    def NET(timeInput, freqInput, testlogit=False, testfeatures=False):
+    def NET(timeInput, freqInput):
         FF = FreqFeatures(freqInput)
         TF = TimeFeatures(timeInput, 16)
-        features = tf.concat([FF, TF], axis=2)
         if testfeatures:
-            return features
+            return FF, TF
+        features = tf.concat([TF, FF], axis=2)
         with tf.variable_scope('Logit'):
             logit = BatchNorm(features, 256)
             logit = SELU(logit)
