@@ -4,7 +4,7 @@ import torch as th
 from tensorflow.python.framework import ops
 
 def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3, 
-               testlogit=False, testfeatures=False, noGlobalAvg=False):
+               testlogit=False, testfeatures=False, noGlobalAvg=False, num_classes=3):
     sd = th.load(pytorch_statedict_path)
     #for k, v in sd.items():
     #    print(k, v.size())
@@ -172,8 +172,8 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3,
             out = SELU(BatchNorm(Conv1d(out, 128+16, 128, 9, 1), 128))
             out = SELU(BatchNorm(Conv1d(out, 128, 128, 9, 2), 128))
             out = SELU(BatchNorm(Conv1d(out, 128, 128, 9, 2), 128))
-            if not noGlobalAvg:
-                out = GlobalMax(out, 20)
+            #if not noGlobalAvg:
+            #    out = GlobalMax(out, 20)
             # THIS IS ONLY FOR PARAMETER LEFTOVERS
             # models.0.logit.weight [3, 128, 1]
             # models.0.logit.bias [3]
@@ -185,8 +185,8 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3,
     def TimeFeatures(input, init_channel):
         x = Encoder(input, init_channel)
         x = ResNet(x, init_channel*8)
-        if not noGlobalAvg:
-            x = GlobalMax(x, 20)
+        #if not noGlobalAvg:
+        #    x = GlobalMax(x, 20)
         # THIS IS ONLY FOR PARAMETER LEFTOVERS
         # models.1.logit.weight [3, 128, 1]
         Conv1d(x, 128, 3, 1)
@@ -201,7 +201,7 @@ def get_logits(timeInput, freqInput, pytorch_statedict_path, res_blocks=3,
         with tf.variable_scope('Logit'):
             logit = BatchNorm(features, 256)
             logit = SELU(logit)
-            logit = Conv1d(logit, 256, 3, 1, bias=True)
+            logit = Conv1d(logit, 256, num_classes, 1, bias=True)
             if testlogit:
                 return logit
             logit = tf.reduce_mean(logit, 1)
