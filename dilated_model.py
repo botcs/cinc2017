@@ -428,10 +428,12 @@ class SkipFCN(nn.Module):
         out = self.drop1(out)
         return out
 
-    def forward(self, x):
+    def forward(self, x, avg=True):
         out = self.forward_features(x)
         out = self.logit(out)
-        out = out.mean(-1)
+        if avg:
+            out = out.mean(-1)
+
         return out
 
 
@@ -711,7 +713,7 @@ class EncodeWideResNetFIXED(nn.Module):
 
         return out
 
-    def forward(self, x, lens=None):
+    def forward(self, x, avg=True, lens=None):
 
         if lens is None:
             lens = x.size(-1)
@@ -720,7 +722,8 @@ class EncodeWideResNetFIXED(nn.Module):
         
         out = self.forward_features(x)
         out = self.logit(out)
-        out = th.sum(out, dim=-1).squeeze() / lens
+        if avg:
+            out = th.sum(out, dim=-1).squeeze() / lens
         return out
 
 
