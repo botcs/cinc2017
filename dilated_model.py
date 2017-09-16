@@ -955,11 +955,16 @@ class CombinedTransform(nn.Module):
         res = [self.forward_fix_len(x, key) for key in self.key2ind.keys()]
         return th.cat(res, 1)
 
-    def forward(self, x):
+    def forward(self, x, avg=True):
         features = self.forward_features(x)
-        if self.pretrained:
-            return self.classifier(features.detach()).mean(-1)
-        return self.classifier(features).mean(-1)
+        if avg:
+            if self.pretrained:
+                return self.classifier(features.detach()).mean(-1)
+            return self.classifier(features).mean(-1)
+        else:
+            if self.pretrained:
+                return self.classifier(features.detach())
+            return self.classifier(features)
 
     def cuda(self, device_id=0):
         super(CombinedTransform, self).cuda(device_id)
